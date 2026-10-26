@@ -252,6 +252,8 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .pbars b{width:70%;border-radius:8px 8px 4px 4px;display:block}
 .pbars small{font-size:.72rem;font-weight:800}
 .pbars span{font-size:.64rem;color:var(--mute);font-weight:700}
+.bioBtn{width:auto;min-width:220px;height:auto;padding:22px 26px;border-radius:24px;font-size:2.4rem;display:flex;flex-direction:column;gap:8px;margin:26px auto 0}
+.bioBtn small{font-size:.85rem;font-weight:700}
 .section-t{font-size:.72rem;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;margin:20px 6px 8px}
 </style>
 </head>
@@ -338,7 +340,13 @@ function toast(msg, action, fn) {
   t.classList.add('show'); if (action) $('#tAct').onclick = () => { t.classList.remove('show'); fn(); };
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), action ? 5000 : 2400);
 }
-function download(name, text, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+/* Android app bridge (present only inside the Ledger Android app) */
+const AND = window.LedgerAndroid || null;
+const andInfo = () => { try { return JSON.parse(AND.info()); } catch (e) { return {}; } };
+const bioOn = () => !!(AND && S.bio);
+function download(name, text, type) {
+  if (AND) { try { const r = AND.saveFile(name, text, type || 'text/plain'); toast(r ? 'Saved to Downloads · ' + name : 'Could not save'); } catch (e) { toast('Could not save'); } return; }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
 
 /* ---------- defaults ---------- */
 const CAT_DEF = [['Food', '🍽️', '#F97316'], ['Household', '🏠', '#EAB308'], ['Transportation', '🚕', '#14B8A6'], ['Personal & Lifestyle', '🛍️', '#A855F7'], ['Education', '📚', '#3B82F6'], ['Medical', '💊', '#EC4899'], ['Financial', '💳', '#64748B'], ['Miscellaneous', '✨', '#84CC16']];
@@ -1611,6 +1619,51 @@ ACT.smsGo = () => {
 window.LedgerSms = (raw, recvTs) => { const x = parseSms(raw, recvTs); if (!x) return false; const r = addPending(x, raw); if (r && U.tab === 'home') render(); return !!r; };
 
 /* =========================================================
+   ANDROID APP: bank SMS queue, fingerprint, updates
+   ========================================================= */
+function drainSms() {
+  if (!AND) return 0; let L = [];
+  try { L = JSON.parse(AND.takeSms() || '[]'); } catch (e) { return 0; }
+  let n = 0; L.forEach(x => { if (window.LedgerSms(x.raw, x.ts)) n++; });
+  if (n) { toast('📩 ' + n + ' new bank message' + (n > 1 ? 's' : '') + ' to sort', 'Sort', () => ACT.pendOpen()); if (U.tab === 'home') render(); }
+  return n;
+}
+window.__ledgerSmsPing = () => drainSms();
+window.__ledgerOpenPending = () => { drainSms(); if (pendNew().length) ACT.pendOpen(); };
+window.onLedgerUpdate = () => toast('A new version of Ledger is ready', 'Restart', () => { try { AND.reload(); } catch (e) { location.reload(); } });
+window.onLedgerPerm = () => { if (U.tab === 'settings') render(); };
+function phoneCard() {
+  if (!AND) return `<div class="card"><h2>Ledger Android app</h2><div class="hint" style="margin:0">The Android app reads bank SMS for you, unlocks with your fingerprint and works offline. Download it from your GitHub page (Releases → ledger.apk).</div></div>`;
+  const I = andInfo();
+  return `<div class="card"><h2>Phone app <small>v${esc(I.version || '?')}</small></h2>
+  <div class="srow"><span class="ic" style="background:var(--soft)">📩</span><span class="mid"><b>Read bank SMS</b><small>${I.sms ? '✓ On · OTPs and offers are ignored on the phone' : 'Off · tap to allow'}</small></span>${I.sms ? '<button class="btn sm sec" data-act="andScan">Scan 30 days</button>' : '<button class="btn sm" data-act="andPerm">Allow</button>'}</div>
+  <div class="srow"><span class="ic" style="background:var(--soft)">🔔</span><span class="mid"><b>Notifications</b><small>${I.notif ? '✓ On · a ping for each bank message' : 'Off · tap to allow'}</small></span>${I.notif ? '' : '<button class="btn sm" data-act="andPerm">Allow</button>'}</div>
+  <div class="srow"><span class="ic" style="background:var(--soft)">🔋</span><span class="mid"><b>Battery: Unrestricted</b><small>${I.battery ? '✓ Samsung will not stop Ledger' : 'Needed so Samsung does not stop SMS reading'}</small></span>${I.battery ? '' : '<button class="btn sm" data-act="andBattery">Fix</button>'}</div>
+  <label class="check"><input type="checkbox" data-in="bioT" ${S.bio ? 'checked' : ''} ${I.bio ? '' : 'disabled'}> Unlock with fingerprint${I.bio ? '' : ' (set up a fingerprint or screen lock on the phone first)'}</label>
+  ${S.bio && !S.pin ? `<label class="check"><input type="checkbox" data-in="autoLock" ${S.autoLock ? 'checked' : ''}> Lock again after 1 minute away</label>` : ''}
+  <button class="btn sec sm" data-act="andUpd">Check for app update</button>
+  <div class="hint">SMS are read only on this phone. Only completed debits and credits go to your "to sort" list and your own Google Sheet.</div></div>`;
+}
+ACT.andPerm = () => { try { AND.requestSms(); } catch (e) { } };
+ACT.andBattery = () => { try { AND.openBattery(); } catch (e) { } };
+ACT.andUpd = () => { window.__ledgerManualUpd = true; try { AND.checkUpdate(); toast('Checking…'); } catch (e) { } };
+ACT.andScan = () => {
+  let L = []; try { L = JSON.parse(AND.readInbox(30) || '[]'); } catch (e) { return toast('Could not read SMS'); }
+  let n = 0; L.forEach(x => { if (window.LedgerSms(x.raw, x.ts)) n++; });
+  toast(n ? n + ' bank message' + (n > 1 ? 's' : '') + ' added to sort. Ignore any you already logged by hand.' : 'Nothing new in the last 30 days');
+  if (n) ACT.pendOpen();
+};
+IN.bioT = t => {
+  if (!t.checked) { S.bio = false; save(); render(); return toast('Fingerprint unlock off'); }
+  window.onLedgerUnlock = (ok, msg) => {
+    window.onLedgerUnlock = (ok2, m2) => { if (ok2) { $('#lock').hidden = true; if (S.url && S.key && Date.now() - lastPull > 60000) pull(true); } else if (m2) toast(m2); };
+    if (ok) { S.bio = true; save(); toast('👆 Fingerprint unlock on'); } else { t.checked = false; if (msg) toast(msg); }
+    render();
+  };
+  try { AND.unlock('Turn on fingerprint unlock'); } catch (e) { t.checked = false; }
+};
+
+/* =========================================================
    PLAN — goals / reminders / budget planner
    ========================================================= */
 function renderPlan() {
@@ -2170,6 +2223,7 @@ function renderSettings() {
   h += `<div class="card"><h2>Accounts <small>tap to edit</small></h2>${S.accounts.slice().sort((a, b) => (a.order || 0) - (b.order || 0)).map(a => `<button class="srow" data-act="acctEdit" data-n="${esc(a.name)}"><span class="ic" style="background:var(--soft)">${(ACC_T[a.type] || ['•'])[0]}</span><span class="mid"><b>${esc(a.name)}${a.archived ? '<em class="tag">hidden</em>' : ''}${a.others ? '<em class="tag">others</em>' : ''}</b><small>${a.others ? '👥 Held for others' + (a.keptIn ? ' in ' + esc(a.keptIn) : '') : (ACC_T[a.type] || ['', a.type])[1]} · since ${dLabel((a.openingDate || '').slice(0, 10))}</small></span><span class="amt ${(C.bal[a.name] || 0) < 0 ? 'red' : ''}">${inr(C.bal[a.name])}</span></button>`).join('') || '<div class="empty">No accounts yet.</div>'}<button class="btn" data-act="acctNew">+ Add account</button></div>`;
   h += `<div class="card"><h2>Categories & budgets <small>monthly</small></h2>${S.cfg.categories.map((c, i) => `<div class="srow"><span class="ic" style="background:${c.color}1f">${c.icon}</span><button class="mid" data-act="catEdit" data-i="${i}"><b>${esc(c.name)}${c.hidden ? '<em class="tag">hidden</em>' : ''}</b><small>${c.budget > 0 ? 'Budget ' + inr(c.budget) : 'No budget · tap to set'}</small></button><button class="mv" data-act="catMove" data-i="${i}" data-d="-1" aria-label="Move up">↑</button><button class="mv" data-act="catMove" data-i="${i}" data-d="1" aria-label="Move down">↓</button></div>`).join('')}<button class="btn" data-act="catNew">+ Add category</button><div class="hint">Budget alerts appear on the Expenses tab at 80% and 100%.</div></div>`;
   h += listCard('Income sources', 'sources') + listCard('Investment types', 'invTypes');
+  h += phoneCard();
   h += `<div class="card"><h2>Privacy & security</h2><label class="check" style="margin-top:0"><input type="checkbox" data-in="hideT" ${S.hide ? 'checked' : ''}> Hide all amounts (👁 button at the top)</label><div class="hint">${S.pin ? '🔒 PIN lock is on. Forgot it? Tap "Forgot PIN" and type your Sheet secret key.' : 'Lock the app with a 4-digit PIN.'}</div><div class="btns"><button class="btn sm" data-act="pinSet">${S.pin ? 'Change PIN' : 'Set PIN'}</button>${S.pin ? '<button class="btn sm sec" data-act="pinOff">Remove PIN</button>' : ''}</div>${S.pin ? `<label class="check"><input type="checkbox" data-in="autoLock" ${S.autoLock ? 'checked' : ''}> Lock again after 1 minute away</label>` : ''}</div>`;
   const R = S.cfg.report || {};
   const hrOpts = sel => Array.from({ length: 24 }, (_, i) => `<option value="${i}" ${+sel === i ? 'selected' : ''}>${h12(i).replace('am', ':00 am').replace('pm', ':00 pm')}</option>`).join('');
@@ -2197,7 +2251,7 @@ function renderSettings() {
   h += `<div class="card"><h2>Appearance</h2><div class="seg" style="margin:0">${[['', 'Auto'], ['light', 'Light'], ['dark', 'Dark']].map(([k, l]) => `<button class="${(S.theme || '') === k ? 'on' : ''}" data-act="themeSet" data-k="${k}">${l}</button>`).join('')}</div></div>`;
   h += `<div class="card"><h2>Backup & restore</h2><button class="btn" data-act="bkNow">☁️ Back up to Google Drive now</button><button class="btn sec" data-act="bkList">↺ Restore from a Drive backup</button><button class="btn sec" data-act="exportJson">⬇ Download backup file (JSON)</button><button class="btn sec" data-act="impJson">⬆ Restore from a JSON file</button><input type="file" id="impFile" accept=".json,application/json" hidden><button class="btn sec" data-act="exportCsv">⬇ Download all entries (CSV)</button><button class="btn dng" data-act="clearLocal">Clear this phone's copy</button><div class="hint">The Google Sheet is your master copy. It's also copied to Drive "Ledger Backups" every night at 3 am (last 15 kept). Before any restore, a safety copy of the current Sheet is made first, so a restore can always be undone.</div></div>`;
   h += `<div class="card"><h2>Bank SMS</h2><div class="lbl" style="margin-top:0">Card / account last 4 digits</div>${live(a => a.type !== 'cash' && a.type !== 'investment' && mineA(a)).map(a => `<div class="grid2" style="grid-template-columns:1fr 110px;align-items:center;margin-bottom:6px"><span style="font-weight:700">${esc(a.name)}</span><input data-in="acL4" data-n="${esc(a.name)}" inputmode="numeric" maxlength="12" value="${esc(a.l4 || '')}" placeholder="e.g. 1211"></div>`).join('')}<div class="hint">Matches SMS like "from XX1211" to the right account. Several numbers? Separate them with commas. The Ledger phone app fills these in for you the first time it sees each one.</div><button class="btn sec" data-act="smsTry">🧪 Paste an SMS to test</button></div>`;
-  h += `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Android (Chrome): ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v6</div>`;
+  h += `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Ledger Android app (see Phone app above).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v6</div>`;
   return h;
 }
 function listCard(t, k) { return `<div class="card"><h2>${t}</h2><div class="pills">${S.cfg[k].map((x, i) => `<span class="pill">${esc(x)}<button data-act="cfgDel" data-k="${k}" data-i="${i}" aria-label="Remove">✕</button></span>`).join('')}</div><div class="addrow"><input id="add_${k}" placeholder="Add new…"><button class="btn sm" data-act="cfgAdd" data-k="${k}">Add</button></div></div>`; }
@@ -2327,9 +2381,15 @@ ACT.catMove = el => { const i = +el.dataset.i, j = i + +el.dataset.d, a = S.cfg.
 
 /* ---------- PIN lock ---------- */
 const hashPin = s => { let h = 2166136261 >>> 0; for (let k = 0; k < 400; k++) for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return h.toString(16); };
-function showLock(mode) { U.pin = { mode, val: '', first: '' }; $('#lock').hidden = false; drawLock(); }
+function showLock(mode) { U.pin = { mode, val: '', first: '', bio: mode === 'unlock' && bioOn() }; $('#lock').hidden = false; drawLock(); if (U.pin.bio) setTimeout(bioAsk, 250); }
+function bioAsk() { if (!AND || !U.pin || !U.pin.bio || $('#lock').hidden) return; try { AND.unlock('Unlock Ledger'); } catch (e) { } }
+window.onLedgerUnlock = (ok, msg) => {
+  if (ok) { $('#lock').hidden = true; if (S.url && S.key && Date.now() - lastPull > 60000) pull(true); return; }
+  if (msg) toast(msg);
+};
 function drawLock() {
   const P = U.pin, title = { unlock: 'Enter your PIN', set1: 'Choose a 4-digit PIN', set2: 'Type it again' }[P.mode];
+  if (P.bio) { $('#lock').innerHTML = `<div class="lk"><div class="logo">₹</div><h2>Ledger is locked</h2><button class="pk bioBtn" data-act="bioAsk">👆<small>Unlock with fingerprint</small></button>${S.pin ? '<button class="forgot" data-act="bioUsePin">Use PIN instead</button>' : ''}</div>`; return; }
   $('#lock').innerHTML = `<div class="lk"><div class="logo">₹</div><h2>${title}</h2><div class="dots" id="dots">${[0, 1, 2, 3].map(i => `<i class="${i < P.val.length ? 'on' : ''}"></i>`).join('')}</div><div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 'x', 0, '⌫'].map(k => k === 'x' ? (P.mode === 'unlock' ? '<span></span>' : '<button class="pk t" data-act="pinCancel">Cancel</button>') : `<button class="pk ${k === '⌫' ? 't' : ''}" data-act="pinKey" data-k="${k}">${k}</button>`).join('')}</div>${P.mode === 'unlock' ? '<button class="forgot" data-act="pinForgot">Forgot PIN?</button>' : ''}</div>`;
 }
 ACT.pinKey = el => {
@@ -2346,6 +2406,8 @@ ACT.pinKey = el => {
   }, 140);
 };
 ACT.pinCancel = () => { $('#lock').hidden = true; };
+ACT.bioAsk = () => bioAsk();
+ACT.bioUsePin = () => { U.pin.bio = false; drawLock(); };
 document.addEventListener('keydown', e => {
   if ($('#lock').hidden || !U.pin) return;
   const k = /^[0-9]$/.test(e.key) ? e.key : e.key === 'Backspace' ? '⌫' : null;
@@ -2387,15 +2449,21 @@ function setupIcons() {
 applyTheme(); setupIcons();
 try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (!S.theme) { applyTheme(); render(); } }); } catch (e) { }
 setTab('home');
-if (S.pin) showLock('unlock');
+if (S.pin || bioOn()) showLock('unlock');
 if (S.url && S.key) flush().then(() => pull(true)).then(() => { if (runAuto()) render(); });
 else if (!S.accounts.length) setTimeout(welcome, 450);
 else if (runAuto()) render();
 setInterval(flush, 30000);
 window.addEventListener('online', flush);
+if (AND) {
+  drainSms();
+  try { if (AND.pendingOpen() === '1') setTimeout(() => { if (pendNew().length) ACT.pendOpen(); }, 500); } catch (e) { }
+  try { AND.checkUpdate(); } catch (e) { }
+}
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { U.hiddenAt = Date.now(); flush(); return; }
-  if (S.pin && S.autoLock && U.hiddenAt && Date.now() - U.hiddenAt > 60000) showLock('unlock');
+  if (AND) drainSms();
+  if ((S.pin || bioOn()) && S.autoLock && U.hiddenAt && Date.now() - U.hiddenAt > 60000) showLock('unlock');
   else if (S.url && S.key && !S.outbox.length && Date.now() - lastPull > 60000) pull(true);
 });
 </script>

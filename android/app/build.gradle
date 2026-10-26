@@ -1,0 +1,50 @@
+plugins {
+    id 'com.android.application'
+}
+
+def vc = Integer.parseInt((project.findProperty('versionCode') ?: '1').toString())
+
+android {
+    namespace 'com.saysee.ledger'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.saysee.ledger'
+        minSdk 26
+        targetSdk 34
+        versionCode vc
+        versionName "6.0." + vc
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('ledger.jks')
+            storePassword System.getenv('KS_PASS') ?: 'ledgerapp'
+            keyAlias 'ledger'
+            keyPassword System.getenv('KS_PASS') ?: 'ledgerapp'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.biometric:biometric:1.1.0'
+    implementation 'androidx.webkit:webkit:1.11.0'
+}
