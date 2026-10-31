@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.CancellationSignal;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.MediaStore;
@@ -31,6 +32,16 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.biometric.BiometricManager;
+import androidx.credentials.Credential;
+import androidx.credentials.CredentialManager;
+import androidx.credentials.CredentialManagerCallback;
+import androidx.credentials.CustomCredential;
+import androidx.credentials.GetCredentialRequest;
+import androidx.credentials.GetCredentialResponse;
+import androidx.credentials.exceptions.GetCredentialCancellationException;
+import androidx.credentials.exceptions.GetCredentialException;
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
 import androidx.webkit.WebViewAssetLoader;
@@ -198,9 +209,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int authenticators() {
-        return Build.VERSION.SDK_INT >= 30
-                ? BiometricManager.Authenticators.BIOMETRIC_STRONG | BiometricManager.Authenticators.DEVICE_CREDENTIAL
-                : BiometricManager.Authenticators.BIOMETRIC_WEAK | BiometricManager.Authenticators.DEVICE_CREDENTIAL;
+        /* WEAK includes face unlock on phones that let apps use it (some Samsung models only allow fingerprint);
+           DEVICE_CREDENTIAL = the phone's own pattern / PIN / password as a fallback */
+        return BiometricManager.Authenticators.BIOMETRIC_WEAK | BiometricManager.Authenticators.DEVICE_CREDENTIAL;
     }
 
     private void unlock(String title) {
@@ -218,10 +229,43 @@ public class MainActivity extends AppCompatActivity {
         });
         BiometricPrompt.PromptInfo info = new BiometricPrompt.PromptInfo.Builder()
                 .setTitle(title == null || title.isEmpty() ? "Unlock Ledger" : title)
-                .setSubtitle("Fingerprint, or your phone's screen lock")
+                .setSubtitle("Fingerprint, face or your phone's screen lock")
                 .setAllowedAuthenticators(authenticators())
                 .build();
         bp.authenticate(info);
+    }
+
+    /** Native "Sign in with Google" (Google blocks its web sign-in inside apps). Returns an ID token to the web app. */
+    private void googleSignIn(String clientId) {
+        try {
+            GetSignInWithGoogleOption opt = new GetSignInWithGoogleOption.Builder(clientId).build();
+            GetCredentialRequest req = new GetCredentialRequest.Builder().addCredentialOption(opt).build();
+            CredentialManager.create(this).getCredentialAsync(this, req, new CancellationSignal(), ContextCompat.getMainExecutor(this),
+                    new CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
+                        @Override
+                        public void onResult(GetCredentialResponse r) {
+                            Credential c = r.getCredential();
+                            if (c instanceof CustomCredential && GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL.equals(c.getType())) {
+                                try {
+                                    String tok = GoogleIdTokenCredential.createFrom(c.getData()).getIdToken();
+                                    js("window.onLedgerGoogle&&onLedgerGoogle(" + q(tok) + ",'')");
+                                } catch (Exception e) {
+                                    js("window.onLedgerGoogle&&onLedgerGoogle(''," + q("Google sign-in failed") + ")");
+                                }
+                            } else {
+                                js("window.onLedgerGoogle&&onLedgerGoogle(''," + q("Google sign-in failed") + ")");
+                            }
+                        }
+
+                        @Override
+                        public void onError(@NonNull GetCredentialException e) {
+                            String m = e instanceof GetCredentialCancellationException ? "" : "Google sign-in: " + e.getMessage();
+                            js("window.onLedgerGoogle&&onLedgerGoogle(''," + q(m) + ")");
+                        }
+                    });
+        } catch (Exception e) {
+            js("window.onLedgerGoogle&&onLedgerGoogle(''," + q("Google sign-in is not available on this phone") + ")");
+        }
     }
 
     private String sha(byte[] b) {
@@ -254,6 +298,11 @@ public class MainActivity extends AppCompatActivity {
         return out.toByteArray();
     }
 
+    private static int appV(String html) {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("const APP_V = (\\d+)").matcher(html);
+        return m.find() ? Integer.parseInt(m.group(1)) : 0;
+    }
+
     /** Downloads the newest app screens from GitHub Pages; they are used from the next start. */
     private void checkUpdate() {
         new Thread(() -> {
@@ -267,6 +316,8 @@ public class MainActivity extends AppCompatActivity {
                 String head = new String(b, 0, Math.min(b.length, 4000), StandardCharsets.UTF_8);
                 String all = new String(b, StandardCharsets.UTF_8);
                 if (b.length < 100000 || !head.contains("<title>") || !all.contains("LedgerSms")) return;
+                /* never go back to older screens (e.g. a test build talking to the live site) */
+                if (appV(all) < appV(new String(currentHtml(), StandardCharsets.UTF_8))) return;
                 if (sha(b).equals(sha(currentHtml()))) {
                     ui.post(() -> js("window.toast&&window.__ledgerManualUpd&&toast('You have the latest version')"));
                     return;
@@ -391,6 +442,11 @@ public class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public String saveFile(String name, String data, String mime) {
             return MainActivity.this.saveFile(name, data, mime);
+        }
+
+        @JavascriptInterface
+        public void googleSignIn(String clientId) {
+            ui.post(() -> MainActivity.this.googleSignIn(clientId));
         }
 
         @JavascriptInterface

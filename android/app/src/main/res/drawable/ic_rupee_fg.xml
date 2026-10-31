@@ -2,6 +2,10 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <path android:strokeColor="#FFFFFF" android:strokeWidth="5" android:strokeLineCap="round" android:strokeLineJoin="round"
-        android:pathData="M40,36 L68,36 M40,46 L68,46 M44,36 C62,36 62,58 44,58 L41,58 M44,58 L66,76" />
+    <!-- ₹ mark -->
+    <path android:strokeColor="#FFFFFF" android:strokeWidth="6" android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M39,35 L69,35 M39,45.5 L69,45.5 M45,35 C63,35 63,58 45,58 L41,58 M45,58 L65,74" />
+    <!-- gold ledger line -->
+    <path android:strokeColor="#FFF5C46B" android:strokeWidth="4" android:strokeLineCap="round"
+        android:pathData="M39,80 L69,80" />
 </vector>
