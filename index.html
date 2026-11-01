@@ -329,6 +329,7 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .a-ic{width:56px;height:56px;margin:0 auto;border-radius:18px;display:grid;place-items:center;font-size:1.6rem;background:linear-gradient(135deg,#8B7BFF,#5B5BF7);box-shadow:0 10px 24px rgba(91,91,247,.35)}
 .a-q{margin:16px 0 8px auto;max-width:85%;width:fit-content;background:var(--acc);color:#fff;padding:9px 14px;border-radius:18px 18px 4px 18px;font-weight:700;font-size:.88rem}
 .a-a{background:var(--soft);border-radius:18px 18px 18px 4px;padding:12px 14px;max-width:100%}
+.chips.wrap .chip{max-width:100%;white-space:normal;text-align:left;height:auto;padding-top:7px;padding-bottom:7px;line-height:1.25}
 .a-a .chip{background:var(--card)!important;color:var(--acc);border:1px solid color-mix(in srgb,var(--acc) 25%,transparent)!important}
 .a-big{font-size:1.6rem;font-weight:800;letter-spacing:-.03em}.a-big small{font-size:.85rem;color:var(--mute);font-weight:700}
 .a-sub{font-size:.78rem;color:var(--mute);margin-top:4px;line-height:1.45;font-weight:600}
@@ -445,6 +446,7 @@ const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings',
 const CLOUD = { url: '__SHEET_URL__', clientId: '__WEB_CLIENT_ID__' };
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
+const APP_BUILD = '2026-11-01 b8';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -616,7 +618,7 @@ function openSheet(title, html, cls) {
     requestAnimationFrame(() => { $('#scrim').classList.add('open'); s.classList.add('open'); });
   }
 }
-function hideSheet() { $('#scrim').classList.remove('open'); $('#sheet').classList.remove('open'); U.c = null; }
+function hideSheet() { $('#scrim').classList.remove('open'); $('#sheet').classList.remove('open'); U.c = null; try { bellBadge(); } catch (e) { } }
 function shut() { if (sheetOpen()) { hideSheet(); U.extra = true; } }
 ACT.closeSheet = shut;
 window.addEventListener('popstate', () => { if (sheetOpen()) hideSheet(); else { U.extra = false; if (U.tab === 'settings' && U.sp) { U.sp = null; U.fresh = true; render(); window.scrollTo(0, 0); } } });
@@ -766,6 +768,7 @@ function inboxCount() { if (!S.accounts.length) return { all: 0, sort: 0, act: 0
 function bellBadge() {
   const b = $('#bellBadge'), btn = $('#bellBtn'); if (!b) return; const c = inboxCount(), n = c.badge || 0;
   b.hidden = !n; b.textContent = n > 9 ? '9+' : n;
+  const ch = $('#ibxChip'); if (ch) ch.innerHTML = inboxChip();
   if (n > (U.lastBell || 0) && btn) { btn.classList.remove('bellgo'); void btn.offsetWidth; btn.classList.add('bellgo'); }
   U.lastBell = n;
 }
@@ -878,7 +881,7 @@ function renderHome() {
   const accs = live(a => a.type !== 'investment' && mineA(a)), oth = live(a => a.others), tot = r2(accs.filter(holderType).reduce((s, a) => s + (C.bal[a.name] || 0), 0));
   const pl = pulseNow();
   h += `<div class="strip"><button class="acard" data-act="tab" data-t="insights" style="border-color:color-mix(in srgb,var(--acc) 30%,var(--line))"><span>💰 Free to spend</span><b>${inrS(freeTotal())}</b><small>${r2(tot - freeTotal()) > 0 ? inr(tot - freeTotal()) + ' in goals · total ' + inr(tot, 1) : 'Banks & cash, nothing reserved'}</small></button>${pl ? `<button class="acard" data-act="pulseOpen"><span>💗 Money Pulse</span><b style="color:${pl.col}">${pl.score}<small style="font-size:.7rem;color:var(--mute)"> /100</small></b><small>${pl.label} · this month</small></button>` : ''}${accs.map(a => { const b = C.bal[a.name] || 0, hd = C.held[a.name] || 0, pk = pockets(a.name).length; return `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>${ACC_T[a.type][0]} ${esc(a.name)}</span><b class="${b - hd < 0 || (a.type === 'card' && b < 0) ? 'red' : ''}">${a.type === 'card' ? (b < -.004 ? inr(-b) : inr(0)) : inr(b - hd)}</b><small>${a.type === 'card' ? (b < -.004 ? 'Due · bill day ' + cardDay(a) : 'No dues ✓') : hd > 0 ? inr(hd) + ' in goals · total ' + inr(b, 1) : pk ? 'Your share' : 'Free to spend'}</small></button>`; }).join('')}${oth.length ? oth.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}" style="border-style:dashed;box-shadow:none"><span>👥 ${esc(a.name)}</span><b class="mute">${inr(C.bal[a.name])}</b><small>${heldOwed(a.name) > 0 ? '<span class="red">You owe ' + inr(heldOwed(a.name), 1) + '</span>' : 'Held for others' + (a.keptIn ? ' · in ' + esc(a.keptIn) : '')}</small></button>`).join('') : ''}</div>`;
-  h += inboxChip();
+  h += '<div id="ibxChip">' + inboxChip() + '</div>';
   h += `<div class="search srch2"><input type="search" placeholder="Search notes, category or account" value="${esc(U.q)}" data-in="q"><button class="askb" data-act="ask" aria-label="Ask Ledger">✨ Ask</button></div>`;
   h += `<div class="chips">${[{ name: 'all', label: 'All' }].concat(visCats()).map(c => `<button class="chip ${U.cat === c.name ? 'on' : ''}" data-act="catF" data-v="${esc(c.name)}">${c.label || c.icon + ' ' + esc(c.name)}</button>`).join('')}</div>`;
   h += `<div id="list">${homeList()}</div>`;
@@ -3072,7 +3075,7 @@ const SP = () => [
 function settingsView(PG) {
   const all = SP().flatMap(g => g[1]), cur = U.sp && all.find(x => x[0] === U.sp);
   if (cur) { $('#title').textContent = cur[2]; $('#title').classList.add('sm'); return `<button class="back" data-act="spBack">‹ Settings</button>` + (PG[cur[0]] || '<div class="empty">Nothing here yet.</div>'); }
-  return SP().map(([g, items]) => `<div class="section-t">${g}</div><div class="group">${items.map(([k, i, t, sub]) => `<button class="item" data-act="spOpen" data-k="${k}"><span class="ic" style="background:var(--soft)">${i}</span><span class="mid"><b>${esc(t)}</b><small>${esc(sub)}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`).join('')}</div>`).join('') + '<div class="hint center" style="margin-top:18px">Ledger v8</div>';
+  return SP().map(([g, items]) => `<div class="section-t">${g}</div><div class="group">${items.map(([k, i, t, sub]) => `<button class="item" data-act="spOpen" data-k="${k}"><span class="ic" style="background:var(--soft)">${i}</span><span class="mid"><b>${esc(t)}</b><small>${esc(sub)}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`).join('')}</div>`).join('') + '<div class="hint center" style="margin-top:18px">Ledger v8.2 · screens ' + APP_BUILD + (AND ? ' · phone app ' + esc(andInfo().version || '?') : '') + '</div>';
 }
 ACT.spOpen = el => { U.sp = el.dataset.k; try { history.pushState({ sp: 1 }, ''); } catch (e) { } U.fresh = true; render(); window.scrollTo(0, 0); };
 ACT.spBack = () => { if (history.state && history.state.sp) history.back(); else { U.sp = null; U.fresh = true; render(); window.scrollTo(0, 0); } };
