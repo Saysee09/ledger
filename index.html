@@ -320,6 +320,18 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .bd{background:var(--soft);border-radius:18px;padding:14px 12px;display:flex;flex-direction:column;gap:2px;opacity:.55;filter:grayscale(1)}
 .bd span{font-size:1.8rem}.bd b{font-size:.86rem}.bd small{font-size:.7rem;color:var(--mute);font-weight:600}
 .bd.ok{opacity:1;filter:none;background:color-mix(in srgb,var(--acc) 10%,var(--card));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 35%,transparent)}
+.srch2{display:flex;gap:8px}.srch2 input{flex:1;min-width:0}
+.askb{flex:0 0 auto;height:48px;padding:0 14px;border-radius:14px;background:linear-gradient(135deg,#8B7BFF,#5B5BF7);color:#fff;font-weight:800;font-size:.84rem;box-shadow:0 6px 16px rgba(91,91,247,.3)}
+.a-hero{text-align:center;padding:8px 6px 4px}.a-hero b{display:block;font-size:1.05rem;font-weight:800;margin-top:6px}.a-hero small{display:block;color:var(--mute);font-size:.78rem;margin-top:4px;line-height:1.45}
+.a-ic{width:56px;height:56px;margin:0 auto;border-radius:18px;display:grid;place-items:center;font-size:1.6rem;background:linear-gradient(135deg,#8B7BFF,#5B5BF7);box-shadow:0 10px 24px rgba(91,91,247,.35)}
+.a-q{margin:16px 0 8px auto;max-width:85%;width:fit-content;background:var(--acc);color:#fff;padding:9px 14px;border-radius:18px 18px 4px 18px;font-weight:700;font-size:.88rem}
+.a-a{background:var(--soft);border-radius:18px 18px 18px 4px;padding:12px 14px;max-width:100%}
+.a-a .chip{background:var(--card)!important;color:var(--acc);border:1px solid color-mix(in srgb,var(--acc) 25%,transparent)!important}
+.a-big{font-size:1.6rem;font-weight:800;letter-spacing:-.03em}.a-big small{font-size:.85rem;color:var(--mute);font-weight:700}
+.a-sub{font-size:.78rem;color:var(--mute);margin-top:4px;line-height:1.45;font-weight:600}
+.a-a .kv{background:var(--card);margin-top:10px}.a-a .group{background:var(--card);margin-top:10px}.a-a .a-bars{margin-top:8px}
+.a-bar{position:sticky;bottom:calc(-28px - env(safe-area-inset-bottom));display:flex;gap:8px;background:var(--card);padding:10px 0 4px;margin-top:14px}
+.a-bar input{flex:1;min-width:0}.a-bar .btn{height:48px;min-height:48px}
 .section-t{font-size:.72rem;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;margin:20px 6px 8px}
 </style>
 </head>
@@ -814,7 +826,7 @@ function renderHome() {
   const pl = pulseNow();
   h += `<div class="strip"><button class="acard" data-act="tab" data-t="insights" style="border-color:color-mix(in srgb,var(--acc) 30%,var(--line))"><span>💰 Free to spend</span><b>${inrS(freeTotal())}</b><small>${r2(tot - freeTotal()) > 0 ? inr(tot - freeTotal()) + ' in goals · total ' + inr(tot, 1) : 'Banks & cash, nothing reserved'}</small></button>${pl ? `<button class="acard" data-act="pulseOpen"><span>💗 Money Pulse</span><b style="color:${pl.col}">${pl.score}<small style="font-size:.7rem;color:var(--mute)"> /100</small></b><small>${pl.label} · this month</small></button>` : ''}${accs.map(a => { const b = C.bal[a.name] || 0, hd = C.held[a.name] || 0, pk = pockets(a.name).length; return `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>${ACC_T[a.type][0]} ${esc(a.name)}</span><b class="${b - hd < 0 || (a.type === 'card' && b < 0) ? 'red' : ''}">${a.type === 'card' ? (b < -.004 ? inr(-b) : inr(0)) : inr(b - hd)}</b><small>${a.type === 'card' ? (b < -.004 ? 'Due · bill day ' + cardDay(a) : 'No dues ✓') : hd > 0 ? inr(hd) + ' in goals · total ' + inr(b, 1) : pk ? 'Your share' : 'Free to spend'}</small></button>`; }).join('')}${oth.length ? oth.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}" style="border-style:dashed;box-shadow:none"><span>👥 ${esc(a.name)}</span><b class="mute">${inr(C.bal[a.name])}</b><small>${heldOwed(a.name) > 0 ? '<span class="red">You owe ' + inr(heldOwed(a.name), 1) + '</span>' : 'Held for others' + (a.keptIn ? ' · in ' + esc(a.keptIn) : '')}</small></button>`).join('') : ''}</div>`;
   h += inboxChip();
-  h += `<div class="search"><input type="search" placeholder="Search notes, category or account" value="${esc(U.q)}" data-in="q"></div>`;
+  h += `<div class="search srch2"><input type="search" placeholder="Search notes, category or account" value="${esc(U.q)}" data-in="q"><button class="askb" data-act="ask" aria-label="Ask Ledger">✨ Ask</button></div>`;
   h += `<div class="chips">${[{ name: 'all', label: 'All' }].concat(visCats()).map(c => `<button class="chip ${U.cat === c.name ? 'on' : ''}" data-act="catF" data-v="${esc(c.name)}">${c.label || c.icon + ' ' + esc(c.name)}</button>`).join('')}</div>`;
   h += `<div id="list">${homeList()}</div>`;
   return h;
@@ -2161,6 +2173,232 @@ ACT.plMon = el => { S.prefs.plan.months = +el.dataset.v; save(); const y = windo
 ACT.plApply = () => { if (!confirm('Set these amounts as your monthly category budgets? You can change them any time in Settings.')) return; const list = S.cfg.categories.map(c => U.plan && c.name in U.plan ? Object.assign({}, c, { budget: U.plan[c.name] }) : c); commit([cfgOp('categories', list)]); render(); toast('Budgets updated'); };
 
 /* =========================================================
+   ✨ ASK LEDGER — questions answered on this phone from your own entries.
+   No AI service, nothing leaves the phone. Understands periods, categories,
+   accounts, #tags, notes / payees and amounts ("50k", "1.5 lakh").
+   ========================================================= */
+const ASK_SUG = () => {
+  const tc = (() => { const by = {}; S.exp.filter(e => myX(e) && inP(e, shiftM(ym(), -1))).forEach(e => by[e.category] = (by[e.category] || 0) + e.amount); return Object.keys(by).sort((a, b) => by[b] - by[a])[0]; })();
+  const note = (() => { const f = {}; S.exp.filter(e => myX(e) && e.remarks && e.ts >= addDays(today(), -60)).forEach(e => { const k = e.remarks.replace(/ · .*$/, '').trim(); f[k] = (f[k] || 0) + 1; }); return Object.keys(f).sort((a, b) => f[b] - f[a])[0]; })();
+  const tag = allTags()[0], bank = live(a => a.type === 'bank' && mineA(a))[0];
+  return [
+    ['Spending', ['How much did I spend this month?', (tc || 'Food') + ' last month', 'Top 5 expenses last month', 'Where did my money go last month?', 'Compare this month with last month'].concat(tag ? ['How much on ' + tag + '?'] : [])],
+    ['Habits', [(note ? 'How many times ' + note.toLowerCase() + ' this month?' : 'How many times breakfast this month?'), 'When did I last pay rent?', 'Average daily spend last 3 months', 'What do I spend most on?', 'Weekend vs weekday spending']],
+    ['My money', ['What is my balance?', bank ? 'Balance in ' + bank.name : 'What is my net worth?', 'How much can I spend today?', 'Can I afford ₹50,000?', 'How much did I save last month?']],
+    ['Plans & dues', ['Credit card dues', 'Upcoming bills', 'Who owes me money?', 'How is my emergency fund?', 'How much have I invested?', 'My Money Pulse']]
+  ];
+};
+const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+const CAT_SYN = { food: ['food', 'eat', 'eating', 'meal', 'meals', 'lunch', 'dinner', 'restaurant', 'swiggy', 'zomato', 'groceries', 'grocery'], household: ['household', 'home', 'house', 'rent', 'electricity', 'bills'], transportation: ['transport', 'transportation', 'travel', 'commute', 'cab', 'uber', 'ola', 'auto', 'metro', 'train', 'railway', 'fuel', 'petrol'], 'personal & lifestyle': ['personal', 'lifestyle', 'shopping', 'clothes', 'fun', 'entertainment'], education: ['education', 'study', 'course', 'books', 'fees'], medical: ['medical', 'medicine', 'meds', 'doctor', 'health', 'hospital', 'pharmacy'], financial: ['financial', 'charges', 'fees', 'tax', 'insurance'], miscellaneous: ['misc', 'miscellaneous', 'other', 'others'] };
+/* "50k", "₹50,000", "1.5 lakh", "2L", "1 cr" → number */
+function askAmt(t) {
+  const m = t.match(/(?:₹|rs\.?|inr)?\s*(\d[\d,]*(?:\.\d+)?)\s*(k|thousand|l|lakh|lakhs|lac|cr|crore)?\b/i); if (!m) return null;
+  let v = parseFloat(m[1].replace(/,/g, '')); const u = (m[2] || '').toLowerCase();
+  if (u === 'k' || u === 'thousand') v *= 1e3; else if (/^(l|lakh|lakhs|lac)$/.test(u)) v *= 1e5; else if (/^(cr|crore)$/.test(u)) v *= 1e7;
+  return v > 0 ? v : null;
+}
+/* time words → { from, to, label, mo } (mo = months, for fair comparisons) */
+function askPeriod(t, def) {
+  const td = today(), m = ym(), mEnd = x => x + '-' + p2(daysIn(x)), R = (from, to, label, mo) => ({ from, to: to > td ? td : to, label, mo: mo || 0, given: true });
+  let x;
+  if (/\btoday\b/.test(t)) return R(td, td, 'today');
+  if (/\byesterday\b/.test(t)) { const y = addDays(td, -1); return R(y, y, 'yesterday'); }
+  if (/\bthis week\b/.test(t)) return R(monday(td), td, 'this week');
+  if (/\blast week\b/.test(t)) { const a = addDays(monday(td), -7); return R(a, addDays(a, 6), 'last week'); }
+  if ((x = t.match(/\b(?:last|past|previous)\s+(\d+)\s+(day|week|month|year)s?\b/))) { const n = +x[1], u = x[2]; const from = u === 'day' ? addDays(td, -(n - 1)) : u === 'week' ? addDays(td, -(7 * n - 1)) : u === 'month' ? shiftM(m, -(n - 1)) + '-01' : shiftM(m, -(12 * n - 1)) + '-01'; return R(from, td, 'last ' + n + ' ' + u + 's', u === 'month' ? n : u === 'year' ? 12 * n : 0); }
+  if (/\b(this|current) month\b|\bso far\b/.test(t)) return R(m + '-01', mEnd(m), 'this month', 1);
+  if (/\b(last|previous) month\b/.test(t)) { const p = shiftM(m, -1); return R(p + '-01', mEnd(p), mLabel(p), 1); }
+  if (/\b(last|previous) (fy|financial year)\b/.test(t)) { const a = (+fyStart(td).slice(0, 4) - 1) + '-04-01'; return R(a, fyStart(td).slice(0, 4) + '-03-31', fyLabel(a), 12); }
+  if (/\b(this )?(fy|financial year)\b/.test(t)) return R(fyStart(td), td, fyLabel(td), 12);
+  if (/\b(last|previous) year\b/.test(t)) { const y = +td.slice(0, 4) - 1; return R(y + '-01-01', y + '-12-31', String(y), 12); }
+  if (/\bthis year\b/.test(t)) { const y = td.slice(0, 4); return R(y + '-01-01', td, y, 12); }
+  if (/\b(all time|ever|overall|total so far)\b/.test(t)) return R('0000-01-01', td, 'all time');
+  for (let i = 0; i < 12; i++) {
+    const re = new RegExp('\\b' + MONTHS[i].slice(0, 3) + '[a-z]*\\.?\\b(?:\\s+(\\d{4}|\\d{2}))?'); if (!(x = t.match(re))) continue;
+    if (MONTHS[i] === 'may' && !/\bmay\s+(\d{2,4})\b|\b(in|of|during|for|since)\s+may\b/.test(t)) continue;
+    let y = x[1] ? (x[1].length === 2 ? 2000 + +x[1] : +x[1]) : +td.slice(0, 4); const mm = y + '-' + p2(i + 1);
+    const pick = !x[1] && mm > m ? (y - 1) + '-' + p2(i + 1) : mm;
+    if (new RegExp('\\bsince\\s+' + MONTHS[i].slice(0, 3)).test(t)) return R(pick + '-01', td, 'since ' + mLabel(pick), 0);
+    return R(pick + '-01', mEnd(pick), mLabel(pick), 1);
+  }
+  return def ? Object.assign({ given: false }, def) : null;
+}
+/* what the question is about: account, category, #tag or a word from your notes / bank names */
+function askSubject(t) {
+  const out = {};
+  const tg = t.match(/#[\p{L}\p{N}_-]+/u); if (tg) out.tag = tg[0].toLowerCase();
+  const accs = S.accounts.slice().sort((a, b) => b.name.length - a.name.length);
+  for (const a of accs) { const n = a.name.toLowerCase(), first = n.split(/\s+/)[0]; if (t.includes(n) || (first.length >= 3 && new RegExp('\\b' + first + '\\b').test(t) && (a.type !== 'card' || /\bcard\b/.test(t)) && !(a.type === 'card' && !/\bcard\b/.test(t)))) { if (a.type === 'card' && !/\bcard\b/.test(t) && accs.some(b => b !== a && b.name.toLowerCase().split(/\s+/)[0] === first)) continue; out.acc = a.name; break; } }
+  for (const c of S.cfg.categories) { const n = c.name.toLowerCase(); if (t.includes(n)) { out.cat = c.name; break; } }
+  if (!out.cat) for (const [k, words] of Object.entries(CAT_SYN)) { const c = S.cfg.categories.find(x => x.name.toLowerCase() === k); if (!c) continue; const w = words.find(w => new RegExp('\\b' + w + '\\b').test(t)); if (w) { out.catSoft = c.name; out.syn = w; break; } }
+  const kw = t.match(/\b(?:on|for|at|to|buying|bought|paid|pay|times|of)\s+(?:the\s+|my\s+|a\s+)?([a-z][a-z0-9&' .-]{1,30}?)(?=\s+(?:this|last|in|since|during|today|yesterday|from|vs|compare|so far|\d)|[?.!]|$)/);
+  const STOP = /^(it|me|my|money|spend|spending|average|total|much|many|what|food|this|last|month|week|year|today|budget|the|a|an|i|you|expenses?|bills?|everything|things|stuff|day|days|daily|account|bank)$/;
+  if (kw) { const w = kw[1].trim().replace(/\s+(in|on|for)$/, '').replace(/^((did|do|does|i|have|had|my|buy|bought|order|ordered|pay|paid|spend|spent|go|went|get|got|take|took|eat|ate|the|a)\s+)+/, ''); if (w && !STOP.test(w) && !(out.acc && out.acc.toLowerCase().includes(w)) && !MONTHS.some(mn => w.startsWith(mn.slice(0, 3)) && w.length <= mn.length)) out.kw = w; }
+  if (out.kw && out.cat && out.kw === out.cat.toLowerCase()) delete out.kw;
+  return out;
+}
+/* a word like "rent" or "metro" first matches your own notes / bank names; only if it never appears does it fall back to its category */
+const hayOf = e => ((e.remarks || '') + ' ' + (e.payee || '')).toLowerCase();
+function askWord(sub) {
+  const w = sub.kw || sub.syn; if (!w) return { mode: sub.catSoft ? 'cat' : 'none' };
+  if (S.exp.some(e => myX(e) && (hayOf(e).includes(w) || (sub.kw && e.category.toLowerCase().includes(w))))) return { mode: 'word', w };
+  return { mode: sub.catSoft ? 'cat' : sub.kw ? 'word' : 'none', w };
+}
+function askFilter(sub, from, to) {
+  const W = askWord(sub);
+  return S.exp.filter(e => { const d = e.ts.slice(0, 10); if (d < from || d > to || !myX(e)) return false;
+    if (sub.acc && e.account !== sub.acc) return false; if (sub.tag && !tagsOf(e.remarks).includes(sub.tag)) return false;
+    if (sub.cat && e.category !== sub.cat) return false;
+    if (W.mode === 'word') return hayOf(e).includes(W.w) || (!!sub.kw && e.category.toLowerCase().includes(W.w));
+    if (W.mode === 'cat') return e.category === sub.catSoft;
+    return true; });
+}
+const subLabel = s => { const W = askWord(s), what = [s.tag, s.cat || (W.mode === 'cat' ? s.catSoft + (s.kw || s.syn ? ' (no "' + (s.kw || s.syn) + '" in your notes)' : '') : ''), W.mode === 'word' ? '"' + W.w + '"' : ''].filter(Boolean).join(' '); return (what ? 'on ' + what : '') + (s.acc ? (what ? ' ' : '') + 'from ' + s.acc : ''); };
+const subWord = s => (s.kw || s.syn || s.cat || s.catSoft || s.tag || '');
+/* answer building blocks */
+const aBig = (v, sub) => `<div class="a-big">${v}</div>${sub ? `<div class="a-sub">${sub}</div>` : ''}`;
+const aRows = rows => `<div class="kv a-kv">${rows.map(([k, v, cls]) => `<div><span>${k}</span><b class="${cls || ''}">${v}</b></div>`).join('')}</div>`;
+const aList = list => list.length ? `<div class="group a-list">${list.map(expRow).join('')}</div>` : '';
+const aBars = (pairs, tot) => `<div class="a-bars">${pairs.map(([n, v]) => { const c = cat(n); return `<div class="brow"><div class="h"><span>${c.icon} ${esc(n)}</span><span><b>${inr(v)}</b> <small class="mute">${tot ? Math.round(v / tot * 100) : 0}%</small></span></div><div class="bar"><i style="width:${tot ? v / tot * 100 : 0}%;background:${c.color}"></i></div></div>`; }).join('')}</div>`;
+function prevOf(P) { const C2 = cmpRanges({ from: P.from, to: P.to, mo: P.mo }); return C2.prev; }
+function chgLine(cur, prev, good, word) { const c = pctCh(cur, prev); if (c == null) return prev === 0 && cur > 0 ? 'nothing in ' + word : ''; return `<span class="${!c ? '' : (c > 0) === (good > 0) ? 'green' : 'red'}">${c > 0 ? '▲' : c < 0 ? '▼' : ''} ${c ? Math.abs(c) + '%' : 'same as'}</span> ${c ? 'vs ' : ''}${word} (${inr(prev)})`; }
+function askAnswer(q) {
+  const t = ' ' + q.toLowerCase().replace(/[“”"’]/g, "'").replace(/\s+/g, ' ').trim() + ' ', td = today(), MONTH = { from: ym() + '-01', to: td, label: 'this month', mo: 1 };
+  if (!S.accounts.length) return { h: 'Add your accounts first, then ask me anything about your money.' };
+  const sub = askSubject(t), P = askPeriod(t, MONTH), F = [];
+  const has = re => re.test(t);
+  /* help */
+  if (has(/^\s*(help|hi|hello|hey|what can you do|\?)\s*$/)) return { h: 'Ask me about your spending, balances, bills, goals, loans or "can I afford…". Try one of these:', sug: true };
+  /* can I afford */
+  if (has(/afford|can i buy|should i buy/)) {
+    const amt = askAmt(t); if (!amt) return { h: 'How much is it? Try "Can I afford ₹50,000?"' };
+    const fr = freeTotal(), F2 = cashflow(), mCost = F2.sp + F2.emi, after = fr - amt, cover = mCost > 0 ? after / mCost : null, mo = F2.spare > 0 ? Math.ceil(Math.max(0, amt - fr) / F2.spare) : null;
+    const ok = after >= 0 && (cover == null || cover >= 3), tight = after >= 0 && !ok;
+    return { h: aBig(ok ? '✅ Yes' : tight ? '⚠️ Yes, but tight' : '❌ Not right now', `${inr(amt)} vs ${inr(fr)} free to spend`) + aRows([['Free money after buying', inr(after), after < 0 ? 'red' : ''], ['Your monthly costs (avg)', inr(mCost)], ['Backup left', cover == null ? '—' : after < 0 ? 'none' : (Math.round(cover * 10) / 10) + ' months of costs', cover != null && cover < 3 ? 'red' : 'green'], ['You save a month (avg)', inr(F2.spare), F2.spare < 0 ? 'red' : '']]) + `<div class="a-sub">${ok ? 'You keep 3+ months of costs as backup after buying it.' : tight ? 'You can pay, but less than 3 months of costs stay as backup. Waiting ' + (mo != null && F2.spare > 0 ? Math.max(1, Math.ceil((amt + 3 * mCost - fr) / F2.spare)) + ' months' : 'a bit') + ' keeps you safe.' : mo ? 'At your usual savings it takes about ' + mo + ' month' + (mo > 1 ? 's' : '') + ' to save the gap.' : 'You are not saving each month right now, so this needs a plan first.'}</div>`, f: ['Loan calculator for ' + fmtINR(amt, 1), 'How much can I spend today?'] };
+  }
+  /* safe to spend */
+  if (has(/safe to spend|can i spend|left to spend|budget left|how much (can|should) i spend|spend today/)) {
+    const m = ym(), dl = daysIn(m) - new Date().getDate() + 1, bud = r2(visCats().reduce((s, c) => s + (+c.budget || 0), 0)), sp = sum(S.exp.filter(e => inP(e, m) && myX(e))), fr = freeTotal();
+    if (bud > 0) return { h: aBig(inr(Math.max(0, bud - sp) / dl) + '<small> /day</small>', `safe for the next ${dl} days to stay in your ${inr(bud)} budget`) + aRows([['Spent this month', inr(sp)], ['Budget left', inr(bud - sp), bud - sp < 0 ? 'red' : 'green'], ['Free money in banks', inr(fr)]]), f: ['Where did my money go this month?'] };
+    return { h: aBig(inr(Math.max(0, fr) / dl) + '<small> /day</small>', `your ${inr(fr)} free money spread over ${dl} days till month end`) + `<div class="a-sub">Set category budgets (Settings → Categories) for a sharper number.</div>`, f: ['What is my balance?'] };
+  }
+  /* loans / owe */
+  if (has(/\bowe|owes|lent|borrow|loan|iou|pay back|mom'?s money/)) {
+    const owe = S.loans.filter(l => l.dir === 'owe' && (C.lout[l.id] || 0) > .004), owed = S.loans.filter(l => l.dir === 'owed' && (C.lout[l.id] || 0) > .004);
+    if (!owe.length && !owed.length) return { h: aBig('All settled 🎉', 'Nobody owes you and you owe nobody.') };
+    return { h: aRows(owed.map(l => ['👤 ' + esc(l.name) + ' owes you', inr(C.lout[l.id]), 'green']).concat(owe.map(l => ['🤝 You owe ' + esc(l.name), inr(C.lout[l.id]), 'red']))) + `<div class="a-sub">Owed to you ${inr(loanTotal('owed'))} · you owe ${inr(loanTotal('owe'))}</div>`, act: ['Open Loans', 'askGo', 'loans'] };
+  }
+  /* credit card */
+  if (has(/credit card|card due|card bill|card dues|\bcards?\b.*\b(due|pay|bill)/)) {
+    const cs = live(a => a.type === 'card' && mineA(a)); if (!cs.length) return { h: 'You have no credit card added. Add it in Settings → Accounts with type "Credit card".' };
+    return { h: aRows(cs.map(a => ['💳 ' + esc(a.name), cardDue(a) > .004 ? inr(cardDue(a)) + ' · bill ' + cardDay(a) + 'th' : 'No dues ✓', cardDue(a) > .004 ? 'red' : 'green'])), act: cs.some(a => cardDue(a) > .004) ? ['Pay now', 'payCard', cs.find(a => cardDue(a) > .004).name] : null };
+  }
+  /* upcoming bills */
+  if (has(/upcoming|bills? (due|coming|left|pending)|what.*due|due (this|next)|reminders?|emi due/)) {
+    const L = S.rem.filter(r => r.active !== false && remDueDate(r)).sort((a, b) => remDueDate(a).localeCompare(remDueDate(b))).slice(0, 6), E = S.emis.filter(m => !['done', 'off'].includes(emiState(m).st));
+    if (!L.length && !E.length) return { h: 'No bills or EMIs set up. Add them in Plan → Bills.' };
+    return { h: aRows(L.map(r => [remIcon(r) + ' ' + esc(r.name), (+r.amount ? inr(r.amount) + ' · ' : '') + remDueLabel(r)]).concat(E.map(m => ['📆 ' + esc(m.name), inr(m.amount) + ' · ' + esc(emiState(m).label)]))), act: ['Open bills', 'askGo', 'rem'] };
+  }
+  /* goals */
+  if (has(/goal|emergency|\bef\b|saving for|fund/)) {
+    const gs = S.goals.filter(g => !g.archived); if (!gs.length) return { h: 'No goals yet. Create one in Plan → Goals.' };
+    const g1 = gs.find(g => t.includes(g.name.toLowerCase().split(' ')[0])) || null, list = g1 ? [g1] : gs;
+    return { h: aRows(list.map(g => { const s = C.saved[g.id] || 0, tg = +g.target || 0, gp = goalPlan(g); return [g.icon + ' ' + esc(g.name), inr(s) + (tg ? ' of ' + inr(tg, 1) + ' · ' + Math.round(s / tg * 100) + '%' : '') + (gp && gp.need ? ' · save ' + inr(gp.need) + '/mo' : ''), tg && s >= tg ? 'green' : '']; })) + (g1 && g1.name.toLowerCase().includes('emergency') ? `<div class="a-sub">That covers ${(() => { const F2 = cashflow(), mc = F2.sp + F2.emi; return mc ? Math.round((C.saved[g1.id] || 0) / mc * 10) / 10 + ' months of your usual costs' : 'some months of costs'; })()}. 6 months is a strong cushion.</div>` : ''), act: ['Open goals', 'askGo', 'goals'] };
+  }
+  /* money pulse */
+  if (has(/pulse|score|how am i doing|financial health|my health/)) { const p = pulseNow(); if (!p) return { h: 'Not enough data for a score yet. Keep logging for a couple of weeks.' }; const tips = p.factors.filter(f => f.sc != null && f.tip && f.sc < f.w * .9).sort((a, b) => (b.w - b.sc) - (a.w - a.sc)).slice(0, 2); return { h: aBig(`<span style="color:${p.col}">${p.score}</span><small> /100</small>`, p.label + ' · this month') + (tips.length ? aRows(tips.map(f => ['💡 ' + esc(f.tip), '+' + Math.round((f.w - f.sc) / p.W * 100) + ' pts', 'green'])) : ''), act: ['Open Money Pulse', 'pulseOpen', ''] }; }
+  /* investments */
+  if (has(/invest|\bsip\b|stocks?|mutual|\bipo\b|profit|groww|portfolio/)) {
+    const buys = S.inv.filter(isBuy), sold = S.inv.filter(e => !isBuy(e)), inR = e => e.ts.slice(0, 10) >= P.from && e.ts.slice(0, 10) <= P.to;
+    const still = r2(sum(buys) - sold.reduce((s, e) => s + (+e.cost || 0), 0)), prof = r2(sum(sold) - sold.reduce((s, e) => s + (+e.cost || 0), 0));
+    return { h: aBig(inr(still), 'still invested') + aRows([['Put in ' + (P.given ? P.label : 'this month'), inr(sum(buys.filter(inR)))], ['Profit booked (all sales)', (prof >= 0 ? '+' : '−') + inr(Math.abs(prof)), prof >= 0 ? 'green' : 'red']].concat(holdings().filter(x => x.put > .004).slice(0, 4).map(x => ['📈 ' + esc(x.name), inr(x.put)]))), act: ['Open investments', 'askGo', 'inv'] };
+  }
+  /* weekend vs weekday */
+  if (has(/weekend|weekday/)) { const d = deepDive().find(x => x[1].startsWith('Weekend')); return { h: d ? `<div class="a-sub" style="font-size:.9rem;color:var(--ink)">${d[2]}</div>` : 'Need a few more weeks of entries to compare weekends and weekdays.' }; }
+  /* balance / net worth (unless clearly a spending question) */
+  const spendQ = has(/spen|spent|expense|cost|paid|pay |bought|buy |purchase/);
+  if (!spendQ && (has(/balance|net worth|how much (money )?(do )?i have|in my (account|bank)|money do i have|worth/) || (sub.acc && has(/how much (money )?(is )?(there )?(left )?in\b|^\s*(in )?\w+( bank)?\s*$/)))) {
+    if (sub.acc) { const a = acc(sub.acc), b = C.bal[a.name] || 0, hd = C.held[a.name] || 0; return { h: aBig(inr(b), esc(a.name) + (hd ? ' · ' + inr(hd) + ' in goals, ' + inr(b - hd) + ' free' : '')), act: ['Open ' + a.name, 'acctOpen', a.name] }; }
+    const nw = nwAt(null), accs = live(a => mineA(a) && a.type !== 'card');
+    return { h: aBig(inr(freeTotal()), 'free to spend in banks & cash') + aRows(accs.map(a => [(ACC_T[a.type] || ['•'])[0] + ' ' + esc(a.name), inr((C.bal[a.name] || 0) - (holderType(a) ? C.held[a.name] || 0 : 0)) + (holderType(a) && C.held[a.name] ? ' free' : '')]).concat([['🎯 In goals', inr(r2(Object.values(C.saved).reduce((s, v) => s + v, 0)))], ['<b style="color:var(--ink)">Net worth</b>', inr(nw.nw)]])), f: ['How much can I spend today?'] };
+  }
+  /* compare periods */
+  if (has(/compare|\bvs\b|versus|more than last|less than last|than (last|previous)/)) {
+    const cur = P.given ? P : MONTH, pv = prevOf(cur), a = sum(askFilter(sub, cur.from, cur.to)), b = sum(askFilter(sub, pv.from, pv.to));
+    const ca = {}, cb = {}; askFilter(sub, cur.from, cur.to).forEach(e => ca[e.category] = (ca[e.category] || 0) + e.amount); askFilter(sub, pv.from, pv.to).forEach(e => cb[e.category] = (cb[e.category] || 0) + e.amount);
+    const moves = uniq(Object.keys(ca).concat(Object.keys(cb))).map(k => [k, (ca[k] || 0) - (cb[k] || 0)]).sort((x, y) => Math.abs(y[1]) - Math.abs(x[1])).slice(0, 4);
+    return { h: aBig(inr(a), 'spent ' + (subLabel(sub) ? subLabel(sub) + ' ' : '') + cur.label + (cur.to >= td && cur.mo ? ' (so far)' : '')) + `<div class="a-sub">${chgLine(a, b, -1, rLabel(pv.from, pv.to))}${cur.to >= td ? ' · same number of days' : ''}</div>` + (moves.length ? aRows(moves.map(([k, d]) => [cat(k).icon + ' ' + esc(k), (d >= 0 ? '+' : '−') + inr(Math.abs(d)), d > 0 ? 'red' : 'green'])) : '') };
+  }
+  /* savings */
+  if (has(/\bsave|saved|savings/)) {
+    const p = P.given ? P : { from: shiftM(ym(), -1) + '-01', to: shiftM(ym(), -1) + '-' + p2(daysIn(shiftM(ym(), -1))), label: mLabel(shiftM(ym(), -1)), mo: 1 }, s = bare(() => pstats(p.from, p.to)), kept = r2(s.inc - s.spent - s.emis);
+    if (!s.inc) return { h: 'No income logged for ' + p.label + ', so I cannot work out savings. Log your salary under Money → Income.' };
+    return { h: aBig(inr(kept), 'kept from income in ' + p.label + ' · ' + s.rate + '% saved') + aRows([['Income', inr(s.inc), 'green'], ['Spent', '−' + inr(s.spent)], ['EMIs', '−' + inr(s.emis)], ['Invested (part of saved)', inr(s.inv), 'blue']]) + `<div class="a-sub">${s.rate >= 30 ? 'Excellent. 30%+ is a great savings rate.' : s.rate >= 20 ? 'Good. Getting to 30% would max your Money Pulse savings points.' : 'Under 20%. The Budget plan in Plan can show where to trim.'}</div>` };
+  }
+  /* income */
+  if (has(/\bearn|earned|income|salary|received|credited|got paid/)) {
+    const p = P.given ? P : MONTH, L = S.inc.filter(e => !isOthers(e.account) && e.ts.slice(0, 10) >= p.from && e.ts.slice(0, 10) <= p.to && (!sub.acc || e.account === sub.acc) && (!has(/salary/) || /salary/i.test(e.source))), by = {};
+    L.forEach(e => by[e.source] = (by[e.source] || 0) + e.amount);
+    return { h: aBig(inr(sum(L)), (has(/salary/) ? 'salary' : 'income') + ' ' + p.label) + (Object.keys(by).length > 1 ? aRows(Object.entries(by).sort((a, b) => b[1] - a[1]).map(([k, v]) => ['💰 ' + esc(k), inr(v)])) : ''), f: ['How much did I save ' + p.label + '?'] };
+  }
+  /* last time */
+  if (has(/when did i (last|last time)|last time i|when was (my )?last/)) {
+    const s2 = Object.assign({}, sub); if (!s2.kw && !s2.cat && !s2.catSoft && !s2.tag) { const w = t.replace(/.*\b(last|time)\b\s*(i\s+)?(pay|paid|buy|bought|spend|spent|order|ordered|go|went|have|had)?\s*(for|on|at|to)?\s*/, '').replace(/[?.! ]+$/, '').trim(); if (w) s2.kw = w; }
+    const L = askFilter(s2, '0000-01-01', td).sort((a, b) => b.ts.localeCompare(a.ts));
+    if (!L.length) return { h: 'I could not find "' + esc(subWord(s2) || 'that') + '" in your expenses.' };
+    const e = L[0], ago = dayDiff(e.ts.slice(0, 10), td);
+    return { h: aBig(dLabel(e.ts.slice(0, 10)), (ago ? ago + ' day' + (ago > 1 ? 's' : '') + ' ago · ' : '') + inr(e.amount)) + aList(L.slice(0, 3)) + (L.length > 1 ? `<div class="a-sub">${L.length} times in all · usually every ${Math.max(1, Math.round(dayDiff(L[L.length - 1].ts.slice(0, 10), e.ts.slice(0, 10)) / Math.max(1, L.length - 1)))} days</div>` : '') };
+  }
+  /* how many times */
+  if (has(/how many times|how often|how many (entries|transactions|expenses)|count of|number of/)) {
+    const s2 = Object.assign({}, sub); if (!s2.kw && !s2.cat && !s2.catSoft && !s2.tag && !s2.acc) { const m = t.match(/(?:times|often)\s+(?:did i\s+|i\s+)?(?:have|had|buy|bought|order|ordered|pay|paid|spend on|go to)?\s*(?:for|on|at)?\s*([a-z][a-z ]{1,25}?)(?=\s+(this|last|in|since|today)|[?.!]|\s*$)/); if (m && !/^(i|did|do)$/.test(m[1].trim())) s2.kw = m[1].trim(); }
+    const L = askFilter(s2, P.from, P.to);
+    return { h: aBig(L.length + ' time' + (L.length === 1 ? '' : 's'), (subLabel(s2).replace(/^on /, '') || 'expenses') + ' · ' + P.label) + (L.length ? `<div class="a-sub">${inr(sum(L))} in total · avg ${inr(sum(L) / L.length)} each</div>` : '') + aList(L.sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 3)) };
+  }
+  /* top / biggest */
+  if (has(/\btop\b|biggest|largest|most expensive|highest/) && !has(/category|categories/)) {
+    const n = Math.min(10, +((t.match(/\btop\s+(\d+)/) || [])[1]) || 5), L = askFilter(sub, P.from, P.to).sort((a, b) => b.amount - a.amount);
+    return { h: `<div class="a-sub" style="margin-bottom:6px">Top ${Math.min(n, L.length)} ${subLabel(sub) ? subLabel(sub) + ' ' : ''}expenses · ${P.label}</div>` + (L.length ? aList(L.slice(0, n)) : '<div class="a-sub">No expenses in that period.</div>') };
+  }
+  /* breakdown / spend most on */
+  if (has(/spend (the )?most|most on|where did (my|the) money go|where.*money.*go|breakdown|by category|categories|split up/)) {
+    const Q = P.given ? P : (has(/most/) ? { from: shiftM(ym(), -2) + '-01', to: td, label: 'last 3 months', mo: 3 } : P), L = askFilter(sub, Q.from, Q.to), by = {}; L.forEach(e => by[e.category] = (by[e.category] || 0) + e.amount); const pairs = Object.entries(by).sort((a, b) => b[1] - a[1]), tot = sum(L);
+    if (!pairs.length) return { h: 'No spending in ' + Q.label + '.', f: ['Where did my money go last month?'] };
+    const P2 = Q; return { h: aBig(inr(tot), 'spent ' + P2.label + ' · most on ' + cat(pairs[0][0]).icon + ' ' + esc(pairs[0][0])) + aBars(pairs.slice(0, 6), tot), f: ['Compare ' + (P.label === 'this month' ? 'this month' : P.label) + ' with the month before'] };
+  }
+  /* averages */
+  if (has(/average|\bavg\b|per day|a day|daily|per month|a month|monthly/)) {
+    const p = P.given ? P : { from: shiftM(ym(), -2) + '-01', to: td, label: 'last 3 months', mo: 3 }, L = askFilter(sub, p.from, p.to), days = Math.max(1, dayDiff(p.from < firstData() ? firstData() : p.from, p.to > td ? td : p.to) + 1), tot = sum(L);
+    const mon = has(/month/) && !has(/last \d+ months?|this month|last month/) || has(/per month|a month|monthly/);
+    return { h: aBig(mon ? inr(tot / days * 30.44) + '<small> /month</small>' : inr(tot / days) + '<small> /day</small>', 'average ' + (subLabel(sub) || 'spending') + ' · ' + p.label) + aRows([mon ? ['Per day', inr(tot / days)] : ['Per month', inr(tot / days * 30.44)], ['Per week', inr(tot / days * 7)], ['Total', inr(tot)], ['Entries', String(L.length)]]) };
+  }
+  /* default: how much spent (also any question that names a category / note / account / tag) */
+  if (spendQ || sub.cat || sub.catSoft || sub.kw || sub.tag || sub.acc || P.given) {
+    const L = askFilter(sub, P.from, P.to).sort((a, b) => b.ts.localeCompare(a.ts)), tot = sum(L), pv = P.from > '0000' && P.mo ? prevOf(P) : null, b = pv ? sum(askFilter(sub, pv.from, pv.to)) : null;
+    if (!L.length && subWord(sub)) { const ever = askFilter(sub, '0000-01-01', td).sort((a, b) => b.ts.localeCompare(a.ts)); if (ever.length) return { h: aBig(inr(0), 'spent ' + subLabel(sub) + ' ' + P.label) + `<div class="a-sub">Last time was ${dLabel(ever[0].ts.slice(0, 10))} (${inr(ever[0].amount)}) · ${inr(sum(ever))} in total across ${ever.length} entr${ever.length === 1 ? 'y' : 'ies'}.</div>`, f: [subWord(sub) + ' last month', subWord(sub) + ' all time'] }; if (sub.kw) return { h: 'I could not find "' + esc(sub.kw) + '" in any expense. I search your notes, bank SMS names and categories.', f: ['How much did I spend ' + P.label + '?'] }; }
+    return { h: aBig(inr(tot), 'spent ' + (subLabel(sub) ? subLabel(sub) + ' ' : '') + P.label + ' · ' + L.length + ' entr' + (L.length === 1 ? 'y' : 'ies')) + (pv && (b || tot) ? `<div class="a-sub">${chgLine(tot, b, -1, rLabel(pv.from, pv.to))}</div>` : '') + aList(L.slice(0, 4)) + (L.length > 4 ? `<div class="a-sub">+${L.length - 4} more</div>` : ''), f: subWord(sub) ? ['How many times ' + subWord(sub) + ' ' + P.label + '?', 'Average ' + subWord(sub) + ' per month'] : ['Where did my money go ' + P.label + '?', 'Top 5 expenses ' + P.label] };
+  }
+  return { h: 'I did not get that one. I can answer questions about spending, income, balances, bills, goals, loans and "can I afford…". Try:', sug: true };
+}
+/* chat sheet */
+function askSheet(q) {
+  U.ask = U.ask || [];
+  if (q) { let a; try { a = askAnswer(q); } catch (e) { a = { h: 'Something went wrong reading that. Try asking it another way.' }; } U.ask.push({ q, a }); U.ask = U.ask.slice(-12); }
+  const sugHtml = () => ASK_SUG().map(([g, list]) => `<div class="ibx-h"><span>${g}</span></div><div class="chips wrap">${list.map(x => `<button class="chip" data-act="askQ" data-q="${esc(x)}">${esc(x)}</button>`).join('')}</div>`).join('');
+  let h = '';
+  if (!U.ask.length) h = `<div class="a-hero"><div class="a-ic">✨</div><b>Ask anything about your money</b><small>Answers come from your own entries, worked out on this phone. Nothing is sent anywhere.</small></div>` + sugHtml();
+  else h = U.ask.map(({ q, a }) => `<div class="a-q">${esc(q)}</div><div class="a-a">${a.h}${a.act ? `<button class="btn sec sm" style="margin-top:10px" data-act="${a.act[1]}" data-n="${esc(a.act[2])}" data-k="${esc(a.act[2])}">${esc(a.act[0])} ›</button>` : ''}${a.f ? `<div class="chips wrap" style="margin-top:8px">${a.f.map(x => `<button class="chip" data-act="askQ" data-q="${esc(x)}">${esc(x)}</button>`).join('')}</div>` : ''}</div>${a.sug ? sugHtml() : ''}`).join('') + `<button class="more" data-act="askSug">💡 Show example questions</button>`;
+  openSheet('✨ Ask Ledger', `<div id="askLog">${h}</div><div class="a-bar"><input id="askIn" placeholder="e.g. Food last month" autocomplete="off" enterkeyhint="send" data-enter="1"><button class="btn sm" data-act="askSend" aria-label="Ask">Ask</button></div>`, 'tall');
+  const body = $('#shBody'); if (body && U.ask.length) { const qs = $$('#askLog .a-q'); const last = qs[qs.length - 1]; if (last) body.scrollTop = last.offsetTop - 8; }
+  const i = $('#askIn'); if (i) i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); ACT.askSend(); } };
+}
+ACT.ask = () => askSheet();
+ACT.askQ = el => { const q = el.dataset.q, m = q.match(/^Loan calculator for (.+)$/); if (m) { shut(); S.prefs.calc = Object.assign({}, S.prefs.calc, { price: String(askAmt(m[1].toLowerCase()) || '') }); save(); U.pseg = 'calc'; setTab('goals'); return; } askSheet(q); };
+ACT.askSend = () => { const v = ($('#askIn') || {}).value || ''; if (v.trim()) askSheet(v.trim()); };
+ACT.askSug = () => { U.ask = []; askSheet(); };
+ACT.askGo = el => { shut(); const k = el.dataset.k; if (k === 'loans' || k === 'inv') { U.mseg = k; setTab('money'); } else { U.pseg = k; setTab('goals'); } };
+
+/* =========================================================
    LOAN & EMI CALCULATOR (projection only, checks it against your real Ledger numbers)
    ========================================================= */
 const LOAN_P = [['🏠 Home', 8.5, 240], ['🚗 Car', 9.5, 60], ['🏍️ Bike', 11, 36], ['📱 Phone / gadget', 14, 12], ['💼 Personal', 12.5, 36], ['🎁 No-cost EMI', 0, 6]];
@@ -2540,6 +2778,7 @@ function renderInsights() {
   if (f.range === 'month' || f.range === 'year' || f.range === 'fy') h += monthNav(f.range === 'fy' ? 'fy' : f.range === 'year');
   if (f.range === 'custom') h += `<div class="grid2" style="margin-bottom:12px"><input type="date" data-in="fFrom" value="${r.from}" max="${today()}"><input type="date" data-in="fTo" value="${r.to}" max="${today()}"></div>`;
   h += `<div class="chips"><button class="chip ${fc ? 'on' : ''}" data-act="fOpen">⚙ Filters${fc ? ' · ' + fc : ''}</button>${f.accs.map(a => `<button class="chip x" data-act="fDrop" data-k="accs" data-v="${esc(a)}">${esc(a)} ✕</button>`).join('')}${f.cats.map(a => `<button class="chip x" data-act="fDrop" data-k="cats" data-v="${esc(a)}">${cat(a).icon} ${esc(a)} ✕</button>`).join('')}${parseAmt(f.min) > 0 ? `<button class="chip x" data-act="fDrop" data-k="min">≥ ${fmtINR(parseAmt(f.min))} ✕</button>` : ''}${f.q.trim() ? `<button class="chip x" data-act="fDrop" data-k="q">"${esc(f.q.trim())}" ✕</button>` : ''}</div>`;
+  h += `<button class="alert info" data-act="ask" style="width:100%;text-align:left;border-left-color:var(--acc)"><span class="ic" style="background:var(--acc2)">✨</span><span class="mid"><b>Ask Ledger</b><small>"Food last month" · "Can I afford ₹50,000?" · "Top 5 expenses"</small></span><span class="ago">Ask</span></button>`;
   const plI = pulseNow();
   if (plI) h += `<button class="alert info" data-act="pulseOpen" style="width:100%;text-align:left;border-left-color:${plI.col}"><span class="ic" style="background:var(--acc2)">💗</span><span class="mid"><b>Money Pulse · <span style="color:${plI.col}">${plI.score} ${plI.label}</span></b><small>This month's financial health. Tap for day, week, year and tips.</small></span><span class="ago">Open</span></button>`;
   h += `<div class="hero"><div class="hl">Net worth today</div><div class="hv">${inrS(nw)}</div><div class="hs">Banks & cash <b>${inr(liq, 1)}</b> · Investments <b>${inr(invv, 1)}</b>${owedCard ? ' · Cards <b>' + inr(owedCard, 1) + '</b>' : ''}${loanOwe || loanOwed ? ' · Loans <b>' + inr(loanOwed - loanOwe, 1) + '</b>' : ''}</div></div>`;
