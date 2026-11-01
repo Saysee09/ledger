@@ -23,6 +23,7 @@ public class SmsReceiver extends BroadcastReceiver {
         String text = body.toString();
         if (!SmsStore.looksFinancial(sender, text)) return;
         SmsStore.add(context, text, SmsStore.now());
+        Widgets.bumpSort(context);
         if (!MainActivity.ping()) SmsStore.notify(context, text);
     }
 }

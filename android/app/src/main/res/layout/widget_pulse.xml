@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/w_root" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@drawable/widget_bg" android:padding="16dp" android:gravity="center">
+    <TextView android:id="@+id/w_title" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="💗 Money Pulse" android:textColor="#FFB8B3E6" android:textSize="12sp" android:textStyle="bold" android:maxLines="1" />
+    <TextView android:id="@+id/w_value" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="₹ —" android:textColor="#FFFFFFFF" android:textSize="34sp" android:textStyle="bold" android:maxLines="1" android:layout_marginTop="2dp" />
+    <TextView android:id="@+id/w_sub" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Open Ledger once" android:textColor="#FFD9D6F5" android:textSize="12sp" android:maxLines="1" android:ellipsize="end" android:layout_marginTop="4dp" />
+    <TextView android:id="@+id/w_delta" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textColor="#FFD9D6F5" android:textSize="11sp" android:maxLines="1" />
+</LinearLayout>

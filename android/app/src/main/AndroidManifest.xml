@@ -37,5 +37,22 @@
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>
         </receiver>
+
+        <receiver android:name=".FreeWidget" android:exported="false" android:label="Ledger · Free to spend">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_free_info" />
+        </receiver>
+        <receiver android:name=".MonthWidget" android:exported="false" android:label="Ledger · This month">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_month_info" />
+        </receiver>
+        <receiver android:name=".NeedsWidget" android:exported="false" android:label="Ledger · Needs you">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_needs_info" />
+        </receiver>
+        <receiver android:name=".PulseWidget" android:exported="false" android:label="Ledger · Money Pulse">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_pulse_info" />
+        </receiver>
     </application>
 </manifest>

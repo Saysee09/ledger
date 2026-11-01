@@ -73,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
     private WebView web;
     private boolean openPending;
+    private String widgetAction;
     private ValueCallback<Uri[]> fileCb;
     private final Handler ui = new Handler(Looper.getMainLooper());
 
@@ -99,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle saved) {
         super.onCreate(saved);
         openPending = getIntent() != null && getIntent().getBooleanExtra(EXTRA_PENDING, false);
+        widgetAction = getIntent() != null ? getIntent().getStringExtra(Widgets.EXTRA) : null;
         web = new WebView(this);
         setContentView(web);
 
@@ -110,6 +112,8 @@ public class MainActivity extends AppCompatActivity {
         s.setSupportMultipleWindows(false);
         s.setJavaScriptCanOpenWindowsAutomatically(true);
         s.setMediaPlaybackRequiresUserGesture(true);
+        /* respect the phone's bigger-text setting, but cap it so screens never spill off the side */
+        if (s.getTextZoom() > 115) s.setTextZoom(115);
 
         WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
                 .setDomain(HOST)
@@ -171,6 +175,8 @@ public class MainActivity extends AppCompatActivity {
         super.onNewIntent(intent);
         if (intent != null && intent.getBooleanExtra(EXTRA_PENDING, false))
             js("window.__ledgerOpenPending&&__ledgerOpenPending()");
+        String w = intent != null ? intent.getStringExtra(Widgets.EXTRA) : null;
+        if (w != null) js("window.__ledgerAction&&__ledgerAction(" + q(w) + ")");
     }
 
     @Override
@@ -457,6 +463,20 @@ public class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public void reload() {
             ui.post(() -> web.loadUrl(START));
+        }
+
+        /** the app sends a ready-made snapshot for the home-screen widgets */
+        @JavascriptInterface
+        public void setWidgets(String json) {
+            Widgets.save(MainActivity.this, json == null ? "{}" : json);
+        }
+
+        /** a widget button opened the app (exp / inc / inbox / pulse / insights / home) */
+        @JavascriptInterface
+        public String takeAction() {
+            String a = widgetAction;
+            widgetAction = null;
+            return a == null ? "" : a;
         }
 
         @JavascriptInterface

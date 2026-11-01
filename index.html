@@ -20,15 +20,21 @@
 :root{--bg:#F6F7FB;--card:#FFFFFF;--ink:#0F1222;--mute:#687086;--faint:#A6ABBA;--line:#E9EBF2;--soft:#F2F4F8;--acc:#5B5BF7;--acc2:#EEEEFF;--green:#11A04F;--red:#E5484D;--amber:#D98200;--blue:#2F7BF5;--sh:0 1px 2px rgba(15,18,34,.04),0 6px 20px rgba(15,18,34,.05);color-scheme:light}
 [data-theme=dark]{--bg:#0B0D14;--card:#151824;--ink:#ECEEF6;--mute:#8E94AA;--faint:#585E72;--line:#242838;--soft:#1C2030;--acc:#8183FF;--acc2:#23255A;--green:#3DD68C;--red:#FF6B6E;--amber:#FFB224;--blue:#5EA2FF;--sh:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);color-scheme:dark}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{background:var(--bg)}
+html,body{background:var(--bg);overflow-x:hidden;max-width:100%}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{font-family:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);font-size:15px;line-height:1.4;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;overscroll-behavior-y:none;min-height:100vh}
 button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer;font-size:inherit}
 #app{max-width:560px;margin:0 auto;padding:0 16px calc(112px + env(safe-area-inset-bottom))}
 header.top{position:sticky;top:0;z-index:20;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:calc(14px + env(safe-area-inset-top)) 2px 12px;background:linear-gradient(var(--bg) 75%,transparent)}
-.hello{font-size:.76rem;color:var(--mute);font-weight:600}
+.hello{font-size:.76rem;color:var(--mute);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header.top>div:first-child{flex:1 1 auto;min-width:0}
+header.top h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 h1{font-size:1.65rem;font-weight:800;letter-spacing:-.035em;line-height:1.15}
 h1.sm{font-size:1.25rem}
-.hact{display:flex;gap:7px;align-items:center}
+.hact{display:flex;gap:6px;align-items:center;flex:0 0 auto}
+@media (max-width:430px){.sync{padding:0 10px}.sync span{max-width:64px;overflow:hidden;text-overflow:ellipsis}h1{font-size:1.45rem}}
+@media (max-width:370px){.sync span{display:none}.sync{width:36px;padding:0;justify-content:center}.hact{gap:5px}}
+.nav .tb{min-width:0;white-space:nowrap}
 .sync{display:flex;align-items:center;gap:7px;height:36px;padding:0 12px;border-radius:999px;background:var(--card);border:1px solid var(--line);font-size:.72rem;font-weight:700;color:var(--mute);white-space:nowrap}
 .sync i{width:8px;height:8px;border-radius:50%;background:var(--faint)}
 .sync.ok i{background:var(--green)}.sync.pend i{background:var(--amber)}.sync.busy i{background:var(--blue);animation:pulse 1s infinite}.sync.err i{background:var(--red)}
@@ -290,6 +296,21 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .pbars b{width:70%;border-radius:8px 8px 4px 4px;display:block}
 .pbars small{font-size:.72rem;font-weight:800}
 .pbars span{font-size:.64rem;color:var(--mute);font-weight:700}
+/* lock screen = welcome screen: one brand-blue screen */
+.lock{background:radial-gradient(120% 80% at 50% 30%,#2A2178 0%,#17133A 55%,#0B0A1F 100%);color:#fff;transition:opacity .35s ease}
+.lock.bye{opacity:0;pointer-events:none}
+.lock .lk h2{color:#fff}.lock .lk .sub{color:#B8B3E6;font-size:.82rem;font-weight:600;margin-top:4px}
+.lock .logo{width:84px;height:84px;border-radius:26px;box-shadow:0 18px 44px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.08)}
+.lock.intro .logo{animation:spPop .7s cubic-bezier(.2,1.4,.3,1) both}.lock.intro .lk>*:not(.logo){animation:spUp .5s .25s ease both}
+.lock .dots i{border-color:rgba(255,255,255,.45)}.lock .dots i.on{background:#fff;border-color:#fff}
+.lock .pk{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:#fff;box-shadow:none;backdrop-filter:blur(6px)}
+.lock .pk:active{background:rgba(255,255,255,.2)}
+.lock .pk.t{background:none;border:none;color:#B8B3E6}
+.lock .forgot{color:#B8B3E6}
+.lock input{background:rgba(255,255,255,.1);color:#fff;border-color:transparent}.lock input::placeholder{color:#8E89C2}
+.lock .pd{background:rgba(255,255,255,.4)}.lock .pd.on{background:#fff}.lock .patw polyline{stroke:#fff}
+.fpb{display:inline-flex;align-items:center;gap:8px;margin:18px auto 0;padding:10px 18px;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-weight:800;font-size:.86rem}
+.fpb svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round}
 .bioBtn{width:auto;min-width:220px;height:auto;padding:22px 26px;border-radius:24px;font-size:2.4rem;display:flex;flex-direction:column;gap:8px;margin:26px auto 0}
 .bioBtn small{font-size:.85rem;font-weight:700}
 .gbox{display:flex;justify-content:center;margin:18px 0 4px;min-height:44px}
@@ -341,15 +362,17 @@ const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(
 const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
 const fmtINR = (n, c) => {
   n = r2(n); const a = Math.abs(n); let s;
-  const k = c === 1 || c === true;
-  if (k && a >= 1e7) s = (a / 1e7).toFixed(2).replace(/\.?0+$/, '') + 'Cr';
-  else if (k && a >= 1e5) s = (a / 1e5).toFixed(1).replace(/\.0$/, '') + 'L';
-  else if (k && a >= 1e3) s = (a / 1e3).toFixed(a >= 1e4 ? 0 : 1).replace(/\.0$/, '') + 'k';
+  /* short form, Indian style: 950 · 4.5K · 40K · 1.25L · 2.5Cr (thresholds checked after rounding, so 99,999 is 1L, never 100K) */
+  const k = c === 1 || c === true, trim = x => x.replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
+  if (k && a >= 99500) { if (a >= 9999500) s = trim((a / 1e7).toFixed(2)) + 'Cr'; else s = trim((a / 1e5).toFixed(2)) + 'L'; }
+  else if (k && a >= 999.5) s = trim((a / 1e3).toFixed(a >= 9950 ? 0 : 1)) + 'K';
   else s = (c === 'x' ? a : Math.round(a)).toLocaleString('en-IN', { maximumFractionDigits: c === 'x' ? 2 : 0 }); /* totals in whole rupees; 'x' = exact (single entries, bank matching) */
   return (n < 0 ? '−' : '') + '₹' + s;
 };
 const inr = (n, c) => S.hide ? '₹ ••••' : fmtINR(n, c);
 const inrX = n => inr(n, 'x');
+/* big headline numbers: full rupees below 1 lakh, short (1.25L) from 1 lakh up */
+const inrS = n => Math.abs(n) >= 99500 ? inr(n, 1) : inr(n);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const p2 = n => String(n).padStart(2, '0');
 const ymd = d => d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
@@ -606,9 +629,32 @@ function render() {
   U.fresh = false;
   if (U.after) { const f = U.after; U.after = null; requestAnimationFrame(f); }
   if (U.tab === 'home') watchList();
-  remCounts(); bellBadge();
+  remCounts(); bellBadge(); widgetSoon();
   setStatus();
 }
+/* ---------- home-screen widgets (Android app): a small ready-made snapshot ---------- */
+function widgetSoon() { if (!AND || !AND.setWidgets) return; clearTimeout(U.wT); U.wT = setTimeout(widgetPush, 1500); }
+function widgetSnap() {
+  const hide = S.hide, m = ym(), dn = new Date().getDate(), dim = daysIn(m), fr = freeTotal(), H = v => hide ? '₹ ••••' : v;
+  const spent = sum(S.exp.filter(e => inP(e, m) && myX(e))), bud = r2(visCats().reduce((t, c) => t + (+c.budget || 0), 0)), pace = dn >= 3 ? r2(spent / dn * dim) : 0;
+  const c = inboxCount(), P = inboxParts(false), lines = [];
+  live(a => a.type === 'card' && mineA(a) && cardDue(a) > .004).forEach(a => lines.push('💳 ' + a.name + ' ' + H(fmtINR(cardDue(a), 1)) + ' due · bill ' + cardDay(a) + 'th'));
+  S.rem.filter(r => r.active !== false && remDueDate(r)).sort((a, b) => remDueDate(a).localeCompare(remDueDate(b))).slice(0, 2).forEach(r => lines.push('🧾 ' + r.name + (+r.amount ? ' ' + H(fmtINR(r.amount, 1)) : '') + ' · ' + dLabel(remDueDate(r))));
+  S.emis.filter(x => ['over', 'soon', 'today'].includes(emiState(x).st)).forEach(x => lines.push('📆 ' + x.name + ' · ' + emiState(x).label));
+  const pn = pulseNow(), pl = pulse(shiftM(m, -1) + '-01', shiftM(m, -1) + '-' + p2(daysIn(shiftM(m, -1)))), COL = { Excellent: '#3DD68C', Good: '#A5A6FF', Fair: '#FFB224', 'Needs care': '#FF8A8D' };
+  return { at: hm(new Date()), hide, free: H(fmtINR(fr, fr >= 99500 ? 1 : 0)), safe: (hide ? 'Safe per day hidden' : fmtINR(Math.max(0, fr) / (dim - dn + 1)) + '/day safe till ' + mLabel(m, 1) + ' end'),
+    month: mLabel(m, 1), spent: H(fmtINR(spent, spent >= 99500 ? 1 : 0)), hasBudget: bud > 0, pct: bud > 0 ? Math.round(spent / bud * 100) : 0, over: bud > 0 && spent > bud,
+    budgetLine: hide ? '' : bud > 0 ? (spent > bud ? fmtINR(spent - bud, 1) + ' over ' : fmtINR(bud - spent, 1) + ' left of ') + fmtINR(bud, 1) + (pace ? ' · on pace for ' + fmtINR(pace, 1) : '') : 'No budget set · ' + fmtINR(spent / Math.max(1, dn)) + '/day',
+    needs: c.badge || 0, sort: c.sort || 0, lines: (c.sort ? ['📩 ' + c.sort + ' bank SMS to sort'] : []).concat(lines).slice(0, 4),
+    pulse: pn ? String(pn.score) : '—', pulseLabel: pn ? pn.label + ' · this month' : 'Not enough data yet', pulseCol: pn ? COL[pn.label] || '#FFFFFF' : '#FFFFFF', pulseDelta: pn && pl && pl.score != null ? (pn.score - pl.score >= 0 ? '▲ ' : '▼ ') + Math.abs(pn.score - pl.score) + ' vs ' + mLabel(shiftM(m, -1), 1) : '' };
+}
+function widgetPush() { try { if (S.accounts.length) AND.setWidgets(JSON.stringify(widgetSnap())); } catch (e) { } }
+/* a widget button opened the app */
+function widgetAct(a) {
+  if (!a) return; const go = () => { if (a === 'exp' || a === 'inc') { setTab('home'); compose(a); } else if (a === 'inbox') inboxSheet(); else if (a === 'pulse') { setTab('home'); ACT.pulseOpen(); } else if (a === 'insights') setTab('insights'); else setTab('home'); };
+  setTimeout(go, 200);
+}
+window.__ledgerAction = a => widgetAct(a);
 function monthNav(year) {
   const yr = String(new Date().getFullYear());
   const lbl = year === 'fy' ? fyLabel(U.month + '-01') : year ? U.month.slice(0, 4) : mLabel(U.month), dis = year === 'fy' ? fyStart(U.month + '-01') >= fyStart(today()) : year ? U.month.slice(0, 4) >= yr : U.month >= ym();
@@ -756,7 +802,7 @@ function renderHome() {
   const budget = r2(visCats().reduce((s, c) => s + (+c.budget || 0), 0));
   const cur = m === ym(), dim = daysIn(m), dn = cur ? new Date().getDate() : dim;
   let h = monthNav();
-  h += `<div class="hero"><div class="hl">Spent · ${mLabel(m)}</div><div class="hv">${inr(spent)}</div>`;
+  h += `<div class="hero"><div class="hl">Spent · ${mLabel(m)}</div><div class="hv">${inrS(spent)}</div>`;
   if (budget > 0) {
     const pct = Math.min(100, spent / budget * 100), left = r2(budget - spent);
     h += `<div class="hbar ${left < 0 ? 'over' : ''}"><i style="width:${pct}%"></i></div><div class="hs">${left >= 0 ? `<b>${inr(left)}</b> left of ${inr(budget)}${cur ? ' · ' + inr(left / (dim - dn + 1)) + '/day safe' : ''}` : `<b class="red">${inr(-left)} over</b> your ${inr(budget)} budget`}</div>`;
@@ -766,7 +812,7 @@ function renderHome() {
   h += `</div>`;
   const accs = live(a => a.type !== 'investment' && mineA(a)), oth = live(a => a.others), tot = r2(accs.filter(holderType).reduce((s, a) => s + (C.bal[a.name] || 0), 0));
   const pl = pulseNow();
-  h += `<div class="strip"><button class="acard" data-act="tab" data-t="insights" style="border-color:color-mix(in srgb,var(--acc) 30%,var(--line))"><span>💰 Free to spend</span><b>${inr(freeTotal())}</b><small>${r2(tot - freeTotal()) > 0 ? inr(tot - freeTotal()) + ' in goals · total ' + inr(tot, 1) : 'Banks & cash, nothing reserved'}</small></button>${pl ? `<button class="acard" data-act="pulseOpen"><span>💗 Money Pulse</span><b style="color:${pl.col}">${pl.score}<small style="font-size:.7rem;color:var(--mute)"> /100</small></b><small>${pl.label} · this month</small></button>` : ''}${accs.map(a => { const b = C.bal[a.name] || 0, hd = C.held[a.name] || 0, pk = pockets(a.name).length; return `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>${ACC_T[a.type][0]} ${esc(a.name)}</span><b class="${b - hd < 0 || (a.type === 'card' && b < 0) ? 'red' : ''}">${a.type === 'card' ? (b < -.004 ? inr(-b) : inr(0)) : inr(b - hd)}</b><small>${a.type === 'card' ? (b < -.004 ? 'Due · bill day ' + cardDay(a) : 'No dues ✓') : hd > 0 ? inr(hd) + ' in goals · total ' + inr(b, 1) : pk ? 'Your share' : 'Free to spend'}</small></button>`; }).join('')}${oth.length ? oth.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}" style="border-style:dashed;box-shadow:none"><span>👥 ${esc(a.name)}</span><b class="mute">${inr(C.bal[a.name])}</b><small>${heldOwed(a.name) > 0 ? '<span class="red">You owe ' + inr(heldOwed(a.name), 1) + '</span>' : 'Held for others' + (a.keptIn ? ' · in ' + esc(a.keptIn) : '')}</small></button>`).join('') : ''}</div>`;
+  h += `<div class="strip"><button class="acard" data-act="tab" data-t="insights" style="border-color:color-mix(in srgb,var(--acc) 30%,var(--line))"><span>💰 Free to spend</span><b>${inrS(freeTotal())}</b><small>${r2(tot - freeTotal()) > 0 ? inr(tot - freeTotal()) + ' in goals · total ' + inr(tot, 1) : 'Banks & cash, nothing reserved'}</small></button>${pl ? `<button class="acard" data-act="pulseOpen"><span>💗 Money Pulse</span><b style="color:${pl.col}">${pl.score}<small style="font-size:.7rem;color:var(--mute)"> /100</small></b><small>${pl.label} · this month</small></button>` : ''}${accs.map(a => { const b = C.bal[a.name] || 0, hd = C.held[a.name] || 0, pk = pockets(a.name).length; return `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>${ACC_T[a.type][0]} ${esc(a.name)}</span><b class="${b - hd < 0 || (a.type === 'card' && b < 0) ? 'red' : ''}">${a.type === 'card' ? (b < -.004 ? inr(-b) : inr(0)) : inr(b - hd)}</b><small>${a.type === 'card' ? (b < -.004 ? 'Due · bill day ' + cardDay(a) : 'No dues ✓') : hd > 0 ? inr(hd) + ' in goals · total ' + inr(b, 1) : pk ? 'Your share' : 'Free to spend'}</small></button>`; }).join('')}${oth.length ? oth.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}" style="border-style:dashed;box-shadow:none"><span>👥 ${esc(a.name)}</span><b class="mute">${inr(C.bal[a.name])}</b><small>${heldOwed(a.name) > 0 ? '<span class="red">You owe ' + inr(heldOwed(a.name), 1) + '</span>' : 'Held for others' + (a.keptIn ? ' · in ' + esc(a.keptIn) : '')}</small></button>`).join('') : ''}</div>`;
   h += inboxChip();
   h += `<div class="search"><input type="search" placeholder="Search notes, category or account" value="${esc(U.q)}" data-in="q"></div>`;
   h += `<div class="chips">${[{ name: 'all', label: 'All' }].concat(visCats()).map(c => `<button class="chip ${U.cat === c.name ? 'on' : ''}" data-act="catF" data-v="${esc(c.name)}">${c.label || c.icon + ' ' + esc(c.name)}</button>`).join('')}</div>`;
@@ -1368,8 +1414,8 @@ function renderMoney() {
   h += monthNav();
   if (k === 'inc') {
     const by = {}; list.forEach(e => by[e.source] = (by[e.source] || 0) + e.amount);
-    h += `<div class="hero" style="--hc:#11A04F"><div class="hl">Income · ${mLabel(U.month)}</div><div class="hv">${inr(sum(list))}</div><div class="hs">${Object.entries(by).sort((a, b) => b[1] - a[1]).map(([s, v]) => esc(s) + ' <b>' + inr(v, 1) + '</b>').join(' · ') || 'No income logged yet'}</div></div>`;
-  } else h += `<div class="hero" style="--hc:#64748B"><div class="hl">Moved between accounts</div><div class="hv">${inr(sum(list))}</div><div class="hs">Transfers don't count as spending or income</div></div>`;
+    h += `<div class="hero" style="--hc:#11A04F"><div class="hl">Income · ${mLabel(U.month)}</div><div class="hv">${inrS(sum(list))}</div><div class="hs">${Object.entries(by).sort((a, b) => b[1] - a[1]).map(([s, v]) => esc(s) + ' <b>' + inr(v, 1) + '</b>').join(' · ') || 'No income logged yet'}</div></div>`;
+  } else h += `<div class="hero" style="--hc:#64748B"><div class="hl">Moved between accounts</div><div class="hv">${inrS(sum(list))}</div><div class="hs">Transfers don't count as spending or income</div></div>`;
   h += `<button class="btn" data-act="new" data-k="${k}">+ Add ${k === 'inc' ? 'income' : 'transfer'}</button>`;
   h += list.length ? groupDays(list, e => k === 'inc'
     ? row({ sheet: 'Income', id: e.id, icon: '💰', color: '#12A150', t: e.source, s: e.account + (e.remarks ? ' · ' + e.remarks : ''), amt: e.amount, sign: 1 })
@@ -1381,7 +1427,7 @@ ACT.mseg = el => { U.mseg = el.dataset.k; render(); };
 ACT.new = el => compose(el.dataset.k);
 function invView() {
   const all = S.inv.filter(isBuy), sold = S.inv.filter(e => !isBuy(e)), cost = sum(sold.map(e => ({ amount: e.cost }))), got = sum(sold), tot = r2(sum(all) - cost), mon = sum(all.filter(e => inP(e, U.month))), ia = live(a => a.type === 'investment');
-  let h = `<div class="hero" style="--hc:#2F7BF5"><div class="hl">Still invested</div><div class="hv">${inr(tot)}</div><div class="hs"><b>${inr(mon)}</b> put in during ${mLabel(U.month)}${ia.length ? ' · Accounts worth <b>' + inr(ia.reduce((s, a) => s + (C.bal[a.name] || 0), 0)) + '</b>' : ''}</div>${sold.length ? `<div class="hs">Sold / withdrawn <b>${inr(got)}</b> · profit booked <b class="${got - cost >= 0 ? 'green' : 'red'}">${got - cost >= 0 ? '+' : '−'}${inr(Math.abs(got - cost))}</b></div>` : ''}</div>`;
+  let h = `<div class="hero" style="--hc:#2F7BF5"><div class="hl">Still invested</div><div class="hv">${inrS(tot)}</div><div class="hs"><b>${inr(mon)}</b> put in during ${mLabel(U.month)}${ia.length ? ' · Accounts worth <b>' + inr(ia.reduce((s, a) => s + (C.bal[a.name] || 0), 0)) + '</b>' : ''}</div>${sold.length ? `<div class="hs">Sold / withdrawn <b>${inr(got)}</b> · profit booked <b class="${got - cost >= 0 ? 'green' : 'red'}">${got - cost >= 0 ? '+' : '−'}${inr(Math.abs(got - cost))}</b></div>` : ''}</div>`;
   if (ia.length) h += `<div class="strip">${ia.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>📈 ${esc(a.name)}</span><b>${inr(C.bal[a.name])}</b><small>Tap to update value</small></button>`).join('')}</div>`;
   h += `<div class="btns" style="margin:0 0 14px"><button class="btn" data-act="new" data-k="inv">+ Log investment</button><button class="btn sec" data-act="sellPick">↩ Sell / withdraw</button></div>`;
   if (tot > 0) {
@@ -1534,7 +1580,7 @@ function emiDue() {
 }
 function emiView() {
   const act = S.emis.filter(m => m.active !== false && emiState(m).st !== 'done'), monthly = act.reduce((s, m) => s + (+m.amount || 0), 0);
-  let h = `<div class="hero" style="--hc:#A855F7"><div class="hl">Monthly EMIs</div><div class="hv">${inr(monthly)}</div><div class="hs">${act.length} active · <b>${inr(sum(S.emi.filter(e => inP(e, ym()))))}</b> paid this month</div></div>`;
+  let h = `<div class="hero" style="--hc:#A855F7"><div class="hl">Monthly EMIs</div><div class="hv">${inrS(monthly)}</div><div class="hs">${act.length} active · <b>${inr(sum(S.emi.filter(e => inP(e, ym()))))}</b> paid this month</div></div>`;
   if (!S.emis.length) h += `<div class="empty"><span class="big">📆</span>Add an EMI once. Every month tap <b>Pay</b>, and it's deducted from the bank you pick.</div>`;
   S.emis.forEach(m => {
     const s = emiState(m), tot = +m.total || 0, n = emiCount(m), col = { over: 'red', today: 'amber', soon: 'amber', paid: 'green', done: 'green' }[s.st] || 'mute';
@@ -1594,7 +1640,7 @@ function ring(p, col, size) { const r = 26, c = 2 * Math.PI * r, o = c * (1 - Ma
 function renderGoals() {
   const gs = S.goals.filter(g => !g.archived), ar = S.goals.filter(g => g.archived);
   const tot = r2(gs.reduce((s, g) => s + (C.saved[g.id] || 0), 0)), tgt = gs.reduce((s, g) => s + (+g.target || 0), 0);
-  let h = `<div class="hero" style="--hc:#A855F7"><div class="hl">Reserved across goals</div><div class="hv">${inr(tot)}</div>${tgt ? `<div class="hbar"><i style="width:${Math.min(100, tot / tgt * 100)}%"></i></div>` : ''}<div class="hs">${tgt ? '<b>' + Math.round(tot / tgt * 100) + '%</b> of ' + inr(tgt) + ' · ' : ''}The money stays in your bank, only marked for the goal.</div></div>`;
+  let h = `<div class="hero" style="--hc:#A855F7"><div class="hl">Reserved across goals</div><div class="hv">${inrS(tot)}</div>${tgt ? `<div class="hbar"><i style="width:${Math.min(100, tot / tgt * 100)}%"></i></div>` : ''}<div class="hs">${tgt ? '<b>' + Math.round(tot / tgt * 100) + '%</b> of ' + inr(tgt) + ' · ' : ''}The money stays in your bank, only marked for the goal.</div></div>`;
   if (!gs.length) h += `<div class="empty"><span class="big">🎯</span>Create goals like an Emergency Fund, Health Insurance or a TV payback.</div>`;
   h += gs.map(goalCard).join('') + `<button class="btn" data-act="goalNew">+ New goal</button>`;
   if (ar.length) h += `<div class="section-t">Archived</div><div class="group">${ar.map(g => `<button class="item" data-act="goalOpen" data-id="${g.id}"><span class="ic" style="background:var(--soft)">${g.icon}</span><span class="mid"><b>${esc(g.name)}</b><small>${inr(C.saved[g.id] || 0)} left in goal</small></span></button>`).join('')}</div>`;
@@ -1901,6 +1947,7 @@ function phoneCard() {
   <div class="srow"><span class="ic" style="background:var(--soft)">🔔</span><span class="mid"><b>Notifications</b><small>${I.notif ? '✓ On · a ping for each bank message' : 'Off · tap to allow'}</small></span>${I.notif ? '' : '<button class="btn sm" data-act="andPerm">Allow</button>'}</div>
   <div class="srow"><span class="ic" style="background:var(--soft)">🔋</span><span class="mid"><b>Battery: Unrestricted</b><small>${I.battery ? '✓ Samsung will not stop Ledger' : 'Needed so Samsung does not stop SMS reading'}</small></span>${I.battery ? '' : '<button class="btn sm" data-act="andBattery">Fix</button>'}</div>
   <div class="srow"><span class="ic" style="background:var(--soft)">👆</span><span class="mid"><b>App lock</b><small>${esc(lockSummary())}</small></span><button class="btn sm sec" data-act="spOpen" data-k="security">Change</button></div>
+  <div class="srow"><span class="ic" style="background:var(--soft)">🧩</span><span class="mid"><b>Home-screen widgets</b><small>Long-press your home screen → Widgets → Ledger. Four to pick from; they refresh each time you open Ledger.</small></span></div>
   <button class="btn sec sm" data-act="andUpd">Check for app update</button>
   <div class="hint">SMS are read only on this phone. Only completed debits and credits go to your "to sort" list and your own Google Sheet.</div></div>`;
 }
@@ -1920,8 +1967,8 @@ ACT.andScan = () => {
 function renderPlan() {
   U.pseg = U.pseg || 'goals';
   const due = remCounts().due;
-  let h = `<div class="seg page">${[['goals', 'Goals'], ['rem', 'Reminders' + (due ? ' · ' + due : '')], ['budget', 'Budget plan']].map(([k, l]) => `<button class="${U.pseg === k ? 'on' : ''}" data-act="pseg" data-k="${k}">${l}</button>`).join('')}</div>`;
-  return h + (U.pseg === 'rem' ? remView() : U.pseg === 'budget' ? budgetView() : renderGoals());
+  let h = `<div class="seg page">${[['goals', 'Goals'], ['rem', 'Bills' + (due ? ' · ' + due : '')], ['budget', 'Budget'], ['calc', 'Loan calc']].map(([k, l]) => `<button class="${U.pseg === k ? 'on' : ''}" data-act="pseg" data-k="${k}">${l}</button>`).join('')}</div>`;
+  return h + (U.pseg === 'rem' ? remView() : U.pseg === 'budget' ? budgetView() : U.pseg === 'calc' ? calcView() : renderGoals());
 }
 ACT.pseg = el => { U.pseg = el.dataset.k; render(); };
 
@@ -2112,6 +2159,77 @@ IN.plDate = t => { S.prefs.plan.date = t.value; save(); render(); };
 ACT.plPct = el => { S.prefs.plan.pct = +el.dataset.v; save(); const y = window.scrollY; render(); window.scrollTo(0, y); };
 ACT.plMon = el => { S.prefs.plan.months = +el.dataset.v; save(); const y = window.scrollY; render(); window.scrollTo(0, y); };
 ACT.plApply = () => { if (!confirm('Set these amounts as your monthly category budgets? You can change them any time in Settings.')) return; const list = S.cfg.categories.map(c => U.plan && c.name in U.plan ? Object.assign({}, c, { budget: U.plan[c.name] }) : c); commit([cfgOp('categories', list)]); render(); toast('Budgets updated'); };
+
+/* =========================================================
+   LOAN & EMI CALCULATOR (projection only, checks it against your real Ledger numbers)
+   ========================================================= */
+const LOAN_P = [['🏠 Home', 8.5, 240], ['🚗 Car', 9.5, 60], ['🏍️ Bike', 11, 36], ['📱 Phone / gadget', 14, 12], ['💼 Personal', 12.5, 36], ['🎁 No-cost EMI', 0, 6]];
+const emiOf = (P, rate, n) => { if (!(P > 0) || !(n > 0)) return 0; const r = rate / 1200; return r ? P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1) : P / n; };
+function monthsFor(P, rate, E) { const r = rate / 1200; if (!(E > 0)) return null; if (!r) return Math.ceil(P / E); if (E <= P * r) return null; return Math.ceil(Math.log(E / (E - P * r)) / Math.log(1 + r)); }
+/* true yearly cost when there is a processing fee (e.g. "no-cost EMI" with a fee) */
+function effRate(P, fee, E, n) { const net = P - fee; if (!(net > 0) || !(E > 0)) return null; let lo = 0, hi = 200; for (let i = 0; i < 60; i++) { const m = (lo + hi) / 2, r = m / 1200, pv = r ? E * (1 - Math.pow(1 + r, -n)) / r : E * n; if (pv > net) lo = m; else hi = m; } return Math.round((lo + hi) / 2 * 10) / 10; }
+/* your real monthly picture from the last 3 full months */
+function cashflow() {
+  const ms = [1, 2, 3].map(i => shiftM(ym(), -i)).filter(m => m >= firstData().slice(0, 7)), n = Math.max(1, ms.length);
+  const inc = ms.reduce((t, m) => t + sum(S.inc.filter(e => inP(e, m) && !isOthers(e.account))), 0) / n;
+  const sp = ms.reduce((t, m) => t + sum(S.exp.filter(e => inP(e, m) && myX(e))), 0) / n;
+  const emi = S.emis.filter(m => m.active !== false && !['done', 'off'].includes(emiState(m).st)).reduce((t, m) => t + (+m.amount || 0), 0);
+  return { inc: Math.round(inc), sp: Math.round(sp), emi, spare: Math.round(inc - sp - emi), months: ms.length };
+}
+function calcView() {
+  const K = S.prefs.calc = Object.assign({ name: '', price: '', down: '', rate: 10, mode: 'tenure', n: 24, budget: '', fee: 0, extra: '' }, S.prefs.calc || {});
+  const chip = (act, v, l, on) => `<button class="chip ${on ? 'on' : ''}" data-act="${act}" data-v="${v}">${l}</button>`;
+  let h = `<div class="card"><h2>Loan & EMI planner <small>nothing is saved to your data</small></h2>
+  <div class="chips">${LOAN_P.map((p, i) => chip('clPre', i, p[0], false)).join('')}</div>
+  <div class="lbl">What are you buying?</div><input data-in="clF" data-k="name" value="${esc(K.name)}" placeholder="e.g. Car, iPhone, Flat">
+  <div class="grid2 st"><div><div class="lbl">Price ₹</div><input inputmode="decimal" data-in="clF" data-k="price" value="${esc(K.price)}" placeholder="e.g. 800000"></div><div><div class="lbl">Down payment ₹</div><input id="clDown" inputmode="decimal" data-in="clF" data-k="down" value="${esc(K.down)}" placeholder="0"></div></div>
+  <div class="chips" style="margin-top:8px">${[10, 20, 30].map(x => chip('clDp', x, x + '% down', false)).join('')}${chip('clDp', 'free', '👛 All my free money ' + inr(freeTotal(), 1), false)}</div>
+  <div class="grid2 st"><div><div class="lbl">Interest % a year</div><input inputmode="decimal" data-in="clF" data-k="rate" value="${esc(K.rate)}"></div><div><div class="lbl">Processing fee ₹</div><input inputmode="decimal" data-in="clF" data-k="fee" value="${esc(K.fee || '')}" placeholder="0"></div></div>
+  <div class="lbl">Work it out by</div><div class="seg" style="margin:0"><button class="${K.mode === 'tenure' ? 'on' : ''}" data-act="clMode" data-v="tenure">Months I pick</button><button class="${K.mode === 'budget' ? 'on' : ''}" data-act="clMode" data-v="budget">EMI I can pay</button></div>
+  ${K.mode === 'tenure' ? `<div class="lbl">Months</div><input type="number" inputmode="numeric" data-in="clF" data-k="n" value="${esc(K.n)}"><div class="chips" style="margin-top:8px">${[6, 12, 24, 36, 60, 120, 240].map(x => chip('clN', x, x < 24 ? x + ' mo' : (x / 12) + ' yr', +K.n === x)).join('')}</div>` : `<div class="lbl">I can pay per month ₹</div><input inputmode="decimal" data-in="clF" data-k="budget" value="${esc(K.budget)}" placeholder="e.g. 12000">`}
+  <div class="lbl">Extra I can prepay each month ₹ <small class="mute">(optional)</small></div><input inputmode="decimal" data-in="clF" data-k="extra" value="${esc(K.extra)}" placeholder="0"></div>`;
+  return h + '<div id="clOut">' + calcOut() + '</div>';
+}
+function calcOut() {
+  const K = S.prefs.calc, price = parseAmt(K.price) || 0, down = Math.min(price, parseAmt(K.down) || 0), P = r2(price - down), rate = parseAmt(K.rate) || 0, fee = parseAmt(K.fee) || 0, extra = parseAmt(K.extra) || 0;
+  if (!(price > 0)) return `<div class="hint center">Type a price to see the EMI, total interest and whether it fits your budget.</div>`;
+  if (!(P > 0)) return `<div class="card"><div class="hint green" style="margin:0">Paying the full ${inr(price)} upfront: no loan, no interest.</div>${afford(0, down)}</div>`;
+  let n, E;
+  if (K.mode === 'budget') { E = parseAmt(K.budget) || 0; n = monthsFor(P, rate, E); if (!n) return `<div class="card"><div class="hint red" style="margin:0">${E > 0 ? inr(E) + '/month does not even cover the interest (' + inr(P * rate / 1200) + '/month). Pay more per month or put more down.' : 'Type how much you can pay per month.'}</div></div>`; E = emiOf(P, rate, n); }
+  else { n = Math.max(1, parseInt(K.n) || 12); E = emiOf(P, rate, n); }
+  const total = E * n, intr = total - P, end = shiftM(ym(), n), er = fee > 0 ? effRate(P, fee, E, n) : null;
+  let h = `<div class="card"><h2>${esc(K.name || 'Your loan')} <small>${n} months</small></h2><div class="detail" style="padding:2px 0 10px"><div class="dv">${inrX(Math.ceil(E))}<small style="font-size:.9rem;color:var(--mute)"> /month</small></div><div class="dt">for ${n} months · last EMI ${mLabel(end)}</div></div>
+  <div class="kv"><div><span>Price</span><b>${inr(price)}</b></div><div><span>Down payment</span><b>${inr(down)}</b></div><div><span>Loan</span><b>${inr(P)}</b></div><div><span>Total interest</span><b class="${intr > 0 ? 'red' : 'green'}">${inr(intr)}</b></div>${fee ? `<div><span>Processing fee</span><b class="red">${inr(fee)}</b></div>` : ''}<div><span><b style="color:var(--ink)">You pay in total</b></span><b>${inr(down + total + fee)}</b></div><div><span>Extra cost vs paying cash</span><b class="${intr + fee > 0 ? 'red' : 'green'}">${inr(intr + fee)} (${Math.round((intr + fee) / price * 100)}%)</b></div>${er != null ? `<div><span>Real yearly cost with the fee</span><b class="red">${er}%</b></div>` : ''}</div>`;
+  /* principal vs interest bar */
+  const pp = total > 0 ? P / total * 100 : 100;
+  h += `<div class="bar" style="height:12px;margin-top:12px;display:flex"><i style="width:${pp}%;background:var(--acc);border-radius:8px 0 0 8px"></i><i style="width:${100 - pp}%;background:var(--red);border-radius:0 8px 8px 0"></i></div><div class="legend" style="justify-content:space-between"><span>■ Loan ${Math.round(pp)}%</span><span style="color:var(--red)">■ Interest ${Math.round(100 - pp)}%</span></div>`;
+  /* prepay */
+  if (extra > 0 && rate > 0) { let b = P, m = 0, ti = 0; const r = rate / 1200; while (b > .5 && m < 600) { const i = b * r; ti += i; b = b + i - (E + extra); m++; } h += `<div class="hint green">Prepaying ${inr(extra)} extra a month finishes in <b>${m} months</b> instead of ${n} (${n - m} months sooner) and saves <b>${inr(intr - ti)}</b> interest.</div>`; }
+  h += `</div>`;
+  /* tenure options */
+  const opts = [6, 12, 24, 36, 60, 120, 240].filter(x => x !== n && (x <= 60 || P >= 500000)).slice(0, 5).concat(n).sort((a, b) => a - b);
+  h += `<div class="card"><h2>Other lengths</h2><table class="stmt" style="width:100%;border-collapse:collapse">${opts.map(x => { const e = emiOf(P, rate, x), it = e * x - P; return `<tr style="${x === n ? 'font-weight:800' : ''}"><td>${x < 24 ? x + ' months' : (x / 12) + ' years'}${x === n ? ' ✓' : ''}<small>interest ${inr(it)}</small></td><td class="r">${inr(Math.ceil(e))}/mo</td></tr>`; }).join('')}</table><div class="hint">Shorter = bigger EMI but far less interest.</div></div>`;
+  h += `<div class="card"><h2>Can you afford it? <small>from your Ledger</small></h2>${afford(E, down)}</div>`;
+  /* save instead */
+  const sv = Math.ceil(E), monthsSave = (() => { let b = down > 0 ? 0 : 0, m = 0; const r = 7 / 1200; while (b < P && m < 600) { b = b * (1 + r) + sv; m++; } return m; })();
+  h += `<div class="card"><h2>Or save first?</h2><div class="hint" style="margin:0;color:var(--ink)">Putting the same ${inr(sv)}/month in a SIP (~7% a year) gets you the ${inr(P)} in about <b>${monthsSave} months</b> instead of ${n}, with <b class="green">no interest${intr > 0 ? ', ' + inr(intr + fee) + ' saved' : ''}</b>.</div><div class="btns"><button class="btn sec sm" data-act="clGoal" data-t="${Math.round(P)}" data-m="${monthsSave}">🎯 Make it a goal</button><button class="btn sm" data-act="clEmi" data-e="${Math.ceil(E)}" data-n="${n}">📆 Add as EMI</button></div></div>`;
+  return h;
+}
+function afford(E, down) {
+  const F = cashflow(), fr = freeTotal(), left = fr - down, mCost = F.sp + F.emi, cover = mCost > 0 ? left / mCost : null;
+  if (!F.inc) return `<div class="hint" style="margin:0">Log your salary for a few months to see how this fits your income.</div>`;
+  const spare2 = F.spare - E, pct = Math.round((F.emi + E) / F.inc * 100), col = pct <= 20 ? 'green' : pct <= 35 ? 'amber' : 'red';
+  return `<div class="kv"><div><span>Income (avg of ${F.months} mo)</span><b class="green">${inr(F.inc)}</b></div><div><span>Spending (avg)</span><b>−${inr(F.sp)}</b></div>${F.emi ? `<div><span>EMIs you already pay</span><b>−${inr(F.emi)}</b></div>` : ''}${E ? `<div><span>This EMI</span><b>−${inr(Math.ceil(E))}</b></div>` : ''}<div><span><b style="color:var(--ink)">Left each month</b></span><b class="${spare2 >= 0 ? 'green' : 'red'}">${inr(spare2)}</b></div><div><span>All EMIs as % of income</span><b class="${col}">${pct}%</b></div>${down ? `<div><span>Free money after down payment</span><b class="${left >= 0 ? '' : 'red'}">${inr(left)}${cover != null ? ' · ' + (Math.round(cover * 10) / 10) + ' months of costs' : ''}</b></div>` : ''}</div>
+  <div class="hint ${spare2 < 0 || pct > 35 || (cover != null && cover < 3) ? 'red' : 'green'}">${spare2 < 0 ? '❌ This EMI is more than you save each month. Lower the price, put more down or take longer.' : pct > 35 ? '⚠️ Over 35% of income would go to EMIs. Banks may still lend, but it leaves little room.' : cover != null && down && cover < 3 ? '⚠️ The down payment leaves under 3 months of costs as backup. Keep your emergency fund separate.' : '✅ Fits: EMIs stay at ' + pct + '% of income and you still keep ' + inr(spare2) + ' a month.'}</div>`;
+}
+IN.clF = t => { S.prefs.calc[t.dataset.k] = t.value; save(); clearTimeout(U.clT); U.clT = setTimeout(() => { const o = $('#clOut'); if (o) o.innerHTML = calcOut(); }, 350); };
+const clRe = () => { save(); const y = window.scrollY; render(); window.scrollTo(0, y); };
+ACT.clPre = el => { const p = LOAN_P[+el.dataset.v], K = S.prefs.calc; K.rate = p[1]; K.n = p[2]; K.mode = 'tenure'; if (!K.name) K.name = p[0].replace(/^\S+\s/, ''); clRe(); };
+ACT.clDp = el => { const K = S.prefs.calc, pr = parseAmt(K.price) || 0, v = el.dataset.v; K.down = v === 'free' ? Math.max(0, Math.min(pr, Math.floor(freeTotal()))) : Math.round(pr * +v / 100); clRe(); };
+ACT.clMode = el => { S.prefs.calc.mode = el.dataset.v; clRe(); };
+ACT.clN = el => { S.prefs.calc.n = +el.dataset.v; clRe(); };
+ACT.clEmi = el => { const K = S.prefs.calc; emiSheet(null); setTimeout(() => { $('#emName').value = (K.name || 'Loan') + ' EMI'; $('#emAmt').value = el.dataset.e; $('#emTot').value = el.dataset.n; }, 50); };
+ACT.clGoal = el => { const K = S.prefs.calc; goalSheet(null); setTimeout(() => { $('#gsName').value = K.name || 'Big purchase'; $('#gsTarget').value = el.dataset.t; const d = $('#gsDead'); if (d) d.value = addDays(shiftM(ym(), +el.dataset.m) + '-01', 0); }, 50); };
 
 /* =========================================================
    MONEY PULSE — 0 to 100 financial health
@@ -2424,7 +2542,7 @@ function renderInsights() {
   h += `<div class="chips"><button class="chip ${fc ? 'on' : ''}" data-act="fOpen">⚙ Filters${fc ? ' · ' + fc : ''}</button>${f.accs.map(a => `<button class="chip x" data-act="fDrop" data-k="accs" data-v="${esc(a)}">${esc(a)} ✕</button>`).join('')}${f.cats.map(a => `<button class="chip x" data-act="fDrop" data-k="cats" data-v="${esc(a)}">${cat(a).icon} ${esc(a)} ✕</button>`).join('')}${parseAmt(f.min) > 0 ? `<button class="chip x" data-act="fDrop" data-k="min">≥ ${fmtINR(parseAmt(f.min))} ✕</button>` : ''}${f.q.trim() ? `<button class="chip x" data-act="fDrop" data-k="q">"${esc(f.q.trim())}" ✕</button>` : ''}</div>`;
   const plI = pulseNow();
   if (plI) h += `<button class="alert info" data-act="pulseOpen" style="width:100%;text-align:left;border-left-color:${plI.col}"><span class="ic" style="background:var(--acc2)">💗</span><span class="mid"><b>Money Pulse · <span style="color:${plI.col}">${plI.score} ${plI.label}</span></b><small>This month's financial health. Tap for day, week, year and tips.</small></span><span class="ago">Open</span></button>`;
-  h += `<div class="hero"><div class="hl">Net worth today</div><div class="hv">${inr(nw)}</div><div class="hs">Banks & cash <b>${inr(liq, 1)}</b> · Investments <b>${inr(invv, 1)}</b>${owedCard ? ' · Cards <b>' + inr(owedCard, 1) + '</b>' : ''}${loanOwe || loanOwed ? ' · Loans <b>' + inr(loanOwed - loanOwe, 1) + '</b>' : ''}</div></div>`;
+  h += `<div class="hero"><div class="hl">Net worth today</div><div class="hv">${inrS(nw)}</div><div class="hs">Banks & cash <b>${inr(liq, 1)}</b> · Investments <b>${inr(invv, 1)}</b>${owedCard ? ' · Cards <b>' + inr(owedCard, 1) + '</b>' : ''}${loanOwe || loanOwed ? ' · Loans <b>' + inr(loanOwed - loanOwe, 1) + '</b>' : ''}</div></div>`;
   /* one comparison, picked by the person (default: previous period = MoM for a month) */
   const W = cmpWin(r), Q = pstats(r.from, W.end), P = W.win ? pstats(W.win.from, W.win.to) : null;
   const D = (k, good, pts) => W.win ? dline(Q[k], P && W.ok ? P[k] : null, good, pts, W.short) : '';
@@ -2828,18 +2946,19 @@ async function checkSecret(kind, v) {
   return kind === 'pin' && !!S.pin && hashPin(v + '|ledger') === S.pin;
 }
 async function setSecret(kind, v) { const salt = Math.random().toString(36).slice(2) + Date.now().toString(36); S.sec = { kind, salt, h: await hashSecret(v, salt) }; S.pin = ''; }
-function unlocked() { $('#lock').hidden = true; U.pin = null; if (S.url && S.key && Date.now() - lastPull > 60000) pull(true); }
+function unlocked() { const L = $('#lock'); L.classList.add('bye'); setTimeout(() => { L.hidden = true; L.classList.remove('bye', 'intro'); }, 340); U.pin = null; if (S.url && S.key && Date.now() - lastPull > 60000) pull(true); }
 /* which secret the lock screen asks for: the lock type, or the app secret as a backup for the phone's lock */
-function showLock(mode, kind) {
+/* fingerprint is offered as a button whenever the Android app can use it; the PIN / pattern / password always stays on screen */
+const canBio = () => { if (!AND) return false; if (U.bioOk == null) U.bioOk = !!andInfo().bio; return U.bioOk; };
+function showLock(mode, kind, intro) {
   kind = kind || (mode === 'unlock' ? S.lock.type : 'pin');
-  if (kind === 'device' && !AND) kind = S.sec ? S.sec.kind : 'pin';
-  U.pin = { mode, kind, val: '', first: '', seq: [] }; $('#lock').hidden = false; drawLock();
-  if (kind === 'device') setTimeout(bioAsk, 250);
+  if (kind === 'device' && (!AND || (mode === 'unlock' && S.sec))) kind = S.sec ? S.sec.kind : 'pin';
+  U.pin = { mode, kind, val: '', first: '', seq: [] }; const L = $('#lock'); L.classList.remove('bye'); L.classList.toggle('intro', !!intro); L.hidden = false; drawLock();
 }
-function bioAsk() { if (!AND || !U.pin || U.pin.kind !== 'device' || $('#lock').hidden) return; try { AND.unlock('Unlock Ledger'); } catch (e) { } }
+function bioAsk() { if (!AND || !U.pin || $('#lock').hidden) return; try { AND.unlock('Unlock Ledger'); } catch (e) { } }
 window.onLedgerUnlock = (ok, msg) => {
   const P = U.pin; if (!P) return;
-  if (P.mode === 'turnOn') { if (ok) { S.lock.type = 'device'; save(); $('#lock').hidden = true; U.pin = null; toast('👆 Phone lock on'); render(); } else { if (msg) toast(msg); $('#lock').hidden = true; U.pin = null; } return; }
+  if (P.mode === 'turnOn') { if (ok) { S.lock.type = 'device'; save(); toast('👆 Fingerprint lock on'); if (!S.sec) { U.pin = { mode: 'set1', kind: 'pin', val: '', first: '', seq: [], backup: true }; $('#lock').hidden = false; drawLock(); } else { $('#lock').hidden = true; U.pin = null; render(); } } else { if (msg) toast(msg); $('#lock').hidden = true; U.pin = null; } return; }
   if (ok) return unlocked();
   if (msg) toast(msg);
 };
@@ -2847,13 +2966,15 @@ function drawLock() {
   const P = U.pin, L = $('#lock'), set = P.mode !== 'unlock' && P.mode !== 'turnOn';
   const word = { pin: 'PIN', pwd: 'password', pat: 'pattern' }[P.kind];
   const title = P.mode === 'unlock' ? (P.kind === 'device' ? 'Ledger is locked' : 'Enter your ' + word) : P.mode === 'set1' ? 'Choose a ' + (P.kind === 'pin' ? '4-digit PIN' : P.kind === 'pwd' ? 'password (4+ characters)' : 'pattern (join 4+ dots)') : P.mode === 'set2' ? (P.kind === 'pat' ? 'Draw it again' : 'Type it again') : P.mode === 'verify' ? 'Confirm your current ' + word : 'Ledger';
-  const alt = P.mode === 'unlock' ? `${S.lock.type === 'device' && P.kind !== 'device' ? '<button class="forgot" data-act="bioBack">👆 Use phone lock</button>' : ''}${P.kind === 'device' && S.sec ? '<button class="forgot" data-act="bioUseApp">Use app ' + ({ pin: 'PIN', pwd: 'password', pat: 'pattern' }[S.sec.kind]) + ' instead</button>' : ''}<button class="forgot" data-act="pinForgot">Forgot?</button>` : '<button class="forgot" data-act="pinCancel">Cancel</button>';
+  const fp = P.mode === 'unlock' && canBio() ? `<button class="fpb" data-act="bioAsk"><svg viewBox="0 0 24 24"><path d="M12 11c0 3.5-.6 6.3-1.8 8.6M8.5 9.5A3.5 3.5 0 0 1 15.5 11c0 2.4-.3 4.6-.9 6.5M5.3 8.6A7 7 0 0 1 19 11c0 1.2-.1 2.4-.3 3.5M5 13.5c.1-.8.1-1.7 0-2.5M8.6 20.3C9.5 18 10 15 10 11.5"/></svg>Use fingerprint</button>` : '';
+  const alt = P.mode === 'unlock' ? `${fp}<button class="forgot" data-act="pinForgot">Forgot?</button>` : '<button class="forgot" data-act="pinCancel">Cancel</button>';
   let mid = '';
-  if (P.kind === 'device') mid = `<button class="pk bioBtn" data-act="bioAsk">👆<small>Fingerprint, face or phone PIN</small></button>`;
+  if (P.kind === 'device') mid = `<div class="sub" style="margin:18px 0 6px">Fingerprint, face or your phone's PIN</div>`;
   else if (P.kind === 'pin') mid = `<div class="dots" id="dots">${[0, 1, 2, 3].map(i => `<i class="${i < P.val.length ? 'on' : ''}"></i>`).join('')}</div><div class="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, '⌫'].map(k => k === '' ? '<span></span>' : `<button class="pk ${k === '⌫' ? 't' : ''}" data-act="pinKey" data-k="${k}">${k}</button>`).join('')}</div>`;
   else if (P.kind === 'pwd') mid = `<form id="pwF" onsubmit="return false" style="margin:22px 0 10px"><input type="password" id="pwIn" autocomplete="${set ? 'new-password' : 'current-password'}" placeholder="Password" style="text-align:center;font-size:18px"><button class="btn big" data-act="pwGo" style="margin-top:12px">${P.mode === 'unlock' ? 'Unlock' : 'Next'}</button></form>`;
   else mid = `<div class="patw"><svg id="patSvg" viewBox="0 0 300 300"><polyline id="patLine" points="" /></svg>${[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => `<i class="pd" data-i="${i}" style="left:${(i % 3) * 33.333 + 16.667}%;top:${Math.floor(i / 3) * 33.333 + 16.667}%"></i>`).join('')}</div>`;
-  L.innerHTML = `<div class="lk"><div class="logo">${LOGO('lk')}</div><h2>${title}</h2>${mid}<div class="lkalt">${alt}</div></div>`;
+  if (P.mode === 'set1' && P.backup) title = 'Backup PIN, in case fingerprint fails';
+  L.innerHTML = `<div class="lk"><div class="logo">${LOGO('lk')}</div><h2>${P.mode === 'unlock' ? 'Ledger' : title}</h2>${P.mode === 'unlock' ? `<div class="sub">${P.kind === 'device' ? greet() : title}</div>` : ''}${mid}<div class="lkalt">${alt}</div></div>`;
   if (P.kind === 'pwd') setTimeout(() => { const i = $('#pwIn'); if (i) { i.focus(); i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); ACT.pwGo(); } }; } }, 60);
   if (P.kind === 'pat') patBind();
 }
@@ -2866,7 +2987,7 @@ async function lockInput(v) {
     lockFail(); P.val = ''; P.seq = []; return setTimeout(drawLock, 380);
   }
   if (P.mode === 'set1') { if (P.kind === 'pwd' && v.length < 4) return toast('Use at least 4 characters'); if (P.kind === 'pat' && v.split('-').length < 4) { toast('Join at least 4 dots'); P.seq = []; return drawLock(); } P.first = v; P.mode = 'set2'; P.val = ''; P.seq = []; return drawLock(); }
-  if (v === P.first) { await setSecret(P.kind, v); S.lock.type = P.kind; save(); $('#lock').hidden = true; U.pin = null; toast({ pin: 'PIN', pwd: 'Password', pat: 'Pattern' }[P.kind] + ' lock on 🔒'); return render(); }
+  if (v === P.first) { await setSecret(P.kind, v); if (!P.backup) S.lock.type = P.kind; save(); $('#lock').hidden = true; U.pin = null; toast(P.backup ? 'Backup PIN saved 🔒' : { pin: 'PIN', pwd: 'Password', pat: 'Pattern' }[P.kind] + ' lock on 🔒'); return render(); }
   toast("They didn't match. Try again."); P.mode = 'set1'; P.val = ''; P.first = ''; P.seq = []; drawLock();
 }
 ACT.pinKey = el => {
@@ -2906,12 +3027,12 @@ ACT.lockType = el => {
   });
 };
 ACT.lockDelay = el => { S.lock.delay = +el.dataset.v; save(); $$('[data-act=lockDelay]').forEach(b => b.classList.toggle('on', b === el)); toast('Locks ' + (S.lock.delay < 0 ? 'only when the app is closed' : S.lock.delay ? 'after ' + LOCK_D.find(x => x[0] === S.lock.delay)[1] + ' away' : 'as soon as you leave')); };
-ACT.lockBackup = () => guard(() => showLock('set1', (S.sec && S.sec.kind) || 'pin'));
+ACT.lockBackup = () => guard(() => { U.pin = { mode: 'set1', kind: (S.sec && S.sec.kind) || 'pin', val: '', first: '', seq: [], backup: true }; $('#lock').hidden = false; drawLock(); });
 function lockCard() {
   const I = AND ? andInfo() : {};
   return `<div class="card"><h2>App lock</h2><div class="lbl" style="margin-top:0">Unlock with</div><div class="chips wrap">${LOCK_T().map(([k, i, l]) => `<button class="chip ${S.lock.type === k ? 'on' : ''}" data-act="lockType" data-v="${k}">${i} ${l}</button>`).join('')}</div>
-  <div class="hint">${S.lock.type === 'device' ? "Uses your phone's own lock: fingerprint, face (if your phone lets apps use it) or the phone's pattern / PIN." : S.lock.type === 'none' ? 'Anyone holding your unlocked phone can open Ledger.' : 'Tap it again to change your ' + ({ pin: 'PIN', pwd: 'password', pat: 'pattern' }[S.lock.type]) + '.'}${AND ? '' : " Phone's lock (fingerprint / face) is available in the Ledger Android app."}</div>
-  ${S.lock.type === 'device' ? `<button class="btn sec sm" data-act="lockBackup" style="margin-top:6px">${S.sec ? 'Change' : 'Add'} a backup app PIN</button>` : ''}
+  <div class="hint">${S.lock.type === 'device' ? "Opens with your PIN, or tap 👆 Use fingerprint (face works too if your phone allows apps to use it)." : S.lock.type === 'none' ? 'Anyone holding your unlocked phone can open Ledger.' : 'Tap it again to change your ' + ({ pin: 'PIN', pwd: 'password', pat: 'pattern' }[S.lock.type]) + '.'}${AND ? '' : " Phone's lock (fingerprint / face) is available in the Ledger Android app."}</div>
+  ${S.lock.type === 'device' ? `<button class="btn sec sm" data-act="lockBackup" style="margin-top:6px">${S.sec ? 'Change' : 'Add'} backup PIN</button>` : ''}${AND && ['pin', 'pwd', 'pat'].includes(S.lock.type) && canBio() ? '<div class="hint">👆 The lock screen also has a "Use fingerprint" button.</div>' : ''}
   ${lockOn() ? `<div class="lbl">Lock again after leaving the app</div><div class="chips wrap">${LOCK_D.map(([k, l]) => `<button class="chip ${S.lock.delay === k ? 'on' : ''}" data-act="lockDelay" data-v="${k}">${l}</button>`).join('')}</div>` : ''}
   <div class="hint">Forgot it? Tap "Forgot?" on the lock screen and type your Sheet secret key.</div></div>
   <div class="card"><h2>Privacy</h2><label class="check" style="margin-top:0"><input type="checkbox" data-in="hideT" ${S.hide ? 'checked' : ''}> Hide all amounts (👁 button at the top)</label></div>`;
@@ -2930,7 +3051,8 @@ ACT.pinForgot = () => {
 /* when to lock again */
 const HID = 'ledger_hidden_at';
 function lockDue(since) { if (!lockOn()) return false; const d = S.lock.delay; if (d < 0) return false; return !since || Date.now() - since >= d * 1000; }
-function bootLock() { if (!lockOn()) return; const d = S.lock.delay; let h = 0; try { h = +localStorage.getItem(HID) || 0; } catch (e) { } if (d > 0 && h && Date.now() - h < d * 1000) return; showLock('unlock'); }
+function needBootLock() { if (!lockOn()) return false; const d = S.lock.delay; let h = 0; try { h = +localStorage.getItem(HID) || 0; } catch (e) { } return !(d > 0 && h && Date.now() - h < d * 1000); }
+function bootLock() { if (needBootLock()) showLock('unlock', null, true); }
 
 /* ---------- theme & install icon ---------- */
 function applyTheme() {
@@ -2963,7 +3085,9 @@ function splash() {
 }
 
 /* ---------- boot ---------- */
-applyTheme(); setupIcons(); splash();
+applyTheme(); setupIcons();
+/* one opening screen: the lock screen when locked, otherwise the welcome animation */
+if (needBootLock()) { const sp = $('#splash'); if (sp) sp.remove(); } else splash();
 try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (!S.theme) { applyTheme(); render(); } }); } catch (e) { }
 setTab('home');
 bootLock();
@@ -2976,6 +3100,7 @@ if (AND) {
   drainSms();
   try { if (AND.pendingOpen() === '1') setTimeout(() => { if (pendNew().length) ACT.pendOpen(); }, 500); } catch (e) { }
   try { AND.checkUpdate(); } catch (e) { }
+  try { if (AND.takeAction) widgetAct(AND.takeAction()); } catch (e) { }
 }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { if (U.noLock && Date.now() < U.noLock) { U.hiddenAt = 0; flush(); return; } U.hiddenAt = Date.now(); try { localStorage.setItem(HID, U.hiddenAt); } catch (e) { } flush(); return; }

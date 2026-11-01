@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="w_free">Free money, safe per day, and quick + Expense / + Income</string>
+    <string name="w_month">This month\'s spending against your budget</string>
+    <string name="w_needs">Bank SMS to sort, card dues and bills due</string>
+    <string name="w_pulse">Your Money Pulse score out of 100</string>
+</resources>
