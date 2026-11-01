@@ -2,6 +2,7 @@ package com.saysee.ledger;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -109,6 +110,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(saved);
         openPending = getIntent() != null && getIntent().getBooleanExtra(EXTRA_PENDING, false);
         widgetAction = getIntent() != null ? getIntent().getStringExtra(Widgets.EXTRA) : null;
+        if (getIntent() != null && ACTION_INSTALL.equals(getIntent().getAction())) { final Intent st = getIntent(); ui.postDelayed(() -> installStatus(st), 800); }
         web = new WebView(this);
         setContentView(web);
 
@@ -185,43 +187,60 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception ignored) { }
     }
 
-    /** Downloads the new APK, then opens Android's installer (asks once for "Install unknown apps"). */
-    private void installUpdate(String url) {
+    private volatile boolean downloading;
+    static final String ACTION_INSTALL = "com.saysee.ledger.INSTALL_STATUS";
+
+    /** Downloads the new APK (one at a time, to a temp file), checks it, then installs it with Android's PackageInstaller. */
+    private void installUpdate(String url, long expect) {
+        if (downloading) { js("window.toast&&toast('Already downloading…')"); return; }
+        downloading = true;
         new Thread(() -> {
             try {
                 File dir = new File(getCacheDir(), "updates");
-                if (!dir.exists() && !dir.mkdirs()) throw new Exception("no space");
-                File f = new File(dir, "ledger.apk");
+                if (!dir.exists() && !dir.mkdirs()) throw new Exception("no space on phone");
+                File tmp = new File(dir, "ledger.part"), f = new File(dir, "ledger.apk");
+                if (tmp.exists()) tmp.delete();
                 HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
                 c.setInstanceFollowRedirects(true);
                 c.setConnectTimeout(15000);
                 c.setReadTimeout(30000);
                 c.setRequestProperty("User-Agent", "Ledger-Android");
+                c.setRequestProperty("Accept", "application/octet-stream");
                 int code = c.getResponseCode();
-                if (code == 301 || code == 302 || code == 307 || code == 308) {
+                for (int hop = 0; hop < 5 && (code == 301 || code == 302 || code == 303 || code == 307 || code == 308); hop++) {
                     String loc = c.getHeaderField("Location");
-                    c = (HttpURLConnection) new URL(loc).openConnection();
+                    c.disconnect();
+                    c = (HttpURLConnection) new URL(new URL(url), loc).openConnection();
                     c.setConnectTimeout(15000);
                     c.setReadTimeout(30000);
+                    c.setRequestProperty("User-Agent", "Ledger-Android");
                     code = c.getResponseCode();
                 }
-                if (code != 200) throw new Exception("HTTP " + code);
+                if (code != 200) throw new Exception("server said " + code);
                 long total = c.getContentLengthLong(), got = 0;
+                if (total <= 0) total = expect;
                 int last = -1;
-                try (InputStream in = c.getInputStream(); OutputStream o = new FileOutputStream(f)) {
-                    byte[] b = new byte[32768];
+                try (InputStream in = c.getInputStream(); OutputStream o = new FileOutputStream(tmp)) {
+                    byte[] b = new byte[65536];
                     int n;
                     while ((n = in.read(b)) > 0) {
                         o.write(b, 0, n);
                         got += n;
-                        int pct = total > 0 ? (int) (got * 100 / total) : -1;
+                        int pct = total > 0 ? (int) Math.min(99, got * 100 / total) : -1;
                         if (pct != last && pct >= 0) { last = pct; final int p = pct; ui.post(() -> js("window.onLedgerDl&&onLedgerDl(" + p + ")")); }
                     }
                 }
-                if (f.length() < 100000) throw new Exception("download incomplete");
-                ui.post(() -> openInstaller(f));
+                if (expect > 0 && tmp.length() != expect) throw new Exception("download incomplete (" + tmp.length() + " of " + expect + " bytes). Try again on Wi-Fi");
+                /* make sure it really is a newer Ledger before asking Android to install it */
+                android.content.pm.PackageInfo pi = getPackageManager().getPackageArchiveInfo(tmp.getAbsolutePath(), 0);
+                if (pi == null || !getPackageName().equals(pi.packageName)) throw new Exception("the downloaded file is not a valid Ledger app. Try again");
+                if (f.exists()) f.delete();
+                if (!tmp.renameTo(f)) throw new Exception("could not save the update");
+                ui.post(() -> { js("window.onLedgerDl&&onLedgerDl(100)"); openInstaller(f); });
             } catch (Exception e) {
                 ui.post(() -> js("window.onLedgerDl&&onLedgerDl(-1," + q(String.valueOf(e.getMessage())) + ")"));
+            } finally {
+                downloading = false;
             }
         }).start();
     }
@@ -238,20 +257,46 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         pendingApk = null;
-        try {
-            Uri u = FileProvider.getUriForFile(this, getPackageName() + ".files", f);
-            Intent i = new Intent(Intent.ACTION_VIEW).setDataAndType(u, "application/vnd.android.package-archive")
-                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(i);
-            js("window.onLedgerDl&&onLedgerDl(101)");
-        } catch (Exception e) {
-            js("window.onLedgerDl&&onLedgerDl(-1," + q(String.valueOf(e.getMessage())) + ")");
+        new Thread(() -> {
+            try {
+                android.content.pm.PackageInstaller pkg = getPackageManager().getPackageInstaller();
+                android.content.pm.PackageInstaller.SessionParams sp = new android.content.pm.PackageInstaller.SessionParams(android.content.pm.PackageInstaller.SessionParams.MODE_FULL_INSTALL);
+                sp.setAppPackageName(getPackageName());
+                int id = pkg.createSession(sp);
+                try (android.content.pm.PackageInstaller.Session ses = pkg.openSession(id)) {
+                    try (InputStream in = new FileInputStream(f); OutputStream out = ses.openWrite("ledger.apk", 0, f.length())) {
+                        byte[] b = new byte[65536];
+                        int n;
+                        while ((n = in.read(b)) > 0) out.write(b, 0, n);
+                        ses.fsync(out);
+                    }
+                    Intent cb = new Intent(this, MainActivity.class).setAction(ACTION_INSTALL).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                    int fl = PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 31 ? PendingIntent.FLAG_MUTABLE : 0);
+                    ses.commit(PendingIntent.getActivity(this, 77, cb, fl).getIntentSender());
+                }
+                ui.post(() -> js("window.onLedgerDl&&onLedgerDl(101)"));
+            } catch (Exception e) {
+                ui.post(() -> js("window.onLedgerDl&&onLedgerDl(-1," + q("installer: " + e.getMessage()) + ")"));
+            }
+        }).start();
+    }
+
+    /** answers from Android's installer: ask you to confirm, or report a problem */
+    private void installStatus(Intent i) {
+        int st = i.getIntExtra(android.content.pm.PackageInstaller.EXTRA_STATUS, -999);
+        if (st == android.content.pm.PackageInstaller.STATUS_PENDING_USER_ACTION) {
+            Intent confirm = i.getParcelableExtra(Intent.EXTRA_INTENT);
+            if (confirm != null) { confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); try { startActivity(confirm); } catch (Exception ignored) { } }
+        } else if (st != android.content.pm.PackageInstaller.STATUS_SUCCESS && st != -999) {
+            String m = i.getStringExtra(android.content.pm.PackageInstaller.EXTRA_STATUS_MESSAGE);
+            js("window.onLedgerDl&&onLedgerDl(-1," + q(st == android.content.pm.PackageInstaller.STATUS_FAILURE_ABORTED ? "install cancelled" : "Android said: " + (m == null ? "install failed (" + st + ")" : m)) + ")");
         }
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        if (intent != null && ACTION_INSTALL.equals(intent.getAction())) { installStatus(intent); return; }
         if (intent != null && intent.getBooleanExtra(EXTRA_PENDING, false))
             js("window.__ledgerOpenPending&&__ledgerOpenPending()");
         String w = intent != null ? intent.getStringExtra(Widgets.EXTRA) : null;
@@ -562,7 +607,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @JavascriptInterface
-        public void installUpdate(String url) { MainActivity.this.installUpdate(url); }
+        public void installUpdate(String url) { MainActivity.this.installUpdate(url, 0); }
+
+        @JavascriptInterface
+        public void installUpdate2(String url, String size) {
+            long n = 0;
+            try { n = Long.parseLong(size); } catch (Exception ignored) { }
+            MainActivity.this.installUpdate(url, n);
+        }
 
         /** the app sends a ready-made snapshot for the home-screen widgets */
         @JavascriptInterface

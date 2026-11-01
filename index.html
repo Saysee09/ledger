@@ -449,7 +449,7 @@ const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings',
 const CLOUD = { url: '__SHEET_URL__', clientId: '__WEB_CLIENT_ID__' };
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-01 b9';
+const APP_BUILD = '2026-11-01 b10';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -747,12 +747,13 @@ function updSheet() {
   <div class="section-t">What's new</div><div class="card" style="padding:4px 16px 12px">${updNotes(u) || '<div class="hint">Bug fixes and improvements.</div>'}</div>
   <button class="btn sec sm" data-act="updWeb">Download from GitHub instead</button>`, 'tall');
 }
-ACT.updInstall = () => { const u = U.upd; if (!u) return; const b = $('#updBtn'); if (b) { b.disabled = true; b.textContent = 'Downloading…'; } $('#updBar').style.display = 'block'; try { AND.installUpdate(u.url); } catch (e) { window.onLedgerDl(-1, 'Update the phone app first'); } };
+ACT.updInstall = () => { const u = U.upd; if (!u) return; const b = $('#updBtn'); if (b) { b.disabled = true; b.textContent = 'Downloading…'; } $('#updBar').style.display = 'block'; try { if (AND.installUpdate2) AND.installUpdate2(u.url, String(u.size || 0)); else AND.installUpdate(u.url); } catch (e) { window.onLedgerDl(-1, 'Update the phone app first'); } };
 ACT.updWeb = () => { if (U.upd) window.open(U.upd.page || U.upd.url, '_blank'); };
 window.onLedgerDl = (p, msg) => {
   const b = $('#updBtn'), bar = $('#updBar'), m = $('#updMsg'); if (!b) return;
   if (p >= 0 && p <= 100) { bar.querySelector('i').style.width = p + '%'; b.textContent = 'Downloading… ' + p + '%'; return; }
-  if (p === 101) { b.textContent = 'Installer opened ✓'; m.innerHTML = 'Tap <b>Update</b> on Android\'s screen. Ledger restarts on the new version.'; return; }
+  if (p === 100) { bar.querySelector('i').style.width = '100%'; b.textContent = 'Checking the download…'; return; }
+  if (p === 101) { b.textContent = 'Installing…'; m.innerHTML = 'Tap <b>Update</b> / <b>Install</b> on Android\'s screen. Ledger closes and reopens on the new version.'; return; }
   if (p === -2) { b.disabled = false; b.textContent = 'Install now'; m.innerHTML = 'One time only: turn on <b>Allow from this source</b> for Ledger, then come back. The install continues by itself.'; return; }
   b.disabled = false; b.textContent = 'Try again'; m.innerHTML = '<span class="red">Download failed' + (msg ? ': ' + esc(msg) : '') + '.</span> Check the internet, or use "Download from GitHub instead".';
 };
