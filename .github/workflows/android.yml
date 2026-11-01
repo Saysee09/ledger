@@ -3,7 +3,7 @@ name: Build Ledger Android app
 on:
   push:
     branches: [main, dev]
-    paths: ['android/**', 'index.html', '.github/workflows/android.yml']
+    paths: ['android/**', 'index.html', 'RELEASE_NOTES.md', '.github/workflows/android.yml']
   workflow_dispatch:
 
 permissions:
@@ -41,7 +41,7 @@ jobs:
 
       - name: Build
         working-directory: android
-        run: gradle assembleRelease --no-daemon --stacktrace -PversionCode=${{ github.run_number }}
+        run: gradle assembleRelease --no-daemon --stacktrace -PversionCode=${{ github.run_number }} -PversionSuffix=${{ github.ref_name == 'main' && '' || '-test' }}
 
       - name: Name the file
         run: cp android/app/build/outputs/apk/release/app-release.apk ledger.apk
@@ -51,7 +51,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name == 'main' && 'android' || 'test' }}-${{ github.run_number }}
           name: ${{ github.ref_name == 'main' && 'Ledger Android' || 'TEST build (dev branch)' }} ${{ github.run_number }}
-          body: ${{ github.ref_name == 'main' && 'Install ledger.apk on your phone. Newer versions install over the old one and keep your data.' || 'Test build from the dev branch. Installs over your current app and keeps your data.' }}
+          body_path: RELEASE_NOTES.md
           files: ledger.apk
           target_commitish: ${{ github.sha }}
           prerelease: ${{ github.ref_name != 'main' }}

@@ -44,6 +44,13 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
+import androidx.work.Constraints;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.NetworkType;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import java.util.concurrent.TimeUnit;
 import androidx.webkit.WebViewAssetLoader;
 import androidx.webkit.WebViewClientCompat;
 
@@ -74,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
     private WebView web;
     private boolean openPending;
     private String widgetAction;
+    private File pendingApk;
     private ValueCallback<Uri[]> fileCb;
     private final Handler ui = new Handler(Looper.getMainLooper());
 
@@ -168,6 +176,77 @@ public class MainActivity extends AppCompatActivity {
         });
 
         web.loadUrl(START);
+
+        /* look for a new app version about twice a day, even when Ledger is closed */
+        try {
+            PeriodicWorkRequest w = new PeriodicWorkRequest.Builder(UpdateWorker.class, 12, TimeUnit.HOURS)
+                    .setConstraints(new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).build();
+            WorkManager.getInstance(this).enqueueUniquePeriodicWork("ledger-update", ExistingPeriodicWorkPolicy.KEEP, w);
+        } catch (Exception ignored) { }
+    }
+
+    /** Downloads the new APK, then opens Android's installer (asks once for "Install unknown apps"). */
+    private void installUpdate(String url) {
+        new Thread(() -> {
+            try {
+                File dir = new File(getCacheDir(), "updates");
+                if (!dir.exists() && !dir.mkdirs()) throw new Exception("no space");
+                File f = new File(dir, "ledger.apk");
+                HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
+                c.setInstanceFollowRedirects(true);
+                c.setConnectTimeout(15000);
+                c.setReadTimeout(30000);
+                c.setRequestProperty("User-Agent", "Ledger-Android");
+                int code = c.getResponseCode();
+                if (code == 301 || code == 302 || code == 307 || code == 308) {
+                    String loc = c.getHeaderField("Location");
+                    c = (HttpURLConnection) new URL(loc).openConnection();
+                    c.setConnectTimeout(15000);
+                    c.setReadTimeout(30000);
+                    code = c.getResponseCode();
+                }
+                if (code != 200) throw new Exception("HTTP " + code);
+                long total = c.getContentLengthLong(), got = 0;
+                int last = -1;
+                try (InputStream in = c.getInputStream(); OutputStream o = new FileOutputStream(f)) {
+                    byte[] b = new byte[32768];
+                    int n;
+                    while ((n = in.read(b)) > 0) {
+                        o.write(b, 0, n);
+                        got += n;
+                        int pct = total > 0 ? (int) (got * 100 / total) : -1;
+                        if (pct != last && pct >= 0) { last = pct; final int p = pct; ui.post(() -> js("window.onLedgerDl&&onLedgerDl(" + p + ")")); }
+                    }
+                }
+                if (f.length() < 100000) throw new Exception("download incomplete");
+                ui.post(() -> openInstaller(f));
+            } catch (Exception e) {
+                ui.post(() -> js("window.onLedgerDl&&onLedgerDl(-1," + q(String.valueOf(e.getMessage())) + ")"));
+            }
+        }).start();
+    }
+
+    private void openInstaller(File f) {
+        if (Build.VERSION.SDK_INT >= 26 && !getPackageManager().canRequestPackageInstalls()) {
+            pendingApk = f;
+            js("window.onLedgerDl&&onLedgerDl(-2)");
+            try {
+                startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName())));
+            } catch (Exception e) {
+                js("window.onLedgerDl&&onLedgerDl(-1,'Open Settings → Apps → Ledger → Install unknown apps')");
+            }
+            return;
+        }
+        pendingApk = null;
+        try {
+            Uri u = FileProvider.getUriForFile(this, getPackageName() + ".files", f);
+            Intent i = new Intent(Intent.ACTION_VIEW).setDataAndType(u, "application/vnd.android.package-archive")
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+            js("window.onLedgerDl&&onLedgerDl(101)");
+        } catch (Exception e) {
+            js("window.onLedgerDl&&onLedgerDl(-1," + q(String.valueOf(e.getMessage())) + ")");
+        }
     }
 
     @Override
@@ -184,6 +263,8 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         current = new WeakReference<>(this);
         js("window.__ledgerSmsPing&&__ledgerSmsPing()");
+        /* came back from "Install unknown apps": carry on with the install */
+        if (pendingApk != null && (Build.VERSION.SDK_INT < 26 || getPackageManager().canRequestPackageInstalls())) openInstaller(pendingApk);
     }
 
     @Override
@@ -464,6 +545,23 @@ public class MainActivity extends AppCompatActivity {
         public void reload() {
             ui.post(() -> web.loadUrl(START));
         }
+
+        /** newest version found on GitHub (JSON) or "" */
+        @JavascriptInterface
+        public String updateInfo() { return UpdateChecker.saved(MainActivity.this); }
+
+        /** check GitHub now; answers through window.onLedgerNewVersion(json) */
+        @JavascriptInterface
+        public void updateCheck() {
+            new Thread(() -> {
+                org.json.JSONObject u = UpdateChecker.check(MainActivity.this);
+                final String j = u == null ? "" : u.toString();
+                ui.post(() -> js("window.onLedgerNewVersion&&onLedgerNewVersion(" + q(j) + ")"));
+            }).start();
+        }
+
+        @JavascriptInterface
+        public void installUpdate(String url) { MainActivity.this.installUpdate(url); }
 
         /** the app sends a ready-made snapshot for the home-screen widgets */
         @JavascriptInterface

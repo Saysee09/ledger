@@ -320,6 +320,9 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .bd{background:var(--soft);border-radius:18px;padding:14px 12px;display:flex;flex-direction:column;gap:2px;opacity:.55;filter:grayscale(1)}
 .bd span{font-size:1.8rem}.bd b{font-size:.86rem}.bd small{font-size:.7rem;color:var(--mute);font-weight:600}
 .bd.ok{opacity:1;filter:none;background:color-mix(in srgb,var(--acc) 10%,var(--card));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--acc) 35%,transparent)}
+.upd-card{display:flex;gap:14px;align-items:center;background:var(--soft);border-radius:20px;padding:14px}
+.upd-card small{display:block;color:var(--mute);font-size:.76rem;font-weight:600;margin-top:2px}
+.upd-ul{margin:4px 0 4px 18px;padding:0}.upd-ul li{font-size:.86rem;line-height:1.45;margin:6px 0}
 .srch2{display:flex;gap:8px}.srch2 input{flex:1;min-width:0}
 .askb{flex:0 0 auto;height:48px;padding:0 14px;border-radius:14px;background:linear-gradient(135deg,#8B7BFF,#5B5BF7);color:#fff;font-weight:800;font-size:.84rem;box-shadow:0 6px 16px rgba(91,91,247,.3)}
 .a-hero{text-align:center;padding:8px 6px 4px}.a-hero b{display:block;font-size:1.05rem;font-weight:800;margin-top:6px}.a-hero small{display:block;color:var(--mute);font-size:.78rem;margin-top:4px;line-height:1.45}
@@ -663,7 +666,7 @@ function widgetSnap() {
 function widgetPush() { try { if (S.accounts.length) AND.setWidgets(JSON.stringify(widgetSnap())); } catch (e) { } }
 /* a widget button opened the app */
 function widgetAct(a) {
-  if (!a) return; const go = () => { if (a === 'exp' || a === 'inc') { setTab('home'); compose(a); } else if (a === 'inbox') inboxSheet(); else if (a === 'pulse') { setTab('home'); ACT.pulseOpen(); } else if (a === 'insights') setTab('insights'); else setTab('home'); };
+  if (!a) return; const go = () => { if (a === 'exp' || a === 'inc') { setTab('home'); compose(a); } else if (a === 'inbox') inboxSheet(); else if (a === 'pulse') { setTab('home'); ACT.pulseOpen(); } else if (a === 'insights') setTab('insights'); else if (a === 'update') { updLoad(); updSheet(); } else setTab('home'); };
   setTimeout(go, 200);
 }
 window.__ledgerAction = a => widgetAct(a);
@@ -701,12 +704,62 @@ function budgetAlerts() {
 /* ---------- smart nudges (home, current month) ---------- */
 const snoozed = k => { const s = (S.prefs.snooze || {})[k]; return s && s >= today(); };
 /* =========================================================
+   ⬆️ APP UPDATES (Android app): new versions from GitHub Releases
+   ========================================================= */
+const updVer = u => u ? '8.0.' + u.n + (u.test ? ' (test)' : '') : '';
+function updLoad() { if (!AND || !AND.updateInfo) return; try { const j = AND.updateInfo(); U.upd = j ? JSON.parse(j) : null; } catch (e) { U.upd = null; } }
+window.onLedgerNewVersion = j => {
+  let u = null; try { u = j ? JSON.parse(j) : null; } catch (e) { }
+  const isNew = u && (!U.upd || U.upd.tag !== u.tag); U.upd = u; bellBadge(); if (isNew && U.tab === 'home' && !sheetOpen()) render();
+  if (U.updManual) { U.updManual = false; if (!u) toast("You're on the latest version (" + (andInfo().version || '') + ')'); else updSheet(); return; }
+  if (isNew && !S.prefs['updSeen_' + u.tag]) toast('⬆️ Ledger ' + updVer(u) + ' is ready', "What's new", () => updSheet());
+};
+function updAlert() {
+  const u = U.upd; if (!u) return '';
+  return `<div class="alert info" style="border-left-color:var(--green)"><span class="ic" style="background:#11A04F22">⬆️</span><span class="mid"><b>New version ${esc(updVer(u))} ready</b><small>${esc(updDate(u.date))} · ${updCount(u)} change${updCount(u) === 1 ? '' : 's'}</small></span><button class="btn sm" data-act="updOpen">What's new</button></div>`;
+}
+const updDate = d => { if (!d) return ''; const x = new Date(d); return isNaN(x) ? '' : x.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + x.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' }); };
+const updLines = u => String(u.notes || '').split(/\r?\n/);
+const updCount = u => updLines(u).filter(l => /^\s*[-*•]\s+/.test(l)).length;
+/* release notes are simple markdown: "## Heading" and "- point" lines */
+function updNotes(u) {
+  let h = '', open = false;
+  updLines(u).forEach(l => {
+    const t = l.trim(); if (!t) return;
+    if (/^#{1,3}\s/.test(t)) { if (open) { h += '</ul>'; open = false; } const ti = t.replace(/^#+\s*/, ''); if (!/^ledger v?\d/i.test(ti)) h += `<div class="section-t" style="margin:14px 2px 6px">${esc(ti)}</div>`; return; }
+    if (/^[-*•]\s+/.test(t)) { if (!open) { h += '<ul class="upd-ul">'; open = true; } h += `<li>${esc(t.replace(/^[-*•]\s+/, '')).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</li>`; return; }
+    if (open) { h += '</ul>'; open = false; } h += `<div class="hint" style="color:var(--ink)">${esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</div>`;
+  });
+  return h + (open ? '</ul>' : '');
+}
+ACT.updOpen = () => updSheet();
+function updSheet() {
+  const u = U.upd; if (!u) return toast("You're on the latest version");
+  S.prefs['updSeen_' + u.tag] = 1; save(); bellBadge();
+  const mb = u.size ? (Math.round(u.size / 1048576 * 10) / 10) + ' MB' : '';
+  openSheet('⬆️ Update available', `<div class="upd-card"><div class="logo" style="width:64px;height:64px;margin:0 0 0 0;flex:0 0 auto">${LOGO('up')}</div><div class="mid"><b style="font-size:1.1rem">Ledger ${esc(updVer(u))}</b><small>${esc(u.name || '')}</small><small>Released ${esc(updDate(u.date))}${mb ? ' · ' + mb : ''}</small><small>You have ${esc(andInfo().version || '?')}</small></div></div>
+  <button class="btn big" data-act="updInstall" id="updBtn">Install now</button><div class="bar" id="updBar" style="margin-top:10px;display:none"><i style="width:0%;background:var(--acc)"></i></div><div class="hint center" id="updMsg">Downloads in the app, then Android asks you to confirm. Your data stays.</div>
+  <div class="section-t">What's new</div><div class="card" style="padding:4px 16px 12px">${updNotes(u) || '<div class="hint">Bug fixes and improvements.</div>'}</div>
+  <button class="btn sec sm" data-act="updWeb">Download from GitHub instead</button>`, 'tall');
+}
+ACT.updInstall = () => { const u = U.upd; if (!u) return; const b = $('#updBtn'); if (b) { b.disabled = true; b.textContent = 'Downloading…'; } $('#updBar').style.display = 'block'; try { AND.installUpdate(u.url); } catch (e) { window.onLedgerDl(-1, 'Update the phone app first'); } };
+ACT.updWeb = () => { if (U.upd) window.open(U.upd.page || U.upd.url, '_blank'); };
+window.onLedgerDl = (p, msg) => {
+  const b = $('#updBtn'), bar = $('#updBar'), m = $('#updMsg'); if (!b) return;
+  if (p >= 0 && p <= 100) { bar.querySelector('i').style.width = p + '%'; b.textContent = 'Downloading… ' + p + '%'; return; }
+  if (p === 101) { b.textContent = 'Installer opened ✓'; m.innerHTML = 'Tap <b>Update</b> on Android\'s screen. Ledger restarts on the new version.'; return; }
+  if (p === -2) { b.disabled = false; b.textContent = 'Install now'; m.innerHTML = 'One time only: turn on <b>Allow from this source</b> for Ledger, then come back. The install continues by itself.'; return; }
+  b.disabled = false; b.textContent = 'Try again'; m.innerHTML = '<span class="red">Download failed' + (msg ? ': ' + esc(msg) : '') + '.</span> Check the internet, or use "Download from GitHub instead".';
+};
+ACT.updCheck = () => { if (!AND || !AND.updateCheck) return toast('Update the phone app to get in-app updates'); U.updManual = true; toast('Checking for updates…'); try { AND.updateCheck(); } catch (e) { } try { AND.checkUpdate(); } catch (e) { } };
+
+/* =========================================================
    🔔 NOTIFICATION CENTRE: bank SMS to sort, things to pay, heads-ups
    ========================================================= */
 function heldDues() { return live(a => a.others).filter(a => heldOwed(a.name) > .004).map(a => `<div class="alert"><span class="ic" style="background:var(--soft)">🤝</span><span class="mid"><b>You owe ${esc(a.name)} ${inr(heldOwed(a.name))}</b><small>Used from ${esc(a.name)}'s money for yourself</small></span><button class="btn sm" data-act="heldPay" data-n="${esc(a.name)}">Pay back</button></div>`).join(''); }
 function inboxParts(all) {
   const keep = U.nudgeAll; U.nudgeAll = true;
-  try { return { sort: pendNew(), act: cardDues(all) + remDue() + emiDue() + heldDues(), info: budgetAlerts() + goalNudges() + nudges() }; } finally { U.nudgeAll = keep; }
+  try { return { sort: pendNew(), act: updAlert() + cardDues(all) + remDue() + emiDue() + heldDues(), info: budgetAlerts() + goalNudges() + nudges() }; } finally { U.nudgeAll = keep; }
 }
 const nAlerts = h => (h.match(/class="alert/g) || []).length;
 function inboxCount() { if (!S.accounts.length) return { all: 0, sort: 0, act: 0 }; const P = inboxParts(false), A = inboxParts(true); return { sort: P.sort.length, act: nAlerts(P.act), info: nAlerts(P.info), all: P.sort.length + nAlerts(A.act) + nAlerts(P.info), badge: P.sort.length + nAlerts(P.act) + nAlerts(P.info) }; }
@@ -718,7 +771,7 @@ function bellBadge() {
 }
 function inboxChip() {
   const c = inboxCount(); if (!c.badge) return '';
-  const bits = [c.sort ? c.sort + ' bank SMS to sort' : '', c.act ? c.act + ' to pay' : '', c.info ? c.info + ' heads-up' + (c.info > 1 ? 's' : '') : ''].filter(Boolean).join(' · ');
+  const bits = [c.sort ? c.sort + ' bank SMS to sort' : '', c.act ? (U.upd ? 'app update ready' + (c.act > 1 ? ' · ' + (c.act - 1) + ' to pay' : '') : c.act + ' to pay') : '', c.info ? c.info + ' heads-up' + (c.info > 1 ? 's' : '') : ''].filter(Boolean).join(' · ');
   return `<button class="alert info" data-act="inbox" style="width:100%;text-align:left;border-left-color:${c.sort || c.act ? 'var(--amber)' : 'var(--acc)'}"><span class="ic" style="background:var(--acc2)">🔔</span><span class="mid"><b>${c.badge} thing${c.badge > 1 ? 's' : ''} need${c.badge > 1 ? '' : 's'} you</b><small>${bits}</small></span><span class="ago">Open</span></button>`;
 }
 ACT.inbox = () => inboxSheet();
@@ -1960,7 +2013,7 @@ function phoneCard() {
   <div class="srow"><span class="ic" style="background:var(--soft)">🔋</span><span class="mid"><b>Battery: Unrestricted</b><small>${I.battery ? '✓ Samsung will not stop Ledger' : 'Needed so Samsung does not stop SMS reading'}</small></span>${I.battery ? '' : '<button class="btn sm" data-act="andBattery">Fix</button>'}</div>
   <div class="srow"><span class="ic" style="background:var(--soft)">👆</span><span class="mid"><b>App lock</b><small>${esc(lockSummary())}</small></span><button class="btn sm sec" data-act="spOpen" data-k="security">Change</button></div>
   <div class="srow"><span class="ic" style="background:var(--soft)">🧩</span><span class="mid"><b>Home-screen widgets</b><small>Long-press your home screen → Widgets → Ledger. Four to pick from; they refresh each time you open Ledger.</small></span></div>
-  <button class="btn sec sm" data-act="andUpd">Check for app update</button>
+  <button class="btn sec sm" data-act="updCheck">⬆️ Check for app update</button>${U.upd ? `<div class="hint green">Version ${esc(updVer(U.upd))} is ready · <a href="#" data-act="updOpen" style="color:var(--acc);font-weight:800">What's new</a></div>` : ''}
   <div class="hint">SMS are read only on this phone. Only completed debits and credits go to your "to sort" list and your own Google Sheet.</div></div>`;
 }
 ACT.andPerm = () => { try { AND.requestSms(); } catch (e) { } };
@@ -3007,7 +3060,7 @@ function renderSettings() {
   <div class="card"><h2>Files on this phone</h2><button class="btn sec" data-act="exportJson">⬇ Download backup file (JSON)</button><button class="btn sec" data-act="impJson">⬆ Restore from a JSON file</button><input type="file" id="impFile" accept=".json,application/json" hidden><button class="btn sec" data-act="exportCsv">⬇ Download all entries (CSV)</button><button class="btn dng" data-act="clearLocal">Clear this phone's copy</button><div class="hint">The Google Sheet is your master copy. Before any restore a safety copy of the Sheet is made, so a restore can always be undone.</div></div>`);
   if (U.sp === 'backup' && S.url) U.after = bkLoad;
   pg('sms', `<div class="card"><h2>Bank SMS</h2><div class="lbl" style="margin-top:0">Card / account last 4 digits</div>${live(a => a.type !== 'cash' && a.type !== 'investment' && mineA(a)).map(a => `<div class="grid2" style="grid-template-columns:1fr 110px;align-items:center;margin-bottom:6px"><span style="font-weight:700">${esc(a.name)}</span><input data-in="acL4" data-n="${esc(a.name)}" inputmode="numeric" maxlength="12" value="${esc(a.l4 || '')}" placeholder="e.g. 1211"></div>`).join('')}<div class="hint">Matches SMS like "from XX1211" to the right account. Several numbers? Separate them with commas. The Ledger phone app fills these in for you the first time it sees each one.</div><button class="btn sec" data-act="smsTry">🧪 Paste an SMS to test</button></div>`);
-  pg('about', `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Ledger Android app (Settings → Phone app).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v6</div>`);
+  pg('about', `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Ledger Android app (Settings → Phone app).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v8${AND ? ' · app ' + esc(andInfo().version || '') : ''}</div>`);
   return settingsView(PG);
 }
 /* settings: a short menu, each item opens its own page (Android back / ‹ returns to the menu) */
@@ -3339,6 +3392,7 @@ if (AND) {
   drainSms();
   try { if (AND.pendingOpen() === '1') setTimeout(() => { if (pendNew().length) ACT.pendOpen(); }, 500); } catch (e) { }
   try { AND.checkUpdate(); } catch (e) { }
+  updLoad(); if (U.upd && U.tab === 'home') render(); try { if (AND.updateCheck) setTimeout(() => AND.updateCheck(), 2500); } catch (e) { }
   try { if (AND.takeAction) widgetAct(AND.takeAction()); } catch (e) { }
 }
 document.addEventListener('visibilitychange', () => {

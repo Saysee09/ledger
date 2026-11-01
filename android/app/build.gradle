@@ -13,7 +13,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode vc
-        versionName "8.0." + vc
+        versionName "8.0." + vc + (project.findProperty('versionSuffix') ?: '')
     }
 
     signingConfigs {
@@ -48,6 +48,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.biometric:biometric:1.1.0'
     implementation 'androidx.webkit:webkit:1.11.0'
+    implementation 'androidx.work:work-runtime:2.9.1'
     implementation 'androidx.credentials:credentials:1.3.0'
     implementation 'androidx.credentials:credentials-play-services-auth:1.3.0'
     implementation 'com.google.android.libraries.identity.googleid:googleid:1.1.1'
