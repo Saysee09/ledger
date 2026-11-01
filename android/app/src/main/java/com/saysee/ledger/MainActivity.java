@@ -479,6 +479,7 @@ public class MainActivity extends AppCompatActivity {
                 JSONObject o = new JSONObject();
                 o.put("version", getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
                 o.put("sms", has(Manifest.permission.RECEIVE_SMS) && has(Manifest.permission.READ_SMS));
+                o.put("smsLast", SmsStore.last(MainActivity.this));
                 o.put("notif", Build.VERSION.SDK_INT < 33 || has(Manifest.permission.POST_NOTIFICATIONS));
                 PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
                 o.put("battery", pm != null && pm.isIgnoringBatteryOptimizations(getPackageName()));

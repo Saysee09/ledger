@@ -41,6 +41,17 @@ public final class SmsStore {
         return AMOUNT.matcher(body).find() && MONEY_WORD.matcher(body).find();
     }
 
+    /** last SMS this phone handed to Ledger, for the status line in Settings → Phone app */
+    static void noteLast(Context c, String sender, boolean kept) {
+        try {
+            JSONObject o = new JSONObject();
+            o.put("at", now()); o.put("from", sender == null ? "" : sender); o.put("kept", kept);
+            c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString("last", o.toString()).apply();
+        } catch (Exception ignored) { }
+    }
+
+    static String last(Context c) { return c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("last", ""); }
+
     static String now() { return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date()); }
     static String fmt(long ms) { return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date(ms)); }
 
