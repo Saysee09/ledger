@@ -326,6 +326,11 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .upd-card{display:flex;gap:14px;align-items:center;background:var(--soft);border-radius:20px;padding:14px}
 .upd-card small{display:block;color:var(--mute);font-size:.76rem;font-weight:600;margin-top:2px}
 .upd-ul{margin:4px 0 4px 18px;padding:0}.upd-ul li{font-size:.86rem;line-height:1.45;margin:6px 0}
+.rng{width:100%;height:28px;padding:0;background:none!important;border:none!important;accent-color:var(--acc);appearance:auto;-webkit-appearance:auto}
+.pli{display:flex;gap:8px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}.pli:first-of-type{border-top:none}
+.pli-m{flex:1;min-width:0}.pli-n{height:40px;font-weight:700}.pli-r{display:flex;gap:6px;margin-top:6px}.pli-v{height:40px;flex:1;min-width:0}
+.pmode{display:flex;background:var(--soft);border-radius:12px;padding:3px;flex:0 0 auto}.pmode button{height:34px;padding:0 9px;border-radius:9px;font-size:.72rem;font-weight:800;color:var(--mute)}.pmode button.on{background:var(--card);color:var(--ink);box-shadow:var(--sh)}
+.pli-o{display:block;font-size:.74rem;color:var(--mute);margin-top:5px}
 .srch2{display:flex;gap:8px}.srch2 input{flex:1;min-width:0}
 .askb{flex:0 0 auto;height:48px;padding:0 14px;border-radius:14px;background:linear-gradient(135deg,#8B7BFF,#5B5BF7);color:#fff;font-weight:800;font-size:.84rem;box-shadow:0 6px 16px rgba(91,91,247,.3)}
 .a-hero{text-align:center;padding:8px 6px 4px}.a-hero b{display:block;font-size:1.05rem;font-weight:800;margin-top:6px}.a-hero small{display:block;color:var(--mute);font-size:.78rem;margin-top:4px;line-height:1.45}
@@ -441,15 +446,15 @@ function download(name, text, type) {
 
 /* ---------- defaults ---------- */
 const CAT_DEF = [['Food', '🍽️', '#F97316'], ['Household', '🏠', '#EAB308'], ['Transportation', '🚕', '#14B8A6'], ['Personal & Lifestyle', '🛍️', '#A855F7'], ['Education', '📚', '#3B82F6'], ['Medical', '💊', '#EC4899'], ['Financial', '💳', '#64748B'], ['Miscellaneous', '✨', '#84CC16']];
-const defCfg = () => ({ categories: CAT_DEF.map(([name, icon, color]) => ({ name, icon, color, budget: 0, hidden: false })), sources: ['Salary', 'Bonus', 'Interest', 'Refund', 'Gift', 'Other'], invTypes: ['Stocks', 'Mutual Fund', 'ETF', 'Gold', 'FD / RD / PPF'], report: { on: true, day: 1, hour: 9, email: '', weekly: false, wHour: 9, cmp: 'prev' }, matched: {}, nudges: { weekly: true, anomaly: true, pace: true, recon: 14, goals: true }, profile: { born: '', earning: '', city: '', role: '' }, payees: {}, holdings: {}, signin: { clientIds: [], emails: [] }, backup: { keep: 15 }, career: { jobs: [] } });
+const defCfg = () => ({ categories: CAT_DEF.map(([name, icon, color]) => ({ name, icon, color, budget: 0, hidden: false })), sources: ['Salary', 'Bonus', 'Interest', 'Refund', 'Gift', 'Other'], invTypes: ['Stocks', 'Mutual Fund', 'ETF', 'Gold', 'FD / RD / PPF'], report: { on: true, day: 1, hour: 9, email: '', weekly: false, wHour: 9, cmp: 'prev' }, matched: {}, nudges: { weekly: true, anomaly: true, pace: true, recon: 14, goals: true }, profile: { born: '', earning: '', city: '', role: '' }, payees: {}, holdings: {}, signin: { clientIds: [], emails: [] }, backup: { keep: 15 }, career: { jobs: [] }, plans: { list: [] } });
 const ACC_T = { bank: ['🏦', 'Bank'], cash: ['💵', 'Cash'], wallet: ['👛', 'Wallet / UPI'], card: ['💳', 'Credit card'], investment: ['📈', 'Investment'] };
 const COLL = { Expenses: 'exp', Income: 'inc', Transfers: 'trf', Investments: 'inv', EMILog: 'emi', GoalLog: 'goal', LoanLog: 'loan', Adjustments: 'adj', Accounts: 'accounts', Goals: 'goals', EMIs: 'emis', Loans: 'loans', Reminders: 'rem', Pending: 'pend' };
-const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings', 'signin', 'backup', 'career'];
+const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings', 'signin', 'backup', 'career', 'plans'];
 /* Your Sheet and Google sign-in client (safe to be public: neither opens data without your Google account or secret key) */
 const CLOUD = { url: '__SHEET_URL__', clientId: '__WEB_CLIENT_ID__' };
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-01 b10';
+const APP_BUILD = '2026-11-01 b11';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -2167,7 +2172,13 @@ ACT.remPay = el => {
 
 /* ---------- budget planner (projection only: never changes your data) ---------- */
 const ESSENTIAL = ['Household', 'Medical', 'Education', 'Transportation', 'Financial'];
+/* Budget tab: Auto plan (learned from your spending) · My plans (your own, saved) */
 function budgetView() {
+  U.bseg = U.bseg || 'auto';
+  return `<div class="seg">${[['auto', '✨ Auto plan'], ['my', '📝 My plans']].map(([k, l]) => `<button class="${U.bseg === k ? 'on' : ''}" data-act="bseg" data-k="${k}">${l}</button>`).join('')}</div>` + (U.bseg === 'my' ? myPlansView() : autoPlanView());
+}
+ACT.bseg = el => { U.bseg = el.dataset.k; U.cpe = null; render(); };
+function autoPlanView() {
   const mine = S.exp.filter(myX), first = mine.reduce((m, e) => !m || e.ts < m ? e.ts : m, '');
   const span = first ? dayDiff(first.slice(0, 10), today()) : 0;
   if (span < 90) return `<div class="card"><div class="empty"><span class="big">🔒</span><b>Budget plan unlocks after 3 months of expenses</b><br>${first ? span + ' days logged · ' + (90 - span) + ' to go' : 'Start logging expenses'}</div><div class="bar"><i style="width:${Math.min(100, span / 90 * 100)}%;background:var(--acc)"></i></div><div class="hint">It studies how you really spend in each category, then fits that around your next salary, EMIs, bills and goals.</div></div>`;
@@ -2192,7 +2203,7 @@ function budgetView() {
   if (cardDue) fixed.push(['💳 Clear card dues (today)', cardDue]);
   const fixedT = r2(fixed.reduce((s2, x) => s2 + x[1], 0));
   const goalNeed = r2(S.goals.filter(g => !g.archived).reduce((s2, g) => { const gp = goalPlan(g); return s2 + (gp && gp.need ? gp.need : 0); }, 0));
-  const salary = +P.salary || 0, saveT = Math.ceil(Math.max(salary * P.pct / 100, goalNeed) / 100) * 100;
+  const salary = +P.salary || 0, saveT = Math.round(P.saveMode === 'amt' ? Math.min(salary, +P.saveAmt || 0) : salary * (+P.pct || 0) / 100);
   const canSpend = Math.round(salary - fixedT - saveT), want = Math.round(Object.values(hist).reduce((a, b) => a + b, 0));
   const cats = uniq(Object.keys(hist).concat(visCats().filter(c => c.budget > 0).map(c => c.name))).sort((a, b) => (hist[b] || 0) - (hist[a] || 0));
   let sug = {}; cats.forEach(c => sug[c] = hist[c] || 0);
@@ -2209,11 +2220,14 @@ function budgetView() {
   let h = `<div class="card"><h2>Plan for ${mLabel(pm)} <small>projection only</small></h2>
   <div class="grid2"><div><div class="lbl" style="margin-top:0">Next salary ₹</div><input id="plSal" inputmode="decimal" autocomplete="off" data-in="plSal" value="${esc(P.salary == null ? '' : P.salary)}" placeholder="e.g. 45000"></div><div><div class="lbl" style="margin-top:0">Salary date</div><input type="date" data-in="plDate" value="${P.date}"></div></div>
   <div class="chips" style="margin-top:8px">${sal ? `<button class="chip" data-act="plFill" data-v="${sal.amount}">💰 Last salary <small>${inr(sal.amount)}</small></button>` : ''}<button class="chip" data-act="plFill" data-v="${Math.max(0, Math.round(fr))}">👛 Free now <small>${inr(fr)}</small></button></div>
-  <div class="lbl">Save first</div><div class="chips">${[10, 15, 20, 25, 30].map(x => `<button class="chip ${P.pct === x ? 'on' : ''}" data-act="plPct" data-v="${x}">${x}%</button>`).join('')}</div>
+  <div class="lbl">Save first</div>
+  <input type="range" id="plR" min="0" max="100" step="1" value="${Math.round(svPct(P))}" data-in="plSv" data-k="r" class="rng">
+  <div class="grid2" style="margin-top:8px"><div><div class="lbl" style="margin-top:0">% of salary</div><input id="plN" inputmode="decimal" data-in="plSv" data-k="n" value="${Math.round(svPct(P) * 10) / 10}"></div><div><div class="lbl" style="margin-top:0">Or amount ₹</div><input id="plA" inputmode="decimal" data-in="plSv" data-k="a" value="${P.salary ? Math.round(svAmt(P)) : ''}" placeholder="e.g. 40000"></div></div>
+  ${goalNeed > 0 ? `<div class="hint">Your goal plans need about ${inr(goalNeed)}/month.</div>` : ''}
   <div class="lbl">Learn from the last</div><div class="chips">${[3, 6].map(x => `<button class="chip ${P.months === x ? 'on' : ''}" data-act="plMon" data-v="${x}">${x} months</button>`).join('')}</div></div>`;
   h += '<div id="plOut">';
   if (!(salary > 0)) return h + `<div class="hint center">Type your next salary (or tap a chip) to see the plan.</div></div>`;
-  h += `<div class="card"><h2>Where the salary goes</h2><div class="kv"><div><span>💰 Salary</span><b class="green">${inr(salary)}</b></div>${fixed.map(([l, v]) => `<div><span>${esc(l)}</span><b>−${inr(v)}</b></div>`).join('')}<div><span>🎯 Save & goals (${P.pct}%${goalNeed > salary * P.pct / 100 ? ', raised to cover goal plans' : ''})</span><b>−${inr(saveT)}</b></div><div><span><b style="color:var(--ink)">Left to spend</b></span><b class="${canSpend < 0 ? 'red' : ''}">${inr(canSpend)}</b></div><div><span>Per day (${daysIn(pm)} days)</span><b>${inr(Math.floor(Math.max(0, canSpend) / daysIn(pm)))}</b></div></div>
+  h += `<div class="card"><h2>Where the salary goes</h2><div class="kv"><div><span>💰 Salary</span><b class="green">${inr(salary)}</b></div>${fixed.map(([l, v]) => `<div><span>${esc(l)}</span><b>−${inr(v)}</b></div>`).join('')}<div><span>🎯 Save first (${salary ? Math.round(saveT / salary * 100) : 0}%)</span><b>−${inr(saveT)}</b></div><div><span><b style="color:var(--ink)">Left to spend</b></span><b class="${canSpend < 0 ? 'red' : ''}">${inr(canSpend)}</b></div><div><span>Per day (${daysIn(pm)} days)</span><b>${inr(Math.floor(Math.max(0, canSpend) / daysIn(pm)))}</b></div></div>
   ${canSpend < 0 ? '<div class="hint red">Your fixed costs and savings are more than the salary. Lower the save % or review bills.</div>' : want > canSpend ? `<div class="hint">You usually spend ${inr(want)} here, which is ${inr(want - canSpend)} more than fits. The plan trims wants first, then essentials.</div>` : `<div class="hint green">Your usual spending (${inr(want)}) fits, with ${inr(buffer)} spare.</div>`}</div>`;
   h += `<div class="card"><h2>Suggested by category <small>avg of ${ms.length} month${ms.length > 1 ? 's' : ''}</small></h2>${cats.map(c => { const k = cat(c), a = hist[c] || 0, b = sug[c], ch = a ? Math.round((b - a) / a * 100) : 0; return `<div class="srow"><span class="ic" style="background:${k.color}1f">${k.icon}</span><span class="mid"><b>${esc(c)}</b><small>Usually ${inr(a)}${k.budget ? ' · budget now ' + inr(k.budget) : ''}</small></span><span style="text-align:right"><span class="amt">${inr(b)}</span><br><small class="${ch < 0 ? 'amber' : 'mute'}" style="font-size:.7rem;font-weight:700">${ch < 0 ? ch + '%' : 'as usual'}</small></span></div>`; }).join('')}
   ${buffer > 0 ? `<div class="hint">Spare after this plan: <b>${inr(buffer)}</b>. Good to add to a goal.</div>` : ''}
@@ -2221,14 +2235,87 @@ function budgetView() {
   U.plan = sug;
   return h + '</div>';
 }
+/* ---------- MY PLANS: your own salary split, saved to the Sheet (name it "November Plan") ----------
+   item: { n: name, m: 'amt' | 'pct' (of salary) | 'left' (% of what is left after the others), v: number } */
+const PLAN_SUG = ['🏠 Rent', '🍽️ Food', '🚕 Travel', '👩 Mom', '🪙 Gold', '🛟 Emergency fund', '🛡️ Insurance', '📈 SIP', '🧾 Bills', '🛍️ Shopping', '🎁 Fun', '💳 Card bill'];
+const PL_COL = ['#5B5BF7', '#12A150', '#F59E0B', '#E5484D', '#0EA5E9', '#A855F7', '#EC4899', '#14B8A6', '#F97316', '#64748B'];
+const plList = () => ((S.cfg.plans || {}).list || []);
+function planMath(pl) {
+  const sal = +pl.salary || 0, it = pl.items || [], amtOf = x => +x.v || 0;
+  const fixed = it.reduce((t, x) => t + (x.m === 'amt' ? amtOf(x) : x.m === 'pct' ? sal * amtOf(x) / 100 : 0), 0), left = Math.max(0, sal - fixed);
+  const rows = it.map(x => { const a = x.m === 'amt' ? amtOf(x) : x.m === 'pct' ? sal * amtOf(x) / 100 : left * amtOf(x) / 100; return { x, a: Math.round(a), p: sal ? a / sal * 100 : 0 }; });
+  const tot = rows.reduce((t, r) => t + r.a, 0);
+  return { sal, rows, tot, rest: Math.round(sal - tot), leftPool: Math.round(left) };
+}
+/* actual spending this month for items whose name matches one of your categories */
+const plCat = n => { const k = String(n || '').replace(/^\S+\s/, '').trim().toLowerCase(); return S.cfg.categories.find(c => c.name.toLowerCase() === k || c.name.toLowerCase().split(/\W/)[0] === k.split(/\W/)[0]); };
+function myPlansView() {
+  if (U.cpe) return planEditor();
+  const L = plList().slice().sort((a, b) => (b.at || '').localeCompare(a.at || ''));
+  let h = `<div class="card"><h2>My plans <small>your own salary split</small></h2><div class="hint" style="margin-top:0">Make a plan like "November Plan": add Rent, Food, Mom, Gold, Emergency fund… as an amount, a % of salary, or a % of what's left. Saved to your Sheet, so you can open it any time.</div><button class="btn" data-act="cpNew">+ New plan</button></div>`;
+  if (!L.length) return h + `<div class="empty"><span class="big">📝</span>No plans yet.</div>`;
+  return h + L.map(pl => { const M = planMath(pl); return `<div class="ecard"><button class="ghead" data-act="cpOpen" data-id="${pl.id}"><span class="ic" style="background:var(--acc2)">📝</span><span class="mid"><b>${esc(pl.name || 'Plan')}</b><small>Salary ${inr(M.sal)} · ${M.rows.length} item${M.rows.length === 1 ? '' : 's'} · saved ${esc(dLabel((pl.at || '').slice(0, 10)))}</small></span><span class="amt ${M.rest < 0 ? 'red' : 'green'}">${M.rest < 0 ? '−' + inr(-M.rest) : inr(M.rest)}<br><small class="mute" style="font-size:.66rem">${M.rest < 0 ? 'over' : 'unplanned'}</small></span></button>
+  ${planBar(M)}<div class="chips wrap" style="margin-top:8px">${M.rows.slice(0, 6).map(r => `<span class="chip" style="min-height:28px;font-size:.72rem">${esc(r.x.n)} <small>${inr(r.a, 1)} · ${Math.round(r.p)}%</small></span>`).join('')}</div>
+  <div class="btns"><button class="btn sm" data-act="cpOpen" data-id="${pl.id}">Open</button><button class="btn sm sec" data-act="cpDup" data-id="${pl.id}">Copy for ${esc(mLabel(ym(), 1))}</button></div></div>`; }).join('');
+}
+const planBar = M => M.sal > 0 ? `<div class="bar" style="height:12px;display:flex;margin-top:10px">${M.rows.map((r, i) => `<i title="${esc(r.x.n)}" style="width:${Math.max(0, Math.min(100, r.a / Math.max(M.sal, M.tot) * 100))}%;background:${PL_COL[i % PL_COL.length]};border-radius:0"></i>`).join('')}</div>` : '';
+function planEditor() {
+  const E = U.cpe, sal = lastSalary(), fr = freeTotal(), M = planMath(E);
+  return `<div class="card"><h2>${E.id ? 'Edit plan' : 'New plan'} <small><button data-act="cpBack" style="color:var(--acc);font-weight:800">‹ All plans</button></small></h2>
+  <div class="lbl" style="margin-top:0">Plan name</div><input data-in="cpF" data-k="name" value="${esc(E.name)}" placeholder="e.g. November Plan">
+  <div class="lbl">Salary received ₹</div><input id="cpSal" inputmode="decimal" data-in="cpF" data-k="salary" value="${esc(E.salary || '')}" placeholder="e.g. 80000">
+  <div class="chips" style="margin-top:8px">${sal ? `<button class="chip" data-act="cpSalFill" data-v="${sal.amount}">💰 Last salary <small>${inr(sal.amount)}</small></button>` : ''}<button class="chip" data-act="cpSalFill" data-v="${Math.max(0, Math.round(fr))}">👛 Free now <small>${inr(fr)}</small></button></div></div>
+  <div class="card"><h2>Where it goes <small>₹ · % of salary · % of left</small></h2>
+  ${E.items.length ? E.items.map((x, i) => `<div class="pli"><span class="dot" style="background:${PL_COL[i % PL_COL.length]};margin-top:16px"></span><div class="pli-m"><input class="pli-n" data-in="cpI" data-i="${i}" data-k="n" value="${esc(x.n)}" placeholder="Item"><div class="pli-r"><div class="pmode">${[['amt', '₹'], ['pct', '% sal'], ['left', '% left']].map(([m, l]) => `<button class="${x.m === m ? 'on' : ''}" data-act="cpMode" data-i="${i}" data-m="${m}">${l}</button>`).join('')}</div><input class="pli-v" inputmode="decimal" data-in="cpI" data-i="${i}" data-k="v" value="${esc(x.v)}" placeholder="${x.m === 'amt' ? '9500' : '10'}"></div><small class="pli-o" id="cpo${i}">${planRowTxt(M.rows[i], E)}</small></div><button class="ax" data-act="cpDel" data-i="${i}" aria-label="Remove">✕</button></div>`).join('') : '<div class="hint" style="margin-top:0">Add what your salary should cover 👇</div>'}
+  <div class="lbl">Add</div><div class="chips wrap">${PLAN_SUG.filter(x => !E.items.some(i => i.n === x)).map(x => `<button class="chip" data-act="cpAdd" data-v="${esc(x)}">+ ${esc(x)}</button>`).join('')}<button class="chip" data-act="cpAdd" data-v="">+ Other…</button></div></div>
+  <div class="card" id="cpSum">${planSum(M)}</div>
+  <button class="btn big" data-act="cpSave">💾 Save plan</button>${E.id ? `<button class="btn dng" data-act="cpRm">Delete plan</button>` : ''}`;
+}
+function planRowTxt(r, E) { if (!r) return ''; const c = plCat(r.x.n), act = c ? sum(S.exp.filter(e => inP(e, ym()) && myX(e) && e.category === c.name)) : null; return `= <b>${inr(r.a)}</b> · ${Math.round(r.p * 10) / 10}% of salary${act != null ? ` · <span class="${act > r.a && r.a ? 'red' : 'mute'}">spent ${inr(act)} this month</span>` : ''}`; }
+function planSum(M) {
+  return `<div class="kv"><div><span>💰 Salary</span><b class="green">${inr(M.sal)}</b></div><div><span>Planned</span><b>${inr(M.tot)} · ${M.sal ? Math.round(M.tot / M.sal * 100) : 0}%</b></div><div><span><b style="color:var(--ink)">${M.rest < 0 ? 'Over the salary by' : 'Left unplanned'}</b></span><b class="${M.rest < 0 ? 'red' : 'green'}">${inr(Math.abs(M.rest))}${M.sal ? ' · ' + Math.abs(Math.round(M.rest / M.sal * 100)) + '%' : ''}</b></div></div>${planBar(M)}${M.rest < 0 ? '<div class="hint red">This plan spends more than the salary. Trim an item or lower a %.</div>' : M.rest > 0 && M.sal ? '<div class="hint">Tip: add a "% left" item (e.g. Emergency fund 100% left) to put every rupee to work.</div>' : M.sal ? '<div class="hint green">Every rupee has a job ✓</div>' : ''}`;
+}
+function cpCalc() { const E = U.cpe, M = planMath(E); M.rows.forEach((r, i) => { const o = $('#cpo' + i); if (o) o.innerHTML = planRowTxt(r, E); }); const sm = $('#cpSum'); if (sm) sm.innerHTML = planSum(M); }
+const cpRe = () => { const y = window.scrollY; render(); window.scrollTo(0, y); };
+ACT.cpNew = () => { const sal = lastSalary(); U.cpe = { id: '', name: mLabel(ym()).replace(/ \d{4}$/, '') + ' Plan', salary: sal ? sal.amount : '', items: [] }; cpRe(); };
+ACT.cpOpen = el => { const pl = plList().find(x => x.id === el.dataset.id); if (!pl) return; U.cpe = JSON.parse(JSON.stringify(pl)); cpRe(); window.scrollTo(0, 0); };
+ACT.cpDup = el => { const pl = plList().find(x => x.id === el.dataset.id); if (!pl) return; const sal = lastSalary(); U.cpe = Object.assign(JSON.parse(JSON.stringify(pl)), { id: '', name: mLabel(ym()).replace(/ \d{4}$/, '') + ' Plan', salary: sal ? sal.amount : pl.salary }); cpRe(); window.scrollTo(0, 0); toast('Copied · change what you need, then Save'); };
+ACT.cpBack = () => { U.cpe = null; cpRe(); };
+ACT.cpSalFill = el => { U.cpe.salary = +el.dataset.v; const i = $('#cpSal'); if (i) i.value = el.dataset.v; cpCalc(); };
+ACT.cpAdd = el => { const n = el.dataset.v || ''; const c = plCat(n); U.cpe.items.push({ n, m: /rent|insurance|mom|card|bill/i.test(n) ? 'amt' : 'pct', v: '' }); cpRe(); setTimeout(() => { const ins = $$('.pli-' + (n ? 'v' : 'n')); if (ins.length) ins[ins.length - 1].focus(); }, 50); };
+ACT.cpDel = el => { U.cpe.items.splice(+el.dataset.i, 1); cpRe(); };
+ACT.cpMode = el => { const x = U.cpe.items[+el.dataset.i]; x.m = el.dataset.m; $$(`[data-act=cpMode][data-i="${el.dataset.i}"]`).forEach(b => b.classList.toggle('on', b === el)); cpCalc(); };
+IN.cpF = t => { U.cpe[t.dataset.k] = t.dataset.k === 'salary' ? (parseAmt(t.value) || '') : t.value; cpCalc(); };
+IN.cpI = t => { const x = U.cpe.items[+t.dataset.i]; if (!x) return; x[t.dataset.k] = t.dataset.k === 'v' ? (isNaN(parseAmt(t.value)) ? '' : parseAmt(t.value)) : t.value; cpCalc(); };
+ACT.cpSave = () => {
+  const E = U.cpe; if (!String(E.name || '').trim()) return toast('Give the plan a name'); if (!(+E.salary > 0)) return toast('Enter the salary');
+  const items = E.items.filter(x => String(x.n).trim() && +x.v > 0); if (!items.length) return toast('Add at least one item with an amount');
+  const row = { id: E.id || uid('Q'), name: E.name.trim(), salary: +E.salary, items: items.map(x => ({ n: String(x.n).trim(), m: x.m, v: +x.v })), at: nowTs() };
+  const L = plList().filter(x => x.id !== row.id).concat(row);
+  commit([cfgOp('plans', { list: L })]); U.cpe = null; cpRe(); toast('Saved "' + row.name + '" ✓');
+};
+ACT.cpRm = () => { if (!confirm('Delete "' + U.cpe.name + '"?')) return; commit([cfgOp('plans', { list: plList().filter(x => x.id !== U.cpe.id) })]); U.cpe = null; cpRe(); toast('Plan deleted'); };
 function lastSalary() { return S.inc.filter(e => /salary/i.test(e.source) && !isOthers(e.account)).sort((a, b) => b.ts.localeCompare(a.ts))[0]; }
 /* money in my banks, cash and wallets that is not reserved for a goal */
 function freeTotal() { return r2(live(a => holderType(a) && mineA(a)).reduce((s, a) => s + (C.bal[a.name] || 0) - (C.held[a.name] || 0), 0)); }
 /* refresh only the plan results, never the box being typed in (that redraw caused the NaN) */
 function planRefresh() { const box = $('#plOut'); if (!box) return; const t = document.createElement('div'); t.innerHTML = budgetView(); const n = t.querySelector('#plOut'); if (n) box.innerHTML = n.innerHTML; }
-IN.plSal = t => { const v = t.value.trim(), n = parseAmt(v); S.prefs.plan.salary = v === '' || !isFinite(n) ? null : n; save(); clearTimeout(U.plT); U.plT = setTimeout(planRefresh, 500); };
-ACT.plFill = el => { const v = +el.dataset.v || 0, i = $('#plSal'); if (i) i.value = v; S.prefs.plan.salary = v; save(); planRefresh(); buzz(6); };
+IN.plSal = t => { const v = t.value.trim(), n = parseAmt(v); S.prefs.plan.salary = v === '' || !isFinite(n) ? null : n; save(); { const P = S.prefs.plan; if ($('#plA') && P.saveMode !== 'amt') $('#plA').value = P.salary ? Math.round(svAmt(P)) : ''; if ($('#plR') && P.saveMode === 'amt') { $('#plR').value = Math.round(svPct(P)); $('#plN').value = Math.round(svPct(P) * 10) / 10; } } clearTimeout(U.plT); U.plT = setTimeout(planRefresh, 500); };
+ACT.plFill = el => { const v = +el.dataset.v || 0, i = $('#plSal'); if (i) { i.value = v; IN.plSal(i); } planRefresh(); buzz(6); };
 IN.plDate = t => { S.prefs.plan.date = t.value; save(); render(); };
+/* save-first: slider, % box and ₹ box always agree */
+const svPct = P => { const s = +P.salary || 0; return P.saveMode === 'amt' ? (s ? Math.min(100, (+P.saveAmt || 0) / s * 100) : 0) : (+P.pct || 0); };
+const svAmt = P => P.saveMode === 'amt' ? (+P.saveAmt || 0) : (+P.salary || 0) * (+P.pct || 0) / 100;
+IN.plSv = t => {
+  const P = S.prefs.plan, k = t.dataset.k, sal = +P.salary || 0, v = parseAmt(t.value);
+  if (k === 'a') { P.saveMode = 'amt'; P.saveAmt = isNaN(v) ? 0 : Math.max(0, v); }
+  else { P.saveMode = 'pct'; P.pct = isNaN(v) ? 0 : Math.max(0, Math.min(100, v)); }
+  const pct = svPct(P), amt = svAmt(P);
+  if (k !== 'r' && $('#plR')) $('#plR').value = Math.round(pct);
+  if (k !== 'n' && $('#plN')) $('#plN').value = Math.round(pct * 10) / 10;
+  if (k !== 'a' && $('#plA')) $('#plA').value = sal ? Math.round(amt) : '';
+  save(); clearTimeout(U.plT); U.plT = setTimeout(planRefresh, 300);
+};
 ACT.plPct = el => { S.prefs.plan.pct = +el.dataset.v; save(); const y = window.scrollY; render(); window.scrollTo(0, y); };
 ACT.plMon = el => { S.prefs.plan.months = +el.dataset.v; save(); const y = window.scrollY; render(); window.scrollTo(0, y); };
 ACT.plApply = () => { if (!confirm('Set these amounts as your monthly category budgets? You can change them any time in Settings.')) return; const list = S.cfg.categories.map(c => U.plan && c.name in U.plan ? Object.assign({}, c, { budget: U.plan[c.name] }) : c); commit([cfgOp('categories', list)]); render(); toast('Budgets updated'); };

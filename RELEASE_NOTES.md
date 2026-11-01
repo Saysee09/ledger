@@ -1,15 +1,10 @@
-## Ledger v8.2 · What's new
+## Ledger v8.3 · What's new
 
-## Fixed
-- **Install now** works reliably: one download at a time, the file is checked before installing, and Android's proper installer is used (fixes "package appears to be invalid")
-- **Scrolling works again** on every page (Expenses, Insights, Loan calc…)
-- **Phone lock**: no more blank blue screen after the fingerprint; the backup PIN screen shows properly
-- Unlocking with fingerprint no longer locks again straight away when "lock immediately" is on
-- **✨ Ask** next to the search box now answers what you typed
-- "Things need you" card updates as soon as you clear the bell
+## New
+- **My plans** (Plan → Budget → My plans): make your own salary split like "November Plan". Add Rent, Food, Mom, Gold, Emergency fund, Insurance… as a fixed ₹ amount, a % of salary, or a % of what's left. See ₹ and % for each item live, save it, open it later or copy it for next month
+- Items that match a category show what you have actually spent on it this month
+- **Save first** in the Auto plan now has a 0–100% slider, a % box and an amount box (e.g. save ₹40,000 of ₹80,000); all three stay in sync
 
-## Better
-- Sync status is now a small dot (green = synced, amber = waiting, red = problem). Tap it to sync
-- Settings → Phone app shows when the last bank SMS reached Ledger and whether it was kept
-- Long suggestion chips wrap instead of running off the screen
-- Version shown at the bottom of Settings
+## Fixed (from 8.2)
+- Install now works reliably
+- Scrolling, phone lock, Ask from the search box
