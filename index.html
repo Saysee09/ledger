@@ -2252,49 +2252,49 @@ const plCat = n => { const k = String(n || '').replace(/^\S+\s/, '').trim().toLo
 function myPlansView() {
   if (U.cpe) return planEditor();
   const L = plList().slice().sort((a, b) => (b.at || '').localeCompare(a.at || ''));
-  let h = `<div class="card"><h2>My plans <small>your own salary split</small></h2><div class="hint" style="margin-top:0">Make a plan like "November Plan": add Rent, Food, Mom, Gold, Emergency fund… as an amount, a % of salary, or a % of what's left. Saved to your Sheet, so you can open it any time.</div><button class="btn" data-act="cpNew">+ New plan</button></div>`;
+  let h = `<div class="card"><h2>My plans <small>your own salary split</small></h2><div class="hint" style="margin-top:0">Make a plan like "November Plan": add Rent, Food, Mom, Gold, Emergency fund… as an amount, a % of salary, or a % of what's left. Saved to your Sheet, so you can open it any time.</div><button class="btn" data-act="pnNew">+ New plan</button></div>`;
   if (!L.length) return h + `<div class="empty"><span class="big">📝</span>No plans yet.</div>`;
-  return h + L.map(pl => { const M = planMath(pl); return `<div class="ecard"><button class="ghead" data-act="cpOpen" data-id="${pl.id}"><span class="ic" style="background:var(--acc2)">📝</span><span class="mid"><b>${esc(pl.name || 'Plan')}</b><small>Salary ${inr(M.sal)} · ${M.rows.length} item${M.rows.length === 1 ? '' : 's'} · saved ${esc(dLabel((pl.at || '').slice(0, 10)))}</small></span><span class="amt ${M.rest < 0 ? 'red' : 'green'}">${M.rest < 0 ? '−' + inr(-M.rest) : inr(M.rest)}<br><small class="mute" style="font-size:.66rem">${M.rest < 0 ? 'over' : 'unplanned'}</small></span></button>
+  return h + L.map(pl => { const M = planMath(pl); return `<div class="ecard"><button class="ghead" data-act="pnOpen" data-id="${pl.id}"><span class="ic" style="background:var(--acc2)">📝</span><span class="mid"><b>${esc(pl.name || 'Plan')}</b><small>Salary ${inr(M.sal)} · ${M.rows.length} item${M.rows.length === 1 ? '' : 's'} · saved ${esc(dLabel((pl.at || '').slice(0, 10)))}</small></span><span class="amt ${M.rest < 0 ? 'red' : 'green'}">${M.rest < 0 ? '−' + inr(-M.rest) : inr(M.rest)}<br><small class="mute" style="font-size:.66rem">${M.rest < 0 ? 'over' : 'unplanned'}</small></span></button>
   ${planBar(M)}<div class="chips wrap" style="margin-top:8px">${M.rows.slice(0, 6).map(r => `<span class="chip" style="min-height:28px;font-size:.72rem">${esc(r.x.n)} <small>${inr(r.a, 1)} · ${Math.round(r.p)}%</small></span>`).join('')}</div>
-  <div class="btns"><button class="btn sm" data-act="cpOpen" data-id="${pl.id}">Open</button><button class="btn sm sec" data-act="cpDup" data-id="${pl.id}">Copy for ${esc(mLabel(ym(), 1))}</button></div></div>`; }).join('');
+  <div class="btns"><button class="btn sm" data-act="pnOpen" data-id="${pl.id}">Open</button><button class="btn sm sec" data-act="pnDup" data-id="${pl.id}">Copy for ${esc(mLabel(ym(), 1))}</button></div></div>`; }).join('');
 }
 const planBar = M => M.sal > 0 ? `<div class="bar" style="height:12px;display:flex;margin-top:10px">${M.rows.map((r, i) => `<i title="${esc(r.x.n)}" style="width:${Math.max(0, Math.min(100, r.a / Math.max(M.sal, M.tot) * 100))}%;background:${PL_COL[i % PL_COL.length]};border-radius:0"></i>`).join('')}</div>` : '';
 function planEditor() {
   const E = U.cpe, sal = lastSalary(), fr = freeTotal(), M = planMath(E);
-  return `<div class="card"><h2>${E.id ? 'Edit plan' : 'New plan'} <small><button data-act="cpBack" style="color:var(--acc);font-weight:800">‹ All plans</button></small></h2>
-  <div class="lbl" style="margin-top:0">Plan name</div><input data-in="cpF" data-k="name" value="${esc(E.name)}" placeholder="e.g. November Plan">
-  <div class="lbl">Salary received ₹</div><input id="cpSal" inputmode="decimal" data-in="cpF" data-k="salary" value="${esc(E.salary || '')}" placeholder="e.g. 80000">
-  <div class="chips" style="margin-top:8px">${sal ? `<button class="chip" data-act="cpSalFill" data-v="${sal.amount}">💰 Last salary <small>${inr(sal.amount)}</small></button>` : ''}<button class="chip" data-act="cpSalFill" data-v="${Math.max(0, Math.round(fr))}">👛 Free now <small>${inr(fr)}</small></button></div></div>
+  return `<div class="card"><h2>${E.id ? 'Edit plan' : 'New plan'} <small><button data-act="pnBack" style="color:var(--acc);font-weight:800">‹ All plans</button></small></h2>
+  <div class="lbl" style="margin-top:0">Plan name</div><input data-in="pnF" data-k="name" value="${esc(E.name)}" placeholder="e.g. November Plan">
+  <div class="lbl">Salary received ₹</div><input id="pnSal" inputmode="decimal" data-in="pnF" data-k="salary" value="${esc(E.salary || '')}" placeholder="e.g. 80000">
+  <div class="chips" style="margin-top:8px">${sal ? `<button class="chip" data-act="pnSalFill" data-v="${sal.amount}">💰 Last salary <small>${inr(sal.amount)}</small></button>` : ''}<button class="chip" data-act="pnSalFill" data-v="${Math.max(0, Math.round(fr))}">👛 Free now <small>${inr(fr)}</small></button></div></div>
   <div class="card"><h2>Where it goes <small>₹ · % of salary · % of left</small></h2>
-  ${E.items.length ? E.items.map((x, i) => `<div class="pli"><span class="dot" style="background:${PL_COL[i % PL_COL.length]};margin-top:16px"></span><div class="pli-m"><input class="pli-n" data-in="cpI" data-i="${i}" data-k="n" value="${esc(x.n)}" placeholder="Item"><div class="pli-r"><div class="pmode">${[['amt', '₹'], ['pct', '% sal'], ['left', '% left']].map(([m, l]) => `<button class="${x.m === m ? 'on' : ''}" data-act="cpMode" data-i="${i}" data-m="${m}">${l}</button>`).join('')}</div><input class="pli-v" inputmode="decimal" data-in="cpI" data-i="${i}" data-k="v" value="${esc(x.v)}" placeholder="${x.m === 'amt' ? '9500' : '10'}"></div><small class="pli-o" id="cpo${i}">${planRowTxt(M.rows[i], E)}</small></div><button class="ax" data-act="cpDel" data-i="${i}" aria-label="Remove">✕</button></div>`).join('') : '<div class="hint" style="margin-top:0">Add what your salary should cover 👇</div>'}
-  <div class="lbl">Add</div><div class="chips wrap">${PLAN_SUG.filter(x => !E.items.some(i => i.n === x)).map(x => `<button class="chip" data-act="cpAdd" data-v="${esc(x)}">+ ${esc(x)}</button>`).join('')}<button class="chip" data-act="cpAdd" data-v="">+ Other…</button></div></div>
-  <div class="card" id="cpSum">${planSum(M)}</div>
-  <button class="btn big" data-act="cpSave">💾 Save plan</button>${E.id ? `<button class="btn dng" data-act="cpRm">Delete plan</button>` : ''}`;
+  ${E.items.length ? E.items.map((x, i) => `<div class="pli"><span class="dot" style="background:${PL_COL[i % PL_COL.length]};margin-top:16px"></span><div class="pli-m"><input class="pli-n" data-in="pnI" data-i="${i}" data-k="n" value="${esc(x.n)}" placeholder="Item"><div class="pli-r"><div class="pmode">${[['amt', '₹'], ['pct', '% sal'], ['left', '% left']].map(([m, l]) => `<button class="${x.m === m ? 'on' : ''}" data-act="pnMode" data-i="${i}" data-m="${m}">${l}</button>`).join('')}</div><input class="pli-v" inputmode="decimal" data-in="pnI" data-i="${i}" data-k="v" value="${esc(x.v)}" placeholder="${x.m === 'amt' ? '9500' : '10'}"></div><small class="pli-o" id="pno${i}">${planRowTxt(M.rows[i], E)}</small></div><button class="ax" data-act="pnDel" data-i="${i}" aria-label="Remove">✕</button></div>`).join('') : '<div class="hint" style="margin-top:0">Add what your salary should cover 👇</div>'}
+  <div class="lbl">Add</div><div class="chips wrap">${PLAN_SUG.filter(x => !E.items.some(i => i.n === x)).map(x => `<button class="chip" data-act="pnAdd" data-v="${esc(x)}">+ ${esc(x)}</button>`).join('')}<button class="chip" data-act="pnAdd" data-v="">+ Other…</button></div></div>
+  <div class="card" id="pnSum">${planSum(M)}</div>
+  <button class="btn big" data-act="pnSave">💾 Save plan</button>${E.id ? `<button class="btn dng" data-act="pnRm">Delete plan</button>` : ''}`;
 }
 function planRowTxt(r, E) { if (!r) return ''; const c = plCat(r.x.n), act = c ? sum(S.exp.filter(e => inP(e, ym()) && myX(e) && e.category === c.name)) : null; return `= <b>${inr(r.a)}</b> · ${Math.round(r.p * 10) / 10}% of salary${act != null ? ` · <span class="${act > r.a && r.a ? 'red' : 'mute'}">spent ${inr(act)} this month</span>` : ''}`; }
 function planSum(M) {
   return `<div class="kv"><div><span>💰 Salary</span><b class="green">${inr(M.sal)}</b></div><div><span>Planned</span><b>${inr(M.tot)} · ${M.sal ? Math.round(M.tot / M.sal * 100) : 0}%</b></div><div><span><b style="color:var(--ink)">${M.rest < 0 ? 'Over the salary by' : 'Left unplanned'}</b></span><b class="${M.rest < 0 ? 'red' : 'green'}">${inr(Math.abs(M.rest))}${M.sal ? ' · ' + Math.abs(Math.round(M.rest / M.sal * 100)) + '%' : ''}</b></div></div>${planBar(M)}${M.rest < 0 ? '<div class="hint red">This plan spends more than the salary. Trim an item or lower a %.</div>' : M.rest > 0 && M.sal ? '<div class="hint">Tip: add a "% left" item (e.g. Emergency fund 100% left) to put every rupee to work.</div>' : M.sal ? '<div class="hint green">Every rupee has a job ✓</div>' : ''}`;
 }
-function cpCalc() { const E = U.cpe, M = planMath(E); M.rows.forEach((r, i) => { const o = $('#cpo' + i); if (o) o.innerHTML = planRowTxt(r, E); }); const sm = $('#cpSum'); if (sm) sm.innerHTML = planSum(M); }
-const cpRe = () => { const y = window.scrollY; render(); window.scrollTo(0, y); };
-ACT.cpNew = () => { const sal = lastSalary(); U.cpe = { id: '', name: mLabel(ym()).replace(/ \d{4}$/, '') + ' Plan', salary: sal ? sal.amount : '', items: [] }; cpRe(); };
-ACT.cpOpen = el => { const pl = plList().find(x => x.id === el.dataset.id); if (!pl) return; U.cpe = JSON.parse(JSON.stringify(pl)); cpRe(); window.scrollTo(0, 0); };
-ACT.cpDup = el => { const pl = plList().find(x => x.id === el.dataset.id); if (!pl) return; const sal = lastSalary(); U.cpe = Object.assign(JSON.parse(JSON.stringify(pl)), { id: '', name: mLabel(ym()).replace(/ \d{4}$/, '') + ' Plan', salary: sal ? sal.amount : pl.salary }); cpRe(); window.scrollTo(0, 0); toast('Copied · change what you need, then Save'); };
-ACT.cpBack = () => { U.cpe = null; cpRe(); };
-ACT.cpSalFill = el => { U.cpe.salary = +el.dataset.v; const i = $('#cpSal'); if (i) i.value = el.dataset.v; cpCalc(); };
-ACT.cpAdd = el => { const n = el.dataset.v || ''; const c = plCat(n); U.cpe.items.push({ n, m: /rent|insurance|mom|card|bill/i.test(n) ? 'amt' : 'pct', v: '' }); cpRe(); setTimeout(() => { const ins = $$('.pli-' + (n ? 'v' : 'n')); if (ins.length) ins[ins.length - 1].focus(); }, 50); };
-ACT.cpDel = el => { U.cpe.items.splice(+el.dataset.i, 1); cpRe(); };
-ACT.cpMode = el => { const x = U.cpe.items[+el.dataset.i]; x.m = el.dataset.m; $$(`[data-act=cpMode][data-i="${el.dataset.i}"]`).forEach(b => b.classList.toggle('on', b === el)); cpCalc(); };
-IN.cpF = t => { U.cpe[t.dataset.k] = t.dataset.k === 'salary' ? (parseAmt(t.value) || '') : t.value; cpCalc(); };
-IN.cpI = t => { const x = U.cpe.items[+t.dataset.i]; if (!x) return; x[t.dataset.k] = t.dataset.k === 'v' ? (isNaN(parseAmt(t.value)) ? '' : parseAmt(t.value)) : t.value; cpCalc(); };
-ACT.cpSave = () => {
+function pnCalc() { const E = U.cpe, M = planMath(E); M.rows.forEach((r, i) => { const o = $('#pno' + i); if (o) o.innerHTML = planRowTxt(r, E); }); const sm = $('#pnSum'); if (sm) sm.innerHTML = planSum(M); }
+const pnRe = () => { const y = window.scrollY; render(); window.scrollTo(0, y); };
+ACT.pnNew = () => { const sal = lastSalary(); U.cpe = { id: '', name: mLabel(ym()).replace(/ \d{4}$/, '') + ' Plan', salary: sal ? sal.amount : '', items: [] }; pnRe(); };
+ACT.pnOpen = el => { const pl = plList().find(x => x.id === el.dataset.id); if (!pl) return; U.cpe = JSON.parse(JSON.stringify(pl)); pnRe(); window.scrollTo(0, 0); };
+ACT.pnDup = el => { const pl = plList().find(x => x.id === el.dataset.id); if (!pl) return; const sal = lastSalary(); U.cpe = Object.assign(JSON.parse(JSON.stringify(pl)), { id: '', name: mLabel(ym()).replace(/ \d{4}$/, '') + ' Plan', salary: sal ? sal.amount : pl.salary }); pnRe(); window.scrollTo(0, 0); toast('Copied · change what you need, then Save'); };
+ACT.pnBack = () => { U.cpe = null; pnRe(); };
+ACT.pnSalFill = el => { U.cpe.salary = +el.dataset.v; const i = $('#pnSal'); if (i) i.value = el.dataset.v; pnCalc(); };
+ACT.pnAdd = el => { const n = el.dataset.v || ''; const c = plCat(n); U.cpe.items.push({ n, m: /rent|insurance|mom|card|bill/i.test(n) ? 'amt' : 'pct', v: '' }); pnRe(); setTimeout(() => { const ins = $$('.pli-' + (n ? 'v' : 'n')); if (ins.length) ins[ins.length - 1].focus(); }, 50); };
+ACT.pnDel = el => { U.cpe.items.splice(+el.dataset.i, 1); pnRe(); };
+ACT.pnMode = el => { const x = U.cpe.items[+el.dataset.i]; x.m = el.dataset.m; $$(`[data-act=pnMode][data-i="${el.dataset.i}"]`).forEach(b => b.classList.toggle('on', b === el)); pnCalc(); };
+IN.pnF = t => { U.cpe[t.dataset.k] = t.dataset.k === 'salary' ? (parseAmt(t.value) || '') : t.value; pnCalc(); };
+IN.pnI = t => { const x = U.cpe.items[+t.dataset.i]; if (!x) return; x[t.dataset.k] = t.dataset.k === 'v' ? (isNaN(parseAmt(t.value)) ? '' : parseAmt(t.value)) : t.value; pnCalc(); };
+ACT.pnSave = () => {
   const E = U.cpe; if (!String(E.name || '').trim()) return toast('Give the plan a name'); if (!(+E.salary > 0)) return toast('Enter the salary');
   const items = E.items.filter(x => String(x.n).trim() && +x.v > 0); if (!items.length) return toast('Add at least one item with an amount');
   const row = { id: E.id || uid('Q'), name: E.name.trim(), salary: +E.salary, items: items.map(x => ({ n: String(x.n).trim(), m: x.m, v: +x.v })), at: nowTs() };
   const L = plList().filter(x => x.id !== row.id).concat(row);
-  commit([cfgOp('plans', { list: L })]); U.cpe = null; cpRe(); toast('Saved "' + row.name + '" ✓');
+  commit([cfgOp('plans', { list: L })]); U.cpe = null; pnRe(); toast('Saved "' + row.name + '" ✓');
 };
-ACT.cpRm = () => { if (!confirm('Delete "' + U.cpe.name + '"?')) return; commit([cfgOp('plans', { list: plList().filter(x => x.id !== U.cpe.id) })]); U.cpe = null; cpRe(); toast('Plan deleted'); };
+ACT.pnRm = () => { if (!confirm('Delete "' + U.cpe.name + '"?')) return; commit([cfgOp('plans', { list: plList().filter(x => x.id !== U.cpe.id) })]); U.cpe = null; pnRe(); toast('Plan deleted'); };
 function lastSalary() { return S.inc.filter(e => /salary/i.test(e.source) && !isOthers(e.account)).sort((a, b) => b.ts.localeCompare(a.ts))[0]; }
 /* money in my banks, cash and wallets that is not reserved for a goal */
 function freeTotal() { return r2(live(a => holderType(a) && mineA(a)).reduce((s, a) => s + (C.bal[a.name] || 0) - (C.held[a.name] || 0), 0)); }
