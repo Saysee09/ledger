@@ -516,6 +516,52 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /** Monthly wrap: a PNG made by the app (base64). share = Android share sheet; otherwise saved to Pictures/Ledger. */
+    private String sharePng(String name, String b64, String text, boolean share) {
+        try {
+            byte[] b = android.util.Base64.decode(b64, android.util.Base64.DEFAULT);
+            String safe = name.replaceAll("[^A-Za-z0-9._-]", "_");
+            if (!share) {
+                if (Build.VERSION.SDK_INT >= 29) {
+                    ContentValues v = new ContentValues();
+                    v.put(MediaStore.Images.Media.DISPLAY_NAME, safe);
+                    v.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+                    v.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Ledger");
+                    Uri u = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
+                    if (u == null) return "";
+                    try (OutputStream o = getContentResolver().openOutputStream(u)) {
+                        if (o == null) return "";
+                        o.write(b);
+                    }
+                    return "Pictures/Ledger/" + safe;
+                }
+                File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+                if (dir == null) return "";
+                File f = new File(dir, safe);
+                try (OutputStream o = new FileOutputStream(f)) { o.write(b); }
+                return f.getAbsolutePath();
+            }
+            File dir = new File(getCacheDir(), "share");
+            if (!dir.exists() && !dir.mkdirs()) return "";
+            File f = new File(dir, safe);
+            try (OutputStream o = new FileOutputStream(f)) { o.write(b); }
+            Uri u = FileProvider.getUriForFile(this, "com.saysee.ledger.files", f);
+            Intent s = new Intent(Intent.ACTION_SEND);
+            s.setType("image/png");
+            s.putExtra(Intent.EXTRA_STREAM, u);
+            if (text != null && !text.isEmpty()) s.putExtra(Intent.EXTRA_TEXT, text);
+            s.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Intent ch = Intent.createChooser(s, "Share your month");
+            ch.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            ui.post(() -> {
+                try { startActivity(ch); } catch (ActivityNotFoundException e) { /* no app to share with */ }
+            });
+            return "ok";
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
     /** Everything the web app can ask the phone for. */
     private class Bridge {
         @JavascriptInterface
@@ -575,6 +621,16 @@ public class MainActivity extends AppCompatActivity {
         @JavascriptInterface
         public String saveFile(String name, String data, String mime) {
             return MainActivity.this.saveFile(name, data, mime);
+        }
+
+        @JavascriptInterface
+        public String shareImage(String name, String b64, String text) {
+            return MainActivity.this.sharePng(name, b64, text, true);
+        }
+
+        @JavascriptInterface
+        public String saveImage(String name, String b64) {
+            return MainActivity.this.sharePng(name, b64, "", false);
         }
 
         @JavascriptInterface

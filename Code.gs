@@ -1,5 +1,6 @@
 /**
- * LEDGER v9 — Google Apps Script backend
+ * LEDGER v10 — Google Apps Script backend
+ * v10: bills whose price changes later (e.g. ₹151 for 3 months, then ₹650): auto-log and Calendar use the right price.
  * v9: "Recently deleted" tab — deleted entries (with their bank SMS) are kept for 30 days (or what you pick in the app), then removed.
  * v8: one Drive folder "Ledger App" (Backups + Receipts inside), date-first backup names, delete old backups from the app,
  *     payee memory, investment sell / withdraw, money owed to people you hold money for, credit-card bill day.
@@ -34,7 +35,7 @@
  * ------------------------------------------------------------------
  */
 
-var VERSION = 9;
+var VERSION = 10;
 var BIN_DAYS = 30;                  /* default; the app can change it (Settings → Recently deleted) */
 var TZ = 'Asia/Kolkata';
 var FMT = 'yyyy-MM-dd HH:mm:ss';
@@ -61,19 +62,19 @@ var SHEETS = {
   Goals: { cols: [['name', 'Name'], ['kind', 'Type'], ['target', 'Target'], ['account', 'Account'], ['icon', 'Icon'], ['color', 'Color'], ['archived', 'Archived'], ['created', 'Created'], ['id', 'ID'], ['deadline', 'Reach By']] },
   EMIs: { cols: [['name', 'Name'], ['amount', 'Amount'], ['dueDay', 'Due Day'], ['account', 'Account'], ['startMonth', 'Start Month'], ['total', 'Total EMIs'], ['paidBefore', 'Paid Before'], ['active', 'Active'], ['note', 'Note'], ['id', 'ID']] },
   Loans: { cols: [['name', 'Person'], ['dir', 'Direction'], ['note', 'Note'], ['archived', 'Archived'], ['created', 'Created'], ['id', 'ID'], ['acct', 'Held Account']] },
-  Reminders: { cols: [['name', 'Name'], ['kind', 'Kind'], ['amount', 'Amount'], ['account', 'Paid From'], ['category', 'Category'], ['invType', 'Invest Type'], ['invTo', 'Invested Into'], ['every', 'Every'], ['unit', 'Unit'], ['next', 'Next Due'], ['time', 'Time'], ['auto', 'Auto Log'], ['cal', 'Calendar'], ['active', 'Active'], ['snooze', 'Snoozed To'], ['lastDone', 'Last Done'], ['note', 'Note'], ['id', 'ID']] },
+  Reminders: { cols: [['name', 'Name'], ['kind', 'Kind'], ['amount', 'Amount'], ['account', 'Paid From'], ['category', 'Category'], ['invType', 'Invest Type'], ['invTo', 'Invested Into'], ['every', 'Every'], ['unit', 'Unit'], ['next', 'Next Due'], ['time', 'Time'], ['auto', 'Auto Log'], ['cal', 'Calendar'], ['active', 'Active'], ['snooze', 'Snoozed To'], ['lastDone', 'Last Done'], ['note', 'Note'], ['id', 'ID'], ['then', 'Then Amount'], ['thenFrom', 'New Price From']] },
   Pending: { title: 'Bank SMS', cols: [['ts', 'Timestamp'], ['amount', 'Amount'], ['dir', 'Direction'], ['payee', 'Payee'], ['bank', 'Bank'], ['l4', 'Digits'], ['account', 'Account'], ['card', 'Card'], ['atm', 'ATM'], ['ref', 'Ref'], ['status', 'Status'], ['done', 'Filed As'], ['raw', 'SMS'], ['id', 'ID']] },
   Deleted: { title: 'Recently deleted', cols: [['ts', 'Deleted At'], ['what', 'What'], ['amount', 'Amount'], ['tab', 'Tab'], ['date', 'Entry Date'], ['sms', 'SMS'], ['data', 'Data'], ['id', 'ID']] }
 };
 var ORDER = ['Expenses', 'Income', 'Transfers', 'Investments', 'EMILog', 'GoalLog', 'LoanLog', 'Adjustments', 'Accounts', 'Goals', 'EMIs', 'Loans', 'Reminders', 'Pending', 'Deleted'];
 var LOGS = ['Expenses', 'Income', 'Transfers', 'Investments', 'EMILog', 'GoalLog', 'LoanLog', 'Adjustments'];
 var TS_ROWS = { Pending: 1, Deleted: 1 }; /* non-log tabs whose rows need a timestamp instead of a name */
-var NUMS = { amount: 1, opening: 1, target: 1, dueDay: 1, total: 1, paidBefore: 1, order: 1, every: 1, cost: 1, billDay: 1 };
+var NUMS = { amount: 1, opening: 1, target: 1, dueDay: 1, total: 1, paidBefore: 1, order: 1, every: 1, cost: 1, billDay: 1, then: 1 };
 var INTS = { dueDay: 1, total: 1, paidBefore: 1, order: 1, every: 1, billDay: 1 };
 var BOOLS = { archived: 1, active: 1, others: 1, auto: 1, cal: 1, card: 1, atm: 1, mine: 1 };
 var TSK = { ts: 1, openingDate: 1, created: 1 };
 var MONTHK = { period: 1, startMonth: 1 };
-var DATEK = { next: 1, snooze: 1, lastDone: 1, deadline: 1 };
+var DATEK = { next: 1, snooze: 1, lastDone: 1, deadline: 1, thenFrom: 1 };
 var TIMEK = { time: 1 };
 var ACCOUNT_COLS = {
   Expenses: ['Payment Method'], Income: ['Account'], Transfers: ['From', 'To'], Investments: ['Paid From', 'Invested Into'],
@@ -619,6 +620,9 @@ function nextAfter_(d, every, unit) {
   if (unit === 'year') return shiftD_(d, 12 * n);
   return null;
 }
+/* price on a given due date (new price from "New Price From" onwards) */
+function remAmt_(r, d) { return Number(r.then) > 0 && r.thenFrom && d >= r.thenFrom ? Number(r.then) : Number(r.amount) || 0; }
+function remRoll_(r) { if (Number(r.then) > 0 && r.thenFrom && r.next && r.next >= r.thenFrom) { r.amount = Number(r.then); r.then = 0; r.thenFrom = ''; } }
 /* Same IDs as the app ("R" + reminder id + "_" + yyyymmdd), so the app and the Sheet never log a bill twice. */
 function reminderTick() {
   var lock = LockService.getScriptLock();
@@ -638,11 +642,11 @@ function reminderTick() {
       var guard = 0;
       while (r.active && r.next && r.next <= t && guard++ < 36) {
         var id = 'R' + r.id + '_' + r.next.replace(/-/g, ''), ts = r.next + ' ' + (r.time || '09:00') + ':00';
-        if (r.kind === 'sip') { if (!ivIds[id]) { upsert_(ss, 'Investments', { id: id, ts: ts, from: r.account, amount: r.amount, type: r.invType || 'Mutual Fund', name: r.name, to: r.invTo || '', remarks: 'SIP · auto-logged' }, cache); made++; } }
-        else if (!exIds[id]) { upsert_(ss, 'Expenses', { id: id, ts: ts, account: r.account, amount: r.amount, category: r.category || 'Miscellaneous', remarks: r.name + ' · auto-logged', photo: '' }, cache); made++; }
+        if (r.kind === 'sip') { if (!ivIds[id]) { upsert_(ss, 'Investments', { id: id, ts: ts, from: r.account, amount: remAmt_(r, r.next), type: r.invType || 'Mutual Fund', name: r.name, to: r.invTo || '', remarks: 'SIP · auto-logged' }, cache); made++; } }
+        else if (!exIds[id]) { upsert_(ss, 'Expenses', { id: id, ts: ts, account: r.account, amount: remAmt_(r, r.next), category: r.category || 'Miscellaneous', remarks: r.name + ' · auto-logged', photo: '' }, cache); made++; }
         var nx = nextAfter_(r.next, r.every, r.unit);
         if (!nx) r.active = false; else r.next = nx;
-        r.snooze = ''; r.lastDone = t;
+        r.snooze = ''; r.lastDone = t; remRoll_(r);
       }
       upsert_(ss, 'Reminders', r, cache);
     });
@@ -659,15 +663,15 @@ function syncCalendar_(ss) {
   read_(ss, 'Reminders').forEach(function (r) {
     if (!r.active || !r.cal) return;
     var due = r.snooze && r.snooze > r.next ? r.snooze : r.next; if (!due) return;
-    var sig = due + '|' + (r.time || '09:00') + '|' + r.name + '|' + r.amount + '|' + (r.auto ? 1 : 0);
+    var amtDue = remAmt_(r, due), sig = due + '|' + (r.time || '09:00') + '|' + r.name + '|' + amtDue + '|' + (r.auto ? 1 : 0);
     want[r.id] = sig;
     var cur = map[r.id];
     if (cur && cur.sig === sig) return;
     if (cur && cur.ev) { try { var old = cal.getEventById(cur.ev); if (old) old.deleteEvent(); } catch (e) { } }
     var hm = String(r.time || '09:00').split(':'), start = new Date(+due.slice(0, 4), +due.slice(5, 7) - 1, +due.slice(8, 10), +hm[0] || 9, +hm[1] || 0);
-    var amt = r.amount > 0 ? ' · ' + money_(r.amount) : '';
+    var amt = amtDue > 0 ? ' · ' + money_(amtDue) : '';
     var title = (r.kind === 'task' ? '✅ ' : r.kind === 'sip' ? '📈 ' : '🧾 ') + r.name + amt;
-    var desc = r.kind === 'task' ? 'Ledger reminder. Mark it done in the app → Plan → Reminders.' : (r.auto ? 'Ledger logs this automatically from ' + r.account + '.' : 'Open Ledger → Plan → Reminders → Pay.') + (r.note ? '\n' + r.note : '');
+    var desc = r.kind === 'task' ? 'Ledger reminder. Mark it done in the app → Plan → Reminders.' : (r.auto ? 'Ledger logs this automatically from ' + r.account + '.' : 'Open Ledger → Plan → Reminders → Pay.') + (r.then > 0 && r.thenFrom ? '\nPrice becomes ' + money_(r.then) + ' from ' + r.thenFrom + '.' : '') + (r.note ? '\n' + r.note : '');
     var ev = cal.createEvent(title, start, new Date(start.getTime() + 15 * 60000), { description: desc });
     ev.removeAllReminders(); ev.addPopupReminder(0); if (r.kind !== 'task') ev.addPopupReminder(24 * 60);
     map[r.id] = { ev: ev.getId(), sig: sig }; changed = true;
