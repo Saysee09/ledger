@@ -20,6 +20,31 @@
 :root{--bg:#F6F7FB;--card:#FFFFFF;--ink:#0F1222;--mute:#687086;--faint:#A6ABBA;--line:#E9EBF2;--soft:#F2F4F8;--acc:#5B5BF7;--acc2:#EEEEFF;--green:#11A04F;--red:#E5484D;--amber:#D98200;--blue:#2F7BF5;--sh:0 1px 2px rgba(15,18,34,.04),0 6px 20px rgba(15,18,34,.05);color-scheme:light}
 [data-theme=dark]{--bg:#0B0D14;--card:#151824;--ink:#ECEEF6;--mute:#8E94AA;--faint:#585E72;--line:#242838;--soft:#1C2030;--acc:#8183FF;--acc2:#23255A;--green:#3DD68C;--red:#FF6B6E;--amber:#FFB224;--blue:#5EA2FF;--sh:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);color-scheme:dark}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+/* GLASS: frosted panels over a soft colour wash. Light or dark follows the phone (or your pick) */
+[data-glass]{--card:rgba(255,255,255,.56);--soft:rgba(255,255,255,.46);--line:rgba(255,255,255,.72);--bg:#EDEFFB;--sh:inset 0 1px 0 rgba(255,255,255,.8),0 10px 30px rgba(43,36,130,.12);--glass-wash:radial-gradient(42% 32% at 12% 6%,rgba(139,108,255,.55),transparent 70%),radial-gradient(46% 34% at 95% 22%,rgba(34,211,238,.42),transparent 70%),radial-gradient(52% 40% at 78% 88%,rgba(244,114,182,.38),transparent 70%),radial-gradient(46% 38% at 6% 72%,rgba(251,191,36,.32),transparent 70%)}
+[data-glass][data-theme=dark]{--card:rgba(30,32,58,.46);--soft:rgba(255,255,255,.07);--line:rgba(255,255,255,.12);--bg:#090A17;--sh:inset 0 1px 0 rgba(255,255,255,.07),0 12px 32px rgba(0,0,0,.45);--glass-wash:radial-gradient(42% 32% at 12% 6%,rgba(111,76,255,.5),transparent 70%),radial-gradient(46% 34% at 95% 22%,rgba(14,165,233,.32),transparent 70%),radial-gradient(52% 40% at 78% 88%,rgba(219,39,119,.3),transparent 70%),radial-gradient(46% 38% at 6% 72%,rgba(245,158,11,.18),transparent 70%)}
+html[data-glass]{background:var(--glass-wash),var(--bg);background-attachment:fixed}
+[data-glass] body{background:transparent}
+[data-glass] .card,[data-glass] #view .group,[data-glass] .hero,[data-glass] .alert{backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%)}
+[data-glass] .chip,[data-glass] .iconbtn,[data-glass] .sync{background:color-mix(in srgb,var(--card) 80%,transparent)}
+[data-glass] .chip.on,[data-glass] .sheet .chip.on{background:var(--ink);color:var(--bg)}
+[data-glass] .strip .acard{box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 2px 6px rgba(20,16,80,.06)}
+[data-glass] header.top{background:linear-gradient(color-mix(in srgb,var(--bg) 86%,transparent) 62%,transparent);margin:0 -16px;padding-left:18px;padding-right:18px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);-webkit-mask-image:linear-gradient(#000 80%,transparent);mask-image:linear-gradient(#000 80%,transparent)}
+[data-glass] .sheet{background:rgba(250,250,255,.8);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border-top:1px solid rgba(255,255,255,.9)}
+[data-glass][data-theme=dark] .sheet{background:rgba(22,24,44,.82);border-top-color:rgba(255,255,255,.14)}
+[data-glass] .sheet input,[data-glass] .sheet select{background:rgba(120,124,160,.12)}
+[data-glass] .hero{background:radial-gradient(140% 130% at 100% 0%,color-mix(in srgb,var(--hc) 26%,transparent) 0%,color-mix(in srgb,var(--hc) 8%,transparent) 50%,transparent 85%),var(--card)}
+[data-glass] .scrim{background:rgba(6,8,20,.32)}
+@media (prefers-reduced-transparency:reduce){[data-glass]{--card:rgba(255,255,255,.92)}[data-glass][data-theme=dark]{--card:rgba(30,32,58,.94)}}
+.sugbox{background:color-mix(in srgb,var(--acc) 9%,var(--card));border:1px solid color-mix(in srgb,var(--acc) 28%,transparent);border-radius:16px;padding:10px 12px;margin:2px 0 12px}
+.sugbox .sg-h{font-size:.78rem;font-weight:800;color:var(--acc)}.sugbox .sg-l{font-size:.8rem;margin-top:3px;overflow-wrap:anywhere}.sugbox .sg-l small{color:var(--mute)}
+.sugbox .chip small{color:inherit;opacity:.7;font-weight:600}
+.sugbox .chip{max-width:100%;white-space:normal;text-align:left;line-height:1.25;padding-top:6px;padding-bottom:6px}
+.recall{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;width:100%;text-align:left;margin-top:8px;padding:9px 12px;border-radius:14px;border:1px dashed color-mix(in srgb,var(--acc) 45%,transparent);background:color-mix(in srgb,var(--acc) 7%,transparent);font-size:.8rem}
+.recall span{font-weight:800;color:var(--acc)}.recall b{font-weight:700;min-width:0;overflow-wrap:anywhere}.recall small{flex-basis:100%;color:var(--mute)}
+.recall.on{border-style:solid}
+.item small.wrap{white-space:normal;overflow:visible;text-overflow:clip}
+.smsraw{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font-size:.8rem;line-height:1.45;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
 html,body{background:var(--bg)}
 #app{overflow-x:clip}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -446,15 +471,15 @@ function download(name, text, type) {
 
 /* ---------- defaults ---------- */
 const CAT_DEF = [['Food', '🍽️', '#F97316'], ['Household', '🏠', '#EAB308'], ['Transportation', '🚕', '#14B8A6'], ['Personal & Lifestyle', '🛍️', '#A855F7'], ['Education', '📚', '#3B82F6'], ['Medical', '💊', '#EC4899'], ['Financial', '💳', '#64748B'], ['Miscellaneous', '✨', '#84CC16']];
-const defCfg = () => ({ categories: CAT_DEF.map(([name, icon, color]) => ({ name, icon, color, budget: 0, hidden: false })), sources: ['Salary', 'Bonus', 'Interest', 'Refund', 'Gift', 'Other'], invTypes: ['Stocks', 'Mutual Fund', 'ETF', 'Gold', 'FD / RD / PPF'], report: { on: true, day: 1, hour: 9, email: '', weekly: false, wHour: 9, cmp: 'prev' }, matched: {}, nudges: { weekly: true, anomaly: true, pace: true, recon: 14, goals: true }, profile: { born: '', earning: '', city: '', role: '' }, payees: {}, holdings: {}, signin: { clientIds: [], emails: [] }, backup: { keep: 15 }, career: { jobs: [] }, plans: { list: [] } });
+const defCfg = () => ({ bin: { days: 30 }, categories: CAT_DEF.map(([name, icon, color]) => ({ name, icon, color, budget: 0, hidden: false })), sources: ['Salary', 'Bonus', 'Interest', 'Refund', 'Gift', 'Other'], invTypes: ['Stocks', 'Mutual Fund', 'ETF', 'Gold', 'FD / RD / PPF'], report: { on: true, day: 1, hour: 9, email: '', weekly: false, wHour: 9, cmp: 'prev' }, matched: {}, nudges: { weekly: true, anomaly: true, pace: true, recon: 14, goals: true }, profile: { born: '', earning: '', city: '', role: '' }, payees: {}, holdings: {}, signin: { clientIds: [], emails: [] }, backup: { keep: 15 }, career: { jobs: [] }, plans: { list: [] } });
 const ACC_T = { bank: ['🏦', 'Bank'], cash: ['💵', 'Cash'], wallet: ['👛', 'Wallet / UPI'], card: ['💳', 'Credit card'], investment: ['📈', 'Investment'] };
-const COLL = { Expenses: 'exp', Income: 'inc', Transfers: 'trf', Investments: 'inv', EMILog: 'emi', GoalLog: 'goal', LoanLog: 'loan', Adjustments: 'adj', Accounts: 'accounts', Goals: 'goals', EMIs: 'emis', Loans: 'loans', Reminders: 'rem', Pending: 'pend' };
-const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings', 'signin', 'backup', 'career', 'plans'];
+const COLL = { Expenses: 'exp', Income: 'inc', Transfers: 'trf', Investments: 'inv', EMILog: 'emi', GoalLog: 'goal', LoanLog: 'loan', Adjustments: 'adj', Accounts: 'accounts', Goals: 'goals', EMIs: 'emis', Loans: 'loans', Reminders: 'rem', Pending: 'pend', Deleted: 'bin' };
+const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings', 'signin', 'backup', 'career', 'plans', 'bin'];
 /* Your Sheet and Google sign-in client (safe to be public: neither opens data without your Google account or secret key) */
 const CLOUD = { url: '__SHEET_URL__', clientId: '__WEB_CLIENT_ID__' };
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-01 b11';
+const APP_BUILD = '2026-11-04 b12';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -469,14 +494,14 @@ const EYE_OFF = '<svg viewBox="0 0 24 24"><path d="M17.9 17.9A10.8 10.8 0 0 1 12
 /* ---------- state ---------- */
 const KEY = 'ledger3';
 let S = (() => {
-  const b = { accounts: [], goals: [], emis: [], loans: [], exp: [], inc: [], trf: [], inv: [], emi: [], goal: [], loan: [], adj: [], rem: [], pend: [], cfg: null, outbox: [], url: '', key: '', prefs: {}, pin: '', autoLock: true, theme: '', lastSync: '', hide: false };
+  const b = { accounts: [], goals: [], emis: [], loans: [], exp: [], inc: [], trf: [], inv: [], emi: [], goal: [], loan: [], adj: [], rem: [], pend: [], bin: [], cfg: null, outbox: [], url: '', key: '', prefs: {}, pin: '', autoLock: true, theme: '', lastSync: '', hide: false };
   try { return Object.assign(b, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { return b; }
 })();
 if (!S.cfg) S.cfg = defCfg();
 ['categories', 'sources', 'invTypes'].forEach(k => { if (!Array.isArray(S.cfg[k])) S.cfg[k] = defCfg()[k]; });
 CFG_OBJ.forEach(k => { S.cfg[k] = Object.assign({}, defCfg()[k], S.cfg[k] && typeof S.cfg[k] === 'object' ? S.cfg[k] : {}); });
 if (!S.prefs || typeof S.prefs !== 'object') S.prefs = {};
-['loans', 'loan', 'rem', 'pend'].forEach(k => { if (!Array.isArray(S[k])) S[k] = []; });
+['loans', 'loan', 'rem', 'pend', 'bin'].forEach(k => { if (!Array.isArray(S[k])) S[k] = []; });
 S.outbox = S.outbox.filter(o => o.op !== 'addCategory');
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('Phone storage is full. Export a backup.'); } };
 const U = { tab: 'home', month: ym(), q: '', cat: 'all', mseg: 'inc', c: null, charts: [], after: null, extra: false, fresh: true, f: { range: 'month', from: '', to: '', accs: [], cats: [], min: '', q: '' } };
@@ -504,7 +529,9 @@ function localApply(o) {
   if (o.op === 'upsert') { if (i >= 0) arr[i] = o.row; else arr.push(o.row); }
   else if (o.op === 'delete' && i >= 0) arr.splice(i, 1);
 }
-function commit(ops) { ops.forEach(o => { o = JSON.parse(JSON.stringify(o)); localApply(o); S.outbox.push(o); }); save(); C = calc(); flush(); setStatus(); }
+/* the Recently deleted tab needs Sheet script v9; with an older script the bin is kept on this phone and uploaded later */
+const binLocal = () => !(+S.srvV >= 9);
+function commit(ops) { ops.forEach(o => { o = JSON.parse(JSON.stringify(o)); localApply(o); if (!(o.sheet === 'Deleted' && binLocal())) S.outbox.push(o); }); save(); C = calc(); flush(); setStatus(); }
 const up = (sheet, row) => ({ op: 'upsert', sheet, row });
 const del = (sheet, id) => ({ op: 'delete', sheet, id });
 const cfgOp = (key, value) => ({ op: 'config', key, value });
@@ -577,7 +604,10 @@ async function pull(silent) {
     const d = await fetch(u.toString()).then(x => x.json());
     if (!d.ok) throw new Error(d.error || 'Load failed');
     if (!d.version || d.version < APP_V) throw new Error('Your Sheet runs an old script (v' + (d.version || '?') + '). Paste the new Code.gs → Save → run setup → Deploy → Manage deployments → ✏️ → New version');
-    Object.keys(COLL).forEach(k => { S[COLL[k]] = (d.data && d.data[k]) || []; });
+    const oldBin = S.bin || [], hasBin = !!(d.data && Array.isArray(d.data.Deleted));
+    Object.keys(COLL).forEach(k => { if (k === 'Deleted' && !hasBin) return; S[COLL[k]] = (d.data && d.data[k]) || []; });
+    S.srvV = +d.version || 0;
+    if (hasBin) { const have = new Set(S.bin.map(x => x.id)); oldBin.filter(x => x.local && !have.has(x.id)).forEach(x => { const r = Object.assign({}, x); delete r.local; S.bin.push(r); S.outbox.push(up('Deleted', r)); }); }
     const cfg = d.config || {}, push = [];
     ['categories', 'sources', 'invTypes'].concat(CFG_OBJ).forEach(k => { const obj = CFG_OBJ.includes(k), ok = obj ? cfg[k] && typeof cfg[k] === 'object' : Array.isArray(cfg[k]) && cfg[k].length; if (ok) S.cfg[k] = obj ? Object.assign({}, defCfg()[k], cfg[k]) : cfg[k]; else push.push(k); });
     let added = false;
@@ -586,7 +616,7 @@ async function pull(silent) {
     S.outbox.forEach(localApply);
     push.forEach(k => S.outbox.push(cfgOp(k, S.cfg[k])));
     S.lastSync = hm(new Date()); lastPull = Date.now(); lastErr = '';
-    busy = false; save(); pushSignin(); render(); flush();
+    busy = false; binPurge(true); save(); pushSignin(); render(); flush();
     if (!silent) toast('Up to date ✓');
     return true;
   } catch (e) {
@@ -956,9 +986,8 @@ ACT.catF = el => { U.cat = el.dataset.v; if (U.list) U.list.n = 40; render(); };
 
 /* ---------- entry detail ---------- */
 ACT.entry = el => entrySheet(el.dataset.s, el.dataset.id);
-function entrySheet(sheet, id) {
-  const e = S[COLL[sheet]].find(x => x.id === id); if (!e) return;
-  const rows = []; let title = '', icon = '🧾', color = '#5B5BF7';
+function entryInfo(sheet, e) {
+  const rows = []; let title = e.name || '', icon = '🧾', color = '#5B5BF7';
   switch (sheet) {
     case 'Expenses': { const c = cat(e.category); icon = c.icon; color = c.color; title = e.remarks || e.category; rows.push(['Category', e.category], ['Paid from', e.account]); if (e.mine) rows.push(['For', 'Me · owed back to ' + e.account]); if (e.payee && e.payee !== e.remarks) rows.push(['Bank SMS name', e.payee]); break; }
     case 'Income': title = e.source; icon = '💰'; color = '#12A150'; rows.push(['Credited to', e.account], ['Source', e.source]); if (e.payee) rows.push(['Bank SMS name', e.payee]); break;
@@ -969,9 +998,21 @@ function entrySheet(sheet, id) {
     case 'GoalLog': { const g = goalById(e.goalId); title = e.action + ' · ' + (g ? g.name : e.goal); icon = '🎯'; color = '#A855F7'; rows.push(['Goal', g ? g.name : e.goal], ['Account', e.account]); break; }
     case 'LoanLog': title = e.action + ' · ' + e.person; icon = '🤝'; color = '#F59E0B'; rows.push(['Person', e.person], [LACC[e.action] > 0 ? 'Into' : 'From', e.account || '—']); break;
     case 'Adjustments': title = 'Balance correction'; icon = '⚖️'; rows.push(['Account', e.account], ['Change', (e.amount >= 0 ? '+' : '') + inr(e.amount)]); break;
+    case 'Accounts': title = 'Account · ' + e.name; icon = (ACC_T[e.type] || ['🏦'])[0]; rows.push(['Type', (ACC_T[e.type] || ['', e.type])[1]], ['Opening balance', inr(e.opening)]); break;
+    case 'Goals': title = 'Goal · ' + e.name; icon = e.icon || '🎯'; color = e.color || color; rows.push(['Target', inr(e.target)], ['Kept in', e.account || '—']); break;
+    case 'Loans': title = 'Person · ' + e.name; icon = '👤'; color = '#F59E0B'; rows.push(['Type', e.dir === 'owe' ? 'You owe them' : 'They owe you']); break;
+    case 'EMIs': title = 'EMI · ' + e.name; icon = '📆'; color = '#A855F7'; rows.push(['Due day', String(e.dueDay)], ['Paid from', e.account || '—']); break;
+    case 'Reminders': title = 'Reminder · ' + e.name; icon = '⏰'; rows.push(['Next due', e.next ? dLabel(e.next) : '—']); break;
   }
-  rows.push(['When', dLabel(e.ts.slice(0, 10)) + (tLabel(e.ts) ? ', ' + tLabel(e.ts) : '')]);
+  const t = e.ts || e.created || '';
+  if (t) rows.push(['When', dLabel(t.slice(0, 10)) + (tLabel(t) ? ', ' + tLabel(t) : '')]);
   if (e.remarks && sheet !== 'Expenses') rows.push(['Note', e.remarks]);
+  return { title, icon, color, rows };
+}
+function entrySheet(sheet, id) {
+  const e = S[COLL[sheet]].find(x => x.id === id); if (!e) return;
+  const { title, icon, color, rows } = entryInfo(sheet, e);
+  if (sheet === 'Expenses' || sheet === 'Income') { const sm = S.pend.find(p => p.done === id && p.raw); if (sm) rows.push(['From bank SMS', (sm.bank || 'Bank') + (sm.l4 ? ' ·' + sm.l4 : '')]); }
   const split = sheet === 'Expenses' && isSplit(id), an = sheet === 'Expenses' ? anomalyOf(e) : null;
   if (an) rows.push(['⚠️ Unusual', an.x + '× your usual ' + e.category + ' (' + inr(an.med) + ')']);
   if (split) S.loan.filter(l => l.ref === id).forEach(l => rows.push(['👥 ' + l.person + ' owes', inr(l.amount)]));
@@ -1028,10 +1069,84 @@ function delItems(sheet, id) {
 ACT.delEntry = el => {
   const items = delItems(el.dataset.s, el.dataset.id);
   if (!confirm(items.length > 1 ? 'Delete this entry and its ' + (items.length - 1) + ' linked entr' + (items.length > 2 ? 'ies' : 'y') + '?' : 'Delete this entry?')) return;
-  commit(items.map(x => del(x.s, x.i))); shut(); render(); buzz(10);
-  toast('Deleted', 'Undo', () => { commit(items.map(x => up(x.s, x.row))); render(); });
+  const b = binRow(items);
+  commit(items.map(x => del(x.s, x.i)).concat([up('Deleted', b)])); shut(); render(); buzz(10);
+  toast('Deleted · kept ' + binDays() + ' days', 'Undo', () => { commit(items.map(x => up(x.s, x.row)).concat([del('Deleted', b.id)])); render(); });
 };
 
+/* =========================================================
+   RECENTLY DELETED — every delete is kept for N days (default 30) with its linked entries and bank SMS
+   ========================================================= */
+const binDays = () => { const d = +((S.cfg.bin || {}).days); return d >= 1 && d <= 365 ? d : 30; };
+function binRow(items) {
+  const m = items[0], e = m.row, inf = entryInfo(m.s, e), ids = items.map(x => x.i);
+  const sms = S.pend.filter(p => p.done && ids.includes(p.done)).map(p => JSON.parse(JSON.stringify(p)));
+  let data = JSON.stringify({ v: 1, items: items.map(x => ({ s: x.s, row: x.row })), sms });
+  if (data.length > 45000) data = JSON.stringify({ v: 1, items: items.map(x => ({ s: x.s, row: x.row })), sms: sms.map(p => Object.assign({}, p, { raw: String(p.raw || '').slice(0, 200) })) });
+  const r = { id: uid('D'), ts: nowTs(), what: (inf.title || m.s) + (items.length > 1 ? ' + ' + (items.length - 1) + ' linked' : ''), amount: Math.abs(+e.amount || +e.target || 0), tab: m.s, date: e.ts || e.created || '', sms: sms.map(p => p.raw).filter(Boolean).join('\n— — —\n').slice(0, 2000), data };
+  if (binLocal()) r.local = true;
+  return r;
+}
+function binDel(pairs) {
+  const items = pairs.map(([s, i]) => ({ s, i, row: S[COLL[s]].find(x => x.id === i) })).filter(x => x.row).map(x => ({ s: x.s, i: x.i, row: JSON.parse(JSON.stringify(x.row)) }));
+  if (!items.length) return null;
+  const b = binRow(items); commit(items.map(x => del(x.s, x.i)).concat([up('Deleted', b)])); return b;
+}
+const binData = b => { try { const d = JSON.parse(b.data || '{}'); return Array.isArray(d.items) ? { items: d.items, sms: Array.isArray(d.sms) ? d.sms : [] } : null; } catch (e) { return null; } };
+const binLeft = b => Math.max(0, binDays() - Math.floor((Date.parse(today()) - Date.parse((b.ts || today()).slice(0, 10))) / 864e5));
+function binPurge(quiet) {
+  const cut = addDays(today(), -binDays()), old = S.bin.filter(x => (x.ts || '').slice(0, 10) < cut);
+  if (!old.length) return 0;
+  old.forEach(x => { localApply(del('Deleted', x.id)); if (!binLocal()) S.outbox.push(del('Deleted', x.id)); });
+  if (!quiet) { save(); C = calc(); flush(); }
+  return old.length;
+}
+const binList = () => S.bin.slice().sort((a, b) => (b.ts || '').localeCompare(a.ts || ''));
+const TAB_NAME = { Expenses: 'Expense', Income: 'Income', Transfers: 'Transfer', Investments: 'Investment', EMILog: 'EMI payment', GoalLog: 'Goal entry', LoanLog: 'Loan entry', Adjustments: 'Correction', Accounts: 'Account', Goals: 'Goal', Loans: 'Person', EMIs: 'EMI', Reminders: 'Reminder' };
+function binCard() {
+  const L = binList(), days = binDays();
+  const rows = L.map(b => { const D = binData(b), m = D && D.items[0], inf = m ? entryInfo(m.s, m.row) : { icon: '🗑️', color: '#64748B' }, left = binLeft(b);
+    return `<button class="item" data-act="binOpen" data-id="${esc(b.id)}"><span class="ic" style="background:${inf.color}1f">${inf.icon}</span><span class="mid"><b>${esc(b.what || 'Deleted item')}</b><small class="wrap"><span class="${left <= 3 ? 'red' : ''}">${left ? left + ' day' + (left === 1 ? '' : 's') + ' left' : 'goes today'}</span> · ${esc(TAB_NAME[b.tab] || b.tab || '')}${b.sms ? ' · 📩 SMS' : ''} · deleted ${dLabel((b.ts || '').slice(0, 10))}</small></span>${b.amount ? `<span class="amt">${inr(b.amount, 1)}</span>` : ''}</button>`; }).join('');
+  const opts = [7, 15, 30, 60, 90, 180];
+  return `<div class="card"><h2>Recently deleted <small>kept ${days} days</small></h2>
+  <div class="lbl" style="margin-top:0">Keep deleted entries for</div><div class="chips wrap">${opts.map(k => `<button class="chip ${days === k ? 'on' : ''}" data-act="binDays" data-v="${k}">${k} days</button>`).join('')}</div>
+  <div class="addrow"><input id="binDaysIn" inputmode="numeric" maxlength="3" placeholder="Other: 1 to 365 days" value="${opts.includes(days) ? '' : days}"><button class="btn sm" data-act="binDaysSet">Set</button></div>
+  <div class="hint">Anything you delete (entries, accounts, goals, people, EMIs, reminders) waits here with its linked entries and the bank SMS it came from. Tap an item to see it, restore it or delete it for good. After ${days} days it is removed automatically.${binLocal() && S.url ? '<br>⚠️ Kept on this phone for now. Paste the v9 Sheet script to also keep it in your Sheet (tab "Recently deleted").' : ''}</div></div>
+  ${L.length ? `<div class="group">${rows}</div><button class="btn dng" data-act="binEmpty" style="margin-top:14px">Empty Recently deleted (${L.length})</button>` : '<div class="empty">Nothing deleted in the last ' + days + ' days.</div>'}`;
+}
+ACT.binDays = el => { commit([cfgOp('bin', Object.assign({}, S.cfg.bin, { days: +el.dataset.v }))]); binPurge(); render(); toast('Deleted entries are kept ' + el.dataset.v + ' days'); };
+ACT.binDaysSet = () => { const v = Math.round(+($('#binDaysIn').value || '').replace(/\D/g, '')); if (!(v >= 1 && v <= 365)) return toast('Pick 1 to 365 days'); const gone = S.bin.filter(x => (x.ts || '').slice(0, 10) < addDays(today(), -v)).length; if (gone && !confirm(gone + ' item(s) are older than ' + v + ' days and will be removed for good. Continue?')) return; commit([cfgOp('bin', Object.assign({}, S.cfg.bin, { days: v }))]); binPurge(); render(); toast('Deleted entries are kept ' + v + ' days'); };
+ACT.binOpen = el => binSheet(el.dataset.id);
+function binSheet(id) {
+  const b = S.bin.find(x => x.id === id); if (!b) return shut();
+  const D = binData(b); if (!D) return openSheet('Deleted item', `<div class="hint">This item could not be read.</div><button class="btn dng" data-act="binForget" data-id="${esc(id)}">Delete for good</button>`);
+  const m = D.items[0], inf = entryInfo(m.s, m.row), left = binLeft(b);
+  const missing = uniq(D.items.flatMap(x => [x.row.account, x.row.from, x.row.to]).filter(n => n && !acc(n)));
+  const linked = D.items.slice(1).map(x => { const i2 = entryInfo(x.s, x.row); return `<div><span>🔗 ${esc(TAB_NAME[x.s] || x.s)}</span><b>${esc(i2.title)}${x.row.amount ? ' · ' + inr(Math.abs(x.row.amount)) : ''}</b></div>`; }).join('');
+  const smsH = D.sms.length ? D.sms.map(p => `<div class="lbl">📩 Bank SMS${p.bank ? ' · ' + esc(p.bank) : ''}${p.l4 ? ' ·' + esc(p.l4) : ''}</div><div class="smsraw">${esc(p.raw || '(no text kept)')}</div><div class="hint" style="margin-top:6px">${p.dir === 'credit' ? 'Received' : 'Paid'} ${inr(p.amount)}${p.payee ? ' · ' + esc(p.payee) : ''} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}${p.ref ? ' · ref ' + esc(p.ref) : ''}</div>`).join('') : (b.sms ? `<div class="lbl">📩 Bank SMS</div><div class="smsraw">${esc(b.sms)}</div>` : '');
+  const isSms = D.sms.length && ['Expenses', 'Income', 'Transfers', 'Investments', 'LoanLog'].includes(m.s);
+  openSheet('', `<div class="detail"><div class="ic big" style="background:${inf.color}1f">${inf.icon}</div>${m.row.amount ? `<div class="dv">${inrX(Math.abs(m.row.amount))}</div>` : ''}<div class="dt">${esc(inf.title)}</div></div>
+  <div class="kv">${inf.rows.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}${linked}<div><span>Deleted</span><b>${dLabel(b.ts.slice(0, 10))}, ${tLabel(b.ts)}</b></div><div><span>Removed for good</span><b class="${left <= 3 ? 'red' : ''}">${left ? 'in ' + left + ' day' + (left === 1 ? '' : 's') : 'today'}</b></div></div>
+  ${smsH}
+  ${missing.length ? `<div class="hint amber">⚠️ ${missing.map(esc).join(', ')} no longer exist${missing.length === 1 ? 's' : ''}. Restore that account first, or the entry will not change any balance.</div>` : ''}
+  <button class="btn big" data-act="binRestore" data-id="${esc(id)}">↩️ Restore${D.items.length > 1 ? ' all ' + D.items.length : ''}</button>
+  ${isSms ? `<button class="btn sec" data-act="binResort" data-id="${esc(id)}">📩 Put the SMS back in "To sort"</button>` : ''}
+  <button class="btn dng" data-act="binForget" data-id="${esc(id)}">Delete for good</button>`);
+}
+ACT.binRestore = el => {
+  const b = S.bin.find(x => x.id === el.dataset.id), D = b && binData(b); if (!D) return toast('This item could not be read');
+  const ops = D.items.map(x => up(x.s, x.row));
+  D.sms.forEach(p => { if (!S.pend.some(q => q.id === p.id)) ops.push(up('Pending', p)); });
+  ops.push(del('Deleted', b.id)); commit(ops); shut(); render(); buzz(10);
+  toast('Restored · ' + (b.what || 'entry'), 'Undo', () => { commit(D.items.map(x => del(x.s, x.row.id)).concat([up('Deleted', Object.assign({}, b, binLocal() ? { local: true } : {}))])); render(); });
+};
+ACT.binResort = el => {
+  const b = S.bin.find(x => x.id === el.dataset.id), D = b && binData(b); if (!D || !D.sms.length) return;
+  const ops = D.sms.map(p => up('Pending', Object.assign({}, S.pend.find(q => q.id === p.id) || p, { status: 'new', done: '' })));
+  ops.push(del('Deleted', b.id)); commit(ops); shut(); render(); toast('SMS is back in "To sort" · file it again from the 🔔 bell');
+};
+ACT.binForget = el => { if (!confirm('Delete this for good? It cannot be restored.')) return; commit([del('Deleted', el.dataset.id)]); shut(); render(); toast('Deleted for good'); };
+ACT.binEmpty = () => { const n = S.bin.length; if (!n || !confirm('Delete all ' + n + ' item(s) for good? They cannot be restored.')) return; commit(S.bin.map(x => del('Deleted', x.id))); render(); toast('Recently deleted is empty'); };
 /* =========================================================
    COMPOSER — expense / income / transfer / invest
    ========================================================= */
@@ -1072,7 +1187,7 @@ function compose(kind, id, dup) {
     h += `<div class="lbl">Fund / stock name</div><input id="cName" list="nameDl" placeholder="e.g. Nifty 50 Index Fund" value="${esc(v.name || '')}"><datalist id="nameDl">${uniq(S.inv.filter(isBuy).map(x => x.name)).map(n => `<option value="${esc(n)}">`).join('')}</datalist>`;
   }
   h += `<div class="lbl">When</div><div class="when"><button class="chip ${date === today() ? 'on' : ''}" data-act="cDay" data-d="0">Today</button><button class="chip ${date === yest ? 'on' : ''}" data-act="cDay" data-d="-1">Yesterday</button><input type="date" id="cDate" value="${date}" max="${today()}"><input type="time" id="cTime" value="${time}"></div>`;
-  h += `<div class="lbl">Note</div><input id="cRem" placeholder="${kind === 'exp' ? 'What was it? e.g. Lunch #goa-trip' : 'Optional'}" value="${esc(v.remarks || '')}" maxlength="140" autocomplete="off"><div class="chips" id="remSug" style="margin-top:8px"></div>`;
+  h += `<div class="lbl">Note</div><input id="cRem" placeholder="${kind === 'exp' ? 'What was it? e.g. Lunch #goa-trip' : 'Optional'}" value="${esc(v.remarks || '')}" maxlength="140" autocomplete="off" data-in="cRem"><div id="remRecall"></div><div class="chips" id="remSug" style="margin-top:8px"></div>`;
   h += `<button class="btn big" data-act="cSave" id="cSave">Save</button>`;
   openSheet(editing ? 'Edit entry' : dup ? 'Repeat entry' : 'New entry', h, 'tall');
   updCompose();
@@ -1091,7 +1206,7 @@ function favs() {
 }
 ACT.fav = el => {
   const e = (U.favs || [])[+el.dataset.i], c = U.c; if (!e || !c) return;
-  c.cat = e.category; c.acc = e.account; $('#cAmt').value = e.amount; $('#cRem').value = e.remarks;
+  c.cat = e.category; c.acc = e.account; c.touched = true; $('#cAmt').value = e.amount; $('#cRem').value = e.remarks;
   $$('.qa .chip').forEach(b => b.classList.toggle('on', b === el)); syncChips(); updCompose(); buzz(8);
   const s = $('#cSave'); if (s) s.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 };
@@ -1100,13 +1215,38 @@ ACT.tagAdd = el => { const i = $('#cRem'), t = el.dataset.v; if (tagsOf(i.value)
 ACT.cKind = el => { U.keepAmt = $('#cAmt').value; compose(el.dataset.k); };
 function syncChips() { $$('#sheet [data-act=pick]').forEach(b => { const o = U[b.dataset.o || 'c']; if (o) b.classList.toggle('on', o[b.dataset.f] === b.dataset.v); }); }
 ACT.pick = el => {
-  const o = U[el.dataset.o || 'c']; if (!o) return; o[el.dataset.f] = el.dataset.v; syncChips(); buzz(6);
+  const o = U[el.dataset.o || 'c']; if (!o) return; o[el.dataset.f] = el.dataset.v; if (!el.dataset.o && ['cat', 'acc', 'src', 'from', 'to'].includes(el.dataset.f)) o.touched = true; syncChips(); buzz(6);
   if (!el.dataset.o) updCompose();
   if (el.dataset.o === 'g' && (el.dataset.f === 'mode' || el.dataset.f === 'wTo')) { $('#gBox').innerHTML = gBox(); if (el.dataset.f === 'mode') $$('#sheet .seg [data-f=mode]').forEach(b => b.classList.toggle('on', b === el)); }
 };
 ACT.cDay = el => { $('#cDate').value = addDays(today(), +el.dataset.d); $$('[data-act=cDay]').forEach(b => b.classList.toggle('on', b === el)); };
 IN.cAmt = () => updCompose();
-ACT.sug = el => { $('#cRem').value = el.dataset.v; };
+ACT.sug = el => { $('#cRem').value = el.dataset.v; noteRecall(true); };
+/* typed a note you've used before (e.g. "Rahul", "Breakfast")? fill category + account from last time; the amount stays yours */
+function noteHits(txt, kind) {
+  const q = String(txt || '').replace(/#[\w-]+/g, '').trim().toLowerCase(); if (q.length < 3) return [];
+  const arr = kind === 'inc' ? S.inc : kind === 'trf' ? S.trf : S.exp, out = [];
+  for (let i = arr.length - 1; i >= 0 && out.length < 40; i--) { const e = arr[i], r = String(e.remarks || '').replace(/#[\w-]+/g, '').trim().toLowerCase(); if (!r || /split ÷/.test(r)) continue; if (r === q || payeeSame(r, q) >= .85) out.push(e); }
+  return out.sort((a, b) => b.ts.localeCompare(a.ts));
+}
+function noteRecall(apply) {
+  const c = U.c, box = $('#remRecall'); if (!c || !box || c.id || !['exp', 'inc', 'trf'].includes(c.kind)) { if (box) box.innerHTML = ''; return; }
+  const hits = noteHits($('#cRem').value, c.kind); if (!hits.length) { box.innerHTML = ''; U.c.recall = null; return; }
+  const f = {}; hits.forEach(e => { const k = c.kind === 'trf' ? e.from + '|' + e.to : (e.category || e.source) + '|' + e.account; (f[k] = f[k] || []).push(e); });
+  const best = Object.values(f).sort((a, b) => b.length - a.length || b[0].ts.localeCompare(a[0].ts))[0], L = best[0];
+  const ok = c.kind === 'trf' ? acc(L.from) && acc(L.to) : acc(L.account) && !acc(L.account).archived && (c.kind !== 'exp' || S.cfg.categories.some(x => x.name === L.category));
+  if (!ok) { box.innerHTML = ''; return; }
+  const same = c.kind === 'exp' ? c.cat === L.category && c.acc === L.account : c.kind === 'inc' ? c.src === L.source && c.acc === L.account : c.from === L.from && c.to === L.to;
+  const lbl = c.kind === 'exp' ? cat(L.category).icon + ' ' + esc(L.category) + ' · ' + esc(L.account) : c.kind === 'inc' ? '💰 ' + esc(L.source) + ' · ' + esc(L.account) : esc(L.from) + ' → ' + esc(L.to);
+  const amts = best.map(e => e.amount), lo = Math.min(...amts), hi = Math.max(...amts);
+  if (apply && !same && !c.touched) { recallSet(L); return noteRecall(false); }
+  box.innerHTML = `<button class="recall ${same ? 'on' : ''}" data-act="recallUse"><span>${same ? '✓ Same as last time' : '↺ Use last time'}</span><b>${lbl}</b><small>${best.length}× · last ${dLabel(L.ts.slice(0, 10))} ${inr(L.amount, 1)}${lo !== hi ? ' · usually ' + inr(lo, 1) + '–' + inr(hi, 1) : ''}</small></button>`;
+  c.recall = L;
+}
+function recallSet(L) { const c = U.c; if (!c || !L) return; if (c.kind === 'exp') { c.cat = L.category; c.acc = L.account; } else if (c.kind === 'inc') { c.src = L.source; c.acc = L.account; } else { c.from = L.from; c.to = L.to; } syncChips(); updCompose(); }
+ACT.recallUse = () => { const c = U.c; if (!c || !c.recall) return; recallSet(c.recall); c.touched = true; noteRecall(false); buzz(6); };
+let recallT = 0;
+IN.cRem = () => { clearTimeout(recallT); recallT = setTimeout(() => noteRecall(true), 350); };
 ACT.trPreset = el => {
   const bank = live(a => a.type === 'bank')[0], cash = live(a => a.type === 'cash')[0], card = live(a => a.type === 'card')[0], p = el.dataset.p;
   if ((p === 'atm' || p === 'dep') && (!bank || !cash)) return toast('Needs a bank and a cash account');
@@ -1387,7 +1527,7 @@ ACT.aSave = () => {
 ACT.aDel = () => {
   const a = S.accounts.find(x => x.id === U.a.id); if (!a) return;
   if (activity(a.name).length || S.goals.some(g => g.account === a.name) || S.emis.some(m => m.account === a.name)) return toast('This account has history. Hide it instead.');
-  if (!confirm('Delete ' + a.name + '?')) return; commit([del('Accounts', a.id)]); shut(); render();
+  if (!confirm('Delete ' + a.name + '?')) return; binDel([['Accounts', a.id]]); shut(); render();
 };
 
 /* ---------- onboarding ---------- */
@@ -1638,7 +1778,7 @@ ACT.loanOpen = el => {
   <div class="section-t">History</div>${hist.length ? `<div class="group">${hist.map(e => row({ sheet: 'LoanLog', id: e.id, icon: LUP.has(e.action) ? '⬆️' : '⬇️', color: LUP.has(e.action) ? '#F59E0B' : '#11A04F', t: e.action + (e.account ? ' · ' + e.account : ''), s: dLabel(e.ts.slice(0, 10)) + (e.remarks ? ' · ' + e.remarks : ''), amt: e.amount, sign: 0, cls: '' })).join('')}</div>` : '<div class="empty">No history.</div>'}
   ${hist.length ? '' : `<button class="btn dng" data-act="loanDel" data-id="${l.id}">Delete</button>`}`);
 };
-ACT.loanDel = el => { if (!confirm('Delete this person?')) return; commit([del('Loans', el.dataset.id)]); shut(); render(); };
+ACT.loanDel = el => { if (!confirm('Delete this person?')) return; binDel([['Loans', el.dataset.id]]); shut(); render(); };
 
 /* ---------- EMIs ---------- */
 const emiCount = m => (+m.paidBefore || 0) + S.emi.filter(e => e.emiId === m.id).length;
@@ -1691,7 +1831,7 @@ ACT.emSave = () => {
   commit([up('EMIs', { id: U.em.id || uid('M'), name: n, amount: a, dueDay: Math.min(31, Math.max(1, parseInt($('#emDay').value) || 1)), account: U.em.account, startMonth: $('#emStart').value || ym(), total: parseInt($('#emTot').value) || 0, paidBefore: parseInt($('#emPrev').value) || 0, active: $('#emAct').checked, note: $('#emNote').value.trim() })]);
   shut(); render(); toast('EMI saved');
 };
-ACT.emDel = () => { if (!confirm('Delete this EMI? Past payments stay in your log.')) return; commit([del('EMIs', U.em.id)]); shut(); render(); };
+ACT.emDel = () => { if (!confirm('Delete this EMI? Past payments stay in your log.')) return; binDel([['EMIs', U.em.id]]); shut(); render(); };
 ACT.emiPay = el => {
   const m = S.emis.find(x => x.id === el.dataset.id), s = emiState(m); U.ep = { id: m.id, account: m.account };
   const accs = live(a => a.type !== 'investment');
@@ -1761,7 +1901,7 @@ ACT.gsSave = () => {
 ACT.gsDel = () => {
   const g = goalById(U.gs.id); if (!g) return;
   if (S.goal.some(e => e.goalId === g.id)) return toast('This goal has history. Archive it instead.');
-  if (!confirm('Delete goal "' + g.name + '"?')) return; commit([del('Goals', g.id)]); shut(); render();
+  if (!confirm('Delete goal "' + g.name + '"?')) return; binDel([['Goals', g.id]]); shut(); render();
 };
 const goalWhere = g => Object.entries(C.gIn[g.id] || {}).filter(([, v]) => Math.abs(v) > .004).sort((x, y) => y[1] - x[1]);
 ACT.goalOpen = el => {
@@ -1937,19 +2077,97 @@ function pendListHtml(L) {
   return `<div class="group">${L.map(p => { const pk = payeeFind(p.payee); return `<button class="item" data-act="pendPick" data-id="${p.id}"><span class="ic" style="background:${p.dir === 'credit' ? '#12A15022' : 'var(--soft)'}">${p.dir === 'credit' ? '⬇️' : p.card ? '💳' : p.atm ? '🏧' : '⬆️'}</span><span class="mid"><b>${esc((pk && pk.note) || p.payee || (p.dir === 'credit' ? 'Money received' : 'Payment'))}${pk && pk.note ? ' <small class="mute" style="font-weight:600">· ' + esc(pk.category || pk.label || '') + '</small>' : ''}</b><small>${pk && pk.note && p.payee ? esc(p.payee) + ' · ' : ''}${esc(p.account || p.bank + (p.l4 ? ' ·' + p.l4 : '') || 'Unknown account')} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}</small></span><span class="amt ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</span></button>`; }).join('')}</div><button class="btn sec" data-act="pendIgnoreAll">Ignore all ${L.length}</button>`;
 }
 ACT.pendIgnoreAll = () => { if (!confirm('Mark all ' + pendNew().length + ' as ignored? They will not be added anywhere.')) return; commit(pendNew().map(p => up('Pending', Object.assign({}, p, { status: 'ignored' })))); render(); if (inboxCount().all) inboxSheet(); else shut(); };
+/* ---------- smart payee suggestions: same person / shop even when the bank writes the name differently ---------- */
+const NAME_STOP = new Set(['mr', 'mrs', 'ms', 'miss', 'dr', 'shri', 'smt', 'sri', 'kumari', 'the', 'and', 'pvt', 'ltd', 'private', 'limited', 'india', 'upi', 'to', 'from', 'by', 'payment', 'paid']);
+const nameToks = p => uniq(String(p || '').toLowerCase().replace(/@[a-z0-9.]+/g, ' ').replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(t => t.length >= 2 && !NAME_STOP.has(t) && !/^\d+$/.test(t)));
+function payeeSame(a, b) {
+  const ka = payeeKey(a), kb = payeeKey(b); if (!ka || !kb) return 0;
+  if (ka === kb) return 1;
+  const ta = nameToks(a), tb = nameToks(b);
+  if (ta.length && ta.join('') === tb.join('')) return .95;
+  if (Math.min(ka.length, kb.length) >= 5 && (ka.includes(kb) || kb.includes(ka))) return .8;
+  if (!ta.length || !tb.length) return 0;
+  const common = ta.filter(t => tb.includes(t) || (t.length >= 4 && tb.some(u => u.length >= 4 && (u.startsWith(t) || t.startsWith(u)))));
+  if (common.length >= 2 && common.length >= Math.min(ta.length, tb.length)) return .85;
+  if (ta.length === 1 && tb.length === 1 && common.length === 1 && common[0].length >= 4) return .8;
+  return 0;
+}
+/* what an already-filed SMS became */
+function pastFiling(p) {
+  const id = p.done; let e;
+  if (p.status === 'ignored') return { id: p.id, act: 'ignore', amount: p.amount, ts: p.ts };
+  if (!id) return null;
+  if ((e = S.exp.find(x => x.id === id))) return { id, act: 'exp', category: e.category, note: e.remarks, acc: e.account, amount: e.amount, ts: e.ts };
+  if ((e = S.inc.find(x => x.id === id))) return { id, act: e.source === 'Refund' ? 'refund' : 'inc', note: e.source === 'Refund' ? String(e.remarks || '').split(' · ')[0] : e.remarks, category: e.source === 'Refund' ? String(e.remarks || '').split(' · ')[1] || '' : '', acc: e.account, amount: e.amount, ts: e.ts };
+  if ((e = S.trf.find(x => x.id === id))) return { id, act: 'trf', note: e.remarks, acc: p.dir === 'credit' ? e.to : e.from, to: p.dir === 'credit' ? e.from : e.to, amount: e.amount, ts: e.ts };
+  if ((e = S.inv.find(x => x.id === id))) return { id, act: 'inv', note: e.name, acc: e.from, to: e.to, amount: e.amount, ts: e.ts };
+  if ((e = S.loan.find(x => x.id === id))) return { id, act: { Lend: 'lend', Borrow: 'borrow', Repay: 'repay', Receive: 'back' }[e.action], loan: e.loanId, note: e.remarks, acc: e.account, amount: e.amount, ts: e.ts };
+  return null;
+}
+function payeeHistory(payee, dir, skip) {
+  const H = [], seen = new Set(), add = (sim, h) => { if (!h || !h.act || seen.has(h.id)) return; seen.add(h.id); H.push(Object.assign({ sim }, h)); };
+  S.pend.forEach(p => { if (p.id === skip || p.status === 'new' || !p.payee || (dir && p.dir !== dir)) return; const sim = payeeSame(payee, p.payee); if (sim) add(sim, pastFiling(p)); });
+  if (dir !== 'credit') S.exp.forEach(e => { if (!e.payee) return; const sim = payeeSame(payee, e.payee); if (sim) add(sim, { id: e.id, act: 'exp', category: e.category, note: e.remarks, acc: e.account, amount: e.amount, ts: e.ts }); });
+  if (dir !== 'debit') S.inc.forEach(e => { if (!e.payee) return; const sim = payeeSame(payee, e.payee); if (sim) add(sim, pastFiling({ done: e.id, dir: 'credit' })); });
+  return H;
+}
+/* ranks what you usually do with this payee: how often, how recently, and how close the amount is */
+function payeeSuggest(payee, amount, dir, skip) {
+  if (!payee) return [];
+  const H = payeeHistory(payee, dir, skip), now = Date.parse(today()), g = {};
+  H.forEach(h => {
+    const k = [h.act, h.act === 'exp' || h.act === 'refund' ? h.category || '' : '', String(h.note || '').trim().toLowerCase(), h.loan || '', h.to || ''].join('|');
+    const age = Math.max(0, (now - Date.parse(String(h.ts || '').slice(0, 10))) / 864e5) || 0;
+    /* amount closeness counts most: five ₹60 breakfasts must not outvote one ₹2,000 loan when ₹2,500 arrives */
+    const near = amount > 0 && h.amount > 0 ? Math.max(.02, Math.exp(-Math.abs(Math.log(amount / h.amount)) * 1.2)) : .5;
+    const w = h.sim * (.35 + Math.pow(.5, age / 60)) * near;
+    const x = g[k] || (g[k] = { w: 0, n: 0, last: h, lo: h.amount, hi: h.amount });
+    x.w += w; x.n++; x.lo = Math.min(x.lo, h.amount); x.hi = Math.max(x.hi, h.amount); if (String(h.ts || '') > String(x.last.ts || '')) x.last = h;
+  });
+  return Object.values(g).sort((a, b) => b.w - a.w).slice(0, 4);
+}
+function sgLabel(h, short) {
+  const nt = h.note && h.note !== h.payee ? esc(h.note) : '';
+  if (h.act === 'exp') { const c = cat(h.category); return c.icon + ' ' + (nt || esc(h.category)) + (nt && h.category && !short ? ' <small>' + esc(h.category) + '</small>' : ''); }
+  if (h.act === 'ignore') return '🚫 Ignored';
+  if (h.act === 'trf') return '⇄ ' + (h.to ? esc(h.to) : 'Transfer');
+  if (h.act === 'inv') return '📈 ' + (nt || 'Invest');
+  if (['lend', 'repay', 'back', 'borrow'].includes(h.act)) { const l = loanById(h.loan); return '🤝 ' + { lend: 'Lent', repay: 'Repaid', back: 'Got back', borrow: 'Borrowed' }[h.act] + (l ? ' · ' + esc(l.name) : ''); }
+  if (h.act === 'refund') return '↩️ Refund' + (nt ? ' · ' + nt : '');
+  return '💰 ' + (nt || 'Income');
+}
+const sgAmt = x => x.lo === x.hi ? inr(x.lo, 1) : inr(x.lo, 1) + '–' + inr(x.hi, 1);
+/* fill the "money paid / received" form from one suggestion */
+function pdApply(P, p, h) {
+  if (!h || !PEND_ACT[p.dir].some(a => a[0] === h.act)) return;
+  P.act = h.act;
+  if (h.category && (h.act === 'exp' || h.act === 'refund') && S.cfg.categories.some(c => c.name === h.category)) P.cat = h.category;
+  if (h.note && h.note !== p.payee) P.note = h.note;
+  if (!p.account && h.acc && acc(h.acc) && !acc(h.acc).archived) P.account = h.acc;
+  if (h.to && acc(h.to) && !acc(h.to).archived) P.to = h.to;
+  if (h.loan) { const l = loanById(h.loan); if (l && !l.archived) P.loan = l.id; }
+}
 const PEND_ACT = { debit: [['exp', '🧾 Expense'], ['lend', '🤝 Lent'], ['repay', '↩️ Repaid a loan'], ['trf', '⇄ Transfer'], ['inv', '📈 Invest'], ['ignore', '🚫 Ignore']], credit: [['inc', '💰 Income'], ['back', '🤝 Got back (loan)'], ['borrow', '🤲 Borrowed'], ['trf', '⇄ Transfer in'], ['refund', '↩️ Refund'], ['ignore', '🚫 Ignore']] };
 ACT.pendPick = el => {
   const p = S.pend.find(x => x.id === el.dataset.id); if (!p) return;
   const pk = payeeFind(p.payee) || {};
-  U.pd = { id: p.id, note: pk.note || p.payee || '', act: pk.act && PEND_ACT[p.dir].some(a => a[0] === pk.act) ? pk.act : p.dir === 'credit' ? 'inc' : p.atm ? 'trf' : 'exp', account: p.account || (pk.acc && acc(pk.acc) ? pk.acc : ''), cat: pk.category || guessCat(p.payee) || '', loan: pk.loan || '', to: p.atm ? (live(a => a.type === 'cash')[0] || {}).name || '' : '' };
+  const sg = payeeSuggest(p.payee, p.amount, p.dir, p.id);
+  U.pd = { sg, sgi: sg.length ? 0 : -1, id: p.id, note: pk.note || p.payee || '', act: pk.act && PEND_ACT[p.dir].some(a => a[0] === pk.act) ? pk.act : p.dir === 'credit' ? 'inc' : p.atm ? 'trf' : 'exp', account: p.account || (pk.acc && acc(pk.acc) ? pk.acc : ''), cat: pk.category || guessCat(p.payee) || '', loan: pk.loan || '', to: p.atm ? (live(a => a.type === 'cash')[0] || {}).name || '' : (pk.to && acc(pk.to) ? pk.to : '') };
+  if (sg.length) pdApply(U.pd, p, sg[0].last);
   pendForm();
 };
+function pdSugBox(P, p) {
+  const sg = P.sg || []; if (!sg.length) return '';
+  const top = sg[0], L = top.last, n = sg.reduce((t, x) => t + x.n, 0);
+  return `<div class="sugbox"><div class="sg-h">🔁 You've had ${n} payment${n === 1 ? '' : 's'} with ${esc(p.payee)}</div><div class="sg-l">Last time ${dLabel(String(L.ts || '').slice(0, 10))} · ${inr(L.amount)} → ${sgLabel(L)}</div>${sg.length > 1 || P.sgi !== 0 ? `<div class="chips wrap" style="margin-top:8px">${sg.map((x, i) => `<button class="chip ${P.sgi === i ? 'on' : ''}" data-act="pdUse" data-i="${i}">${sgLabel(x.last, 1)} <small>${x.n}× · ${sgAmt(x)}</small></button>`).join('')}</div>` : `<div class="sg-l mute">${top.n}× · usually ${sgAmt(top)} · filled in for you</div>`}</div>`;
+}
+ACT.pdUse = el => { const P = U.pd, p = S.pend.find(x => x.id === P.id), x = (P.sg || [])[+el.dataset.i]; if (!P || !p || !x) return; P.sgi = +el.dataset.i; pdApply(P, p, x.last); const y = $('#shBody') ? $('#shBody').scrollTop : 0; pendForm(); if ($('#shBody')) $('#shBody').scrollTop = y; buzz(6); };
 function pendForm() {
   const P = U.pd, p = S.pend.find(x => x.id === P.id), A = PEND_ACT[p.dir];
   const chip = (f, v, l) => `<button class="chip ${P[f] === v ? 'on' : ''}" data-act="pdSet" data-f="${f}" data-v="${esc(v)}">${l}</button>`;
   const accs = live(a => a.type !== 'investment'), acChips = f => accs.map(a => chip(f, a.name, (a.others ? '👥' : ACC_T[a.type][0]) + ' ' + esc(a.name))).join('');
   let h = `<div class="detail" style="padding-bottom:6px"><div class="dv ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</div><div class="dt">${esc(p.payee || '—')} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}${p.ref ? ' · ref ' + esc(p.ref) : ''}</div></div>
-  <div class="chips wrap">${A.map(([k, l]) => chip('act', k, l)).join('')}</div>`;
+  ${pdSugBox(P, p)}<div class="chips wrap">${A.map(([k, l]) => chip('act', k, l)).join('')}</div>`;
   if (P.act !== 'ignore') {
     h += `<div class="lbl">${p.dir === 'credit' ? 'Into' : 'Paid from'} ${p.l4 ? '<small class="mute">(SMS: ' + esc(p.bank) + ' ·' + esc(p.l4) + ')</small>' : ''}</div><div class="chips wrap">${acChips('account')}</div>`;
     const pa = acc(P.account) || {};
@@ -1967,7 +2185,7 @@ function pendForm() {
   openSheet(p.dir === 'credit' ? 'Money received' : 'Money paid', h, 'tall');
 }
 ACT.pdNote = el => { $('#pdRemk').value = el.dataset.v; U.pd.note = el.dataset.v; };
-ACT.pdSet = el => { if ($('#pdRemk')) U.pd.note = $('#pdRemk').value; U.pd[el.dataset.f] = U.pd[el.dataset.f] === el.dataset.v && el.dataset.f !== 'act' ? '' : el.dataset.v; const y = $('#shBody') ? $('#shBody').scrollTop : 0; pendForm(); if ($('#shBody')) $('#shBody').scrollTop = y; };
+ACT.pdSet = el => { if ($('#pdRemk')) U.pd.note = $('#pdRemk').value; U.pd.sgi = -1; U.pd[el.dataset.f] = U.pd[el.dataset.f] === el.dataset.v && el.dataset.f !== 'act' ? '' : el.dataset.v; const y = $('#shBody') ? $('#shBody').scrollTop : 0; pendForm(); if ($('#shBody')) $('#shBody').scrollTop = y; };
 ACT.pdSave = () => {
   const P = U.pd, p = S.pend.find(x => x.id === P.id); if (!p) return;
   if (P.act === 'ignore') { commit([up('Pending', Object.assign({}, p, { status: 'ignored' }))]); return pendNext(); }
@@ -1987,7 +2205,7 @@ ACT.pdSave = () => {
   }
   const accRow = acc(P.account);
   if (p.l4 && $('#pdRem') && $('#pdRem').checked && accRow) ops.push(up('Accounts', Object.assign({}, accRow, { l4: [accRow.l4, p.l4].filter(Boolean).join(',') })));
-  if (p.payee) { const lbl = { exp: P.cat, lend: 'Lent', repay: 'Loan repay', trf: 'Transfer', inv: 'Invest', inc: 'Income', back: 'Got back', borrow: 'Borrowed', refund: 'Refund' }[P.act]; ops.push(payeeLearn(p.payee, { act: P.act, category: P.cat || '', loan: P.loan && P.loan !== 'new' ? P.loan : '', label: lbl, note: note.trim() && note.trim() !== p.payee ? note.trim() : '', acc: P.account })); }
+  if (p.payee) { const lbl = { exp: P.cat, lend: 'Lent', repay: 'Loan repay', trf: 'Transfer', inv: 'Invest', inc: 'Income', back: 'Got back', borrow: 'Borrowed', refund: 'Refund' }[P.act]; ops.push(payeeLearn(p.payee, { act: P.act, category: P.cat || '', loan: P.loan && P.loan !== 'new' ? P.loan : '', label: lbl, note: note.trim() && note.trim() !== p.payee ? note.trim() : '', acc: P.account, to: ['trf', 'inv'].includes(P.act) ? P.to || '' : '' })); }
   ops.push(up('Pending', Object.assign({}, p, { status: 'done', done: id, account: P.account })));
   commit(ops); buzz(10); pendNext();
 };
@@ -2158,7 +2376,7 @@ ACT.rmSave = () => {
   if (old && old.next !== next) row.snooze = '';
   commit([up('Reminders', row)]); shut(); runAuto(); render(); toast(row.auto && row.next <= today() ? 'Saved and logged' : 'Reminder saved');
 };
-ACT.rmDel = () => { if (!confirm('Delete this reminder? Bills it already logged stay in your history.')) return; commit([del('Reminders', U.rm.id)]); shut(); render(); };
+ACT.rmDel = () => { if (!confirm('Delete this reminder? Bills it already logged stay in your history.')) return; binDel([['Reminders', U.rm.id]]); shut(); render(); };
 ACT.remDone = el => { const r = S.rem.find(x => x.id === el.dataset.id); if (!r) return; commit([up('Reminders', remAdvance(r))]); if (sheetOpen()) shut(); render(); buzz(10); toast(r.unit === 'once' ? 'Done ✓' : 'Done ✓ · next on ' + dLabel(nextAfter(r.next, r.every, r.unit))); };
 ACT.remSnooze = el => { const r = S.rem.find(x => x.id === el.dataset.id); if (!r) return; commit([up('Reminders', Object.assign({}, r, { snooze: addDays(today(), 1) }))]); render(); toast('Reminding you tomorrow'); };
 ACT.remPay = el => {
@@ -3147,7 +3365,10 @@ function renderSettings() {
   <label class="check"><input type="checkbox" data-in="ndg" data-k="pace" ${N.pace !== false ? 'checked' : ''}> Budget pace warnings (before you cross 80%)</label>
   <label class="check"><input type="checkbox" data-in="ndg" data-k="anomaly" ${N.anomaly !== false ? 'checked' : ''}> Flag unusual spends (3× your usual for that category)</label>
   <div class="lbl">Remind me to match bank balances</div><div class="seg" style="margin:0">${[[0, 'Off'], [7, '7 days'], [14, '14 days'], [30, '30 days']].map(([k, l]) => `<button class="${(+N.recon || 0) === k ? 'on' : ''}" data-act="ndgRec" data-v="${k}">${l}</button>`).join('')}</div></div>`);
-  pg('look', `<div class="card"><h2>Appearance</h2><div class="seg" style="margin:0">${[['', 'Auto'], ['light', 'Light'], ['dark', 'Dark']].map(([k, l]) => `<button class="${(S.theme || '') === k ? 'on' : ''}" data-act="themeSet" data-k="${k}">${l}</button>`).join('')}</div></div>`);
+  pg('look', `<div class="card"><h2>Appearance</h2><div class="seg" style="margin:0">${[['', 'Auto'], ['light', 'Light'], ['dark', 'Dark'], ['glass', '✨ Glass']].map(([k, l]) => `<button class="${(S.theme || '') === k ? 'on' : ''}" data-act="themeSet" data-k="${k}">${l}</button>`).join('')}</div>
+  ${S.theme === 'glass' ? `<div class="lbl">Glass tone</div><div class="seg" style="margin:0">${[['', 'Auto'], ['light', 'Bright'], ['dark', 'Night']].map(([k, l]) => `<button class="${(S.glassTone || '') === k ? 'on' : ''}" data-act="glassTone" data-k="${k}">${l}</button>`).join('')}</div>` : ''}
+  <div class="hint">${S.theme === 'glass' ? 'Glass: see-through frosted cards over a soft colour wash. Picks bright or night to match your phone, unless you choose one.' : 'Auto follows your phone\'s light / dark setting. Try ✨ Glass for frosted see-through cards.'}</div></div>`);
+  pg('bin', binCard());
   pg('backup', `<div class="card"><h2>Google Drive backups <small>Ledger App / Backups</small></h2><button class="btn" data-act="bkNow">☁️ Back up now</button>
   <div class="lbl">Keep automatic daily backups</div><div class="seg" style="margin:0">${[7, 15, 30].map(k => `<button class="${(+((S.cfg.backup || {}).keep) || 15) === k ? 'on' : ''}" data-act="bkKeep" data-v="${k}">Last ${k}</button>`).join('')}</div>
   <div id="bkBox" style="margin-top:12px">${S.url ? '<div class="hint">Loading your backups…</div>' : '<div class="hint">Connect your Sheet first.</div>'}</div>
@@ -3155,19 +3376,19 @@ function renderSettings() {
   <div class="card"><h2>Files on this phone</h2><button class="btn sec" data-act="exportJson">⬇ Download backup file (JSON)</button><button class="btn sec" data-act="impJson">⬆ Restore from a JSON file</button><input type="file" id="impFile" accept=".json,application/json" hidden><button class="btn sec" data-act="exportCsv">⬇ Download all entries (CSV)</button><button class="btn dng" data-act="clearLocal">Clear this phone's copy</button><div class="hint">The Google Sheet is your master copy. Before any restore a safety copy of the Sheet is made, so a restore can always be undone.</div></div>`);
   if (U.sp === 'backup' && S.url) U.after = bkLoad;
   pg('sms', `<div class="card"><h2>Bank SMS</h2><div class="lbl" style="margin-top:0">Card / account last 4 digits</div>${live(a => a.type !== 'cash' && a.type !== 'investment' && mineA(a)).map(a => `<div class="grid2" style="grid-template-columns:1fr 110px;align-items:center;margin-bottom:6px"><span style="font-weight:700">${esc(a.name)}</span><input data-in="acL4" data-n="${esc(a.name)}" inputmode="numeric" maxlength="12" value="${esc(a.l4 || '')}" placeholder="e.g. 1211"></div>`).join('')}<div class="hint">Matches SMS like "from XX1211" to the right account. Several numbers? Separate them with commas. The Ledger phone app fills these in for you the first time it sees each one.</div><button class="btn sec" data-act="smsTry">🧪 Paste an SMS to test</button></div>`);
-  pg('about', `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Ledger Android app (Settings → Phone app).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v8${AND ? ' · app ' + esc(andInfo().version || '') : ''}</div>`);
+  pg('about', `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Ledger Android app (Settings → Phone app).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v8.4${AND ? ' · app ' + esc(andInfo().version || '') : ''}</div>`);
   return settingsView(PG);
 }
 /* settings: a short menu, each item opens its own page (Android back / ‹ returns to the menu) */
 const SP = () => [
-  ['Your data', [['sync', '☁️', 'Google Sheet & sync', !S.url ? 'Not connected' : lastErr ? 'Problem · tap to see' : 'Connected' + (S.lastSync ? ' · ' + S.lastSync : '')], ['backup', '🗂️', 'Backups & restore', 'Drive · Ledger App / Backups']]],
+  ['Your data', [['sync', '☁️', 'Google Sheet & sync', !S.url ? 'Not connected' : lastErr ? 'Problem · tap to see' : 'Connected' + (S.lastSync ? ' · ' + S.lastSync : '')], ['backup', '🗂️', 'Backups & restore', 'Drive · Ledger App / Backups'], ['bin', '🗑️', 'Recently deleted', (S.bin.length ? S.bin.length + ' item' + (S.bin.length === 1 ? '' : 's') : 'Empty') + ' · kept ' + binDays() + ' days']]],
   ['Money', [['accounts', '🏦', 'Accounts', S.accounts.length + ' account' + (S.accounts.length === 1 ? '' : 's')], ['cats', '🏷️', 'Categories, budgets & types', S.cfg.categories.length + ' categories'], ['sms', '📩', 'Bank SMS', 'Card digits · test an SMS']]],
-  ['App', [['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off'], ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark' })[S.theme || '']], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Ledger v8']]]
+  ['App', [['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off'], ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Ledger v8.4']]]
 ];
 function settingsView(PG) {
   const all = SP().flatMap(g => g[1]), cur = U.sp && all.find(x => x[0] === U.sp);
   if (cur) { $('#title').textContent = cur[2]; $('#title').classList.add('sm'); return `<button class="back" data-act="spBack">‹ Settings</button>` + (PG[cur[0]] || '<div class="empty">Nothing here yet.</div>'); }
-  return SP().map(([g, items]) => `<div class="section-t">${g}</div><div class="group">${items.map(([k, i, t, sub]) => `<button class="item" data-act="spOpen" data-k="${k}"><span class="ic" style="background:var(--soft)">${i}</span><span class="mid"><b>${esc(t)}</b><small>${esc(sub)}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`).join('')}</div>`).join('') + '<div class="hint center" style="margin-top:18px">Ledger v8.2 · screens ' + APP_BUILD + (AND ? ' · phone app ' + esc(andInfo().version || '?') : '') + '</div>';
+  return SP().map(([g, items]) => `<div class="section-t">${g}</div><div class="group">${items.map(([k, i, t, sub]) => `<button class="item" data-act="spOpen" data-k="${k}"><span class="ic" style="background:var(--soft)">${i}</span><span class="mid"><b>${esc(t)}</b><small>${esc(sub)}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`).join('')}</div>`).join('') + '<div class="hint center" style="margin-top:18px">Ledger v8.4 · screens ' + APP_BUILD + (AND ? ' · phone app ' + esc(andInfo().version || '?') : '') + '</div>';
 }
 ACT.spOpen = el => { U.sp = el.dataset.k; try { history.pushState({ sp: 1 }, ''); } catch (e) { } U.fresh = true; render(); window.scrollTo(0, 0); };
 ACT.spBack = () => { if (history.state && history.state.sp) history.back(); else { U.sp = null; U.fresh = true; render(); window.scrollTo(0, 0); } };
@@ -3217,6 +3438,7 @@ ACT.rpSend = async el => {
 IN.ndg = t => { commit([cfgOp('nudges', Object.assign({}, S.cfg.nudges, { [t.dataset.k]: t.checked }))]); };
 ACT.ndgRec = el => { commit([cfgOp('nudges', Object.assign({}, S.cfg.nudges, { recon: +el.dataset.v }))]); $$('[data-act=ndgRec]').forEach(b => b.classList.toggle('on', b === el)); };
 ACT.themeSet = el => { S.theme = el.dataset.k; save(); applyTheme(); render(); };
+ACT.glassTone = el => { S.glassTone = el.dataset.k; save(); applyTheme(); render(); };
 ACT.clearLocal = () => { if (S.outbox.length && !confirm(S.outbox.length + ' change(s) are not uploaded yet and will be lost. Continue?')) return; if (!confirm('Remove this phone’s copy?')) return; localStorage.removeItem(KEY); location.reload(); };
 IN.acL4 = t => { clearTimeout(U.l4T); U.l4T = setTimeout(() => { const a = acc(t.dataset.n), v = t.value.replace(/[^\d,]/g, ''); if (a && (a.l4 || '') !== v) commit([up('Accounts', Object.assign({}, a, { l4: v }))]); }, 600); };
 ACT.bkNow = async () => {
@@ -3266,7 +3488,7 @@ function impJsonFile(file) {
       try {
         if (S.url) { const r = await post({ action: 'backup', safety: true }); if (!r.ok) throw new Error(r.error); }
         const ops = [];
-        Object.keys(COLL).forEach(sh => { const k = COLL[sh], keep = new Set((d[k] || []).map(x => x.id)); S[k].forEach(x => { if (!keep.has(x.id)) ops.push(del(sh, x.id)); }); (d[k] || []).forEach(x => ops.push(up(sh, x))); });
+        Object.keys(COLL).forEach(sh => { if (sh === 'Deleted' && !Array.isArray(d.bin)) return; const k = COLL[sh], keep = new Set((d[k] || []).map(x => x.id)); S[k].forEach(x => { if (!keep.has(x.id)) ops.push(del(sh, x.id)); }); (d[k] || []).forEach(x => ops.push(up(sh, x))); });
         if (d.cfg) ['categories', 'sources', 'invTypes'].concat(CFG_OBJ).forEach(k => { if (d.cfg[k] != null) ops.push(cfgOp(k, d.cfg[k])); });
         commit(ops); render(); toast('✓ Restored ' + n + ' records' + (S.url ? ' · uploading to Sheet' : ''));
       } catch (e) { toast('Restore stopped: ' + netMsg(e)); }
@@ -3444,9 +3666,11 @@ function bootLock() { if (needBootLock()) showLock('unlock', null, true); }
 
 /* ---------- theme & install icon ---------- */
 function applyTheme() {
-  const dark = S.theme ? S.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-  $('#themeColor').setAttribute('content', dark ? '#0B0D14' : '#F6F7FB');
+  const glass = S.theme === 'glass', t = glass ? (S.glassTone || '') : S.theme, R = document.documentElement;
+  const dark = t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  R.dataset.theme = dark ? 'dark' : 'light';
+  if (glass) R.dataset.glass = '1'; else delete R.dataset.glass;
+  $('#themeColor').setAttribute('content', glass ? (dark ? '#090A17' : '#EDEFFB') : dark ? '#0B0D14' : '#F6F7FB');
 }
 function setupIcons() {
   try {
@@ -3476,7 +3700,8 @@ function splash() {
 applyTheme(); setupIcons();
 /* one opening screen: the lock screen when locked, otherwise the welcome animation */
 if (needBootLock()) { const sp = $('#splash'); if (sp) sp.remove(); } else splash();
-try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (!S.theme) { applyTheme(); render(); } }); } catch (e) { }
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (!S.theme || (S.theme === 'glass' && !S.glassTone)) { applyTheme(); render(); } }); } catch (e) { }
+binPurge();
 setTab('home');
 bootLock();
 if (S.url && S.key) flush().then(() => pull(true)).then(() => { if (runAuto()) render(); });

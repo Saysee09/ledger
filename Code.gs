@@ -1,5 +1,6 @@
 /**
- * LEDGER v8 — Google Apps Script backend
+ * LEDGER v9 — Google Apps Script backend
+ * v9: "Recently deleted" tab — deleted entries (with their bank SMS) are kept for 30 days (or what you pick in the app), then removed.
  * v8: one Drive folder "Ledger App" (Backups + Receipts inside), date-first backup names, delete old backups from the app,
  *     payee memory, investment sell / withdraw, money owed to people you hold money for, credit-card bill day.
  * v7: Sign in with Google
@@ -33,7 +34,8 @@
  * ------------------------------------------------------------------
  */
 
-var VERSION = 8;
+var VERSION = 9;
+var BIN_DAYS = 30;                  /* default; the app can change it (Settings → Recently deleted) */
 var TZ = 'Asia/Kolkata';
 var FMT = 'yyyy-MM-dd HH:mm:ss';
 var KEEP_BACKUPS = 15;
@@ -60,11 +62,12 @@ var SHEETS = {
   EMIs: { cols: [['name', 'Name'], ['amount', 'Amount'], ['dueDay', 'Due Day'], ['account', 'Account'], ['startMonth', 'Start Month'], ['total', 'Total EMIs'], ['paidBefore', 'Paid Before'], ['active', 'Active'], ['note', 'Note'], ['id', 'ID']] },
   Loans: { cols: [['name', 'Person'], ['dir', 'Direction'], ['note', 'Note'], ['archived', 'Archived'], ['created', 'Created'], ['id', 'ID'], ['acct', 'Held Account']] },
   Reminders: { cols: [['name', 'Name'], ['kind', 'Kind'], ['amount', 'Amount'], ['account', 'Paid From'], ['category', 'Category'], ['invType', 'Invest Type'], ['invTo', 'Invested Into'], ['every', 'Every'], ['unit', 'Unit'], ['next', 'Next Due'], ['time', 'Time'], ['auto', 'Auto Log'], ['cal', 'Calendar'], ['active', 'Active'], ['snooze', 'Snoozed To'], ['lastDone', 'Last Done'], ['note', 'Note'], ['id', 'ID']] },
-  Pending: { title: 'Bank SMS', cols: [['ts', 'Timestamp'], ['amount', 'Amount'], ['dir', 'Direction'], ['payee', 'Payee'], ['bank', 'Bank'], ['l4', 'Digits'], ['account', 'Account'], ['card', 'Card'], ['atm', 'ATM'], ['ref', 'Ref'], ['status', 'Status'], ['done', 'Filed As'], ['raw', 'SMS'], ['id', 'ID']] }
+  Pending: { title: 'Bank SMS', cols: [['ts', 'Timestamp'], ['amount', 'Amount'], ['dir', 'Direction'], ['payee', 'Payee'], ['bank', 'Bank'], ['l4', 'Digits'], ['account', 'Account'], ['card', 'Card'], ['atm', 'ATM'], ['ref', 'Ref'], ['status', 'Status'], ['done', 'Filed As'], ['raw', 'SMS'], ['id', 'ID']] },
+  Deleted: { title: 'Recently deleted', cols: [['ts', 'Deleted At'], ['what', 'What'], ['amount', 'Amount'], ['tab', 'Tab'], ['date', 'Entry Date'], ['sms', 'SMS'], ['data', 'Data'], ['id', 'ID']] }
 };
-var ORDER = ['Expenses', 'Income', 'Transfers', 'Investments', 'EMILog', 'GoalLog', 'LoanLog', 'Adjustments', 'Accounts', 'Goals', 'EMIs', 'Loans', 'Reminders', 'Pending'];
+var ORDER = ['Expenses', 'Income', 'Transfers', 'Investments', 'EMILog', 'GoalLog', 'LoanLog', 'Adjustments', 'Accounts', 'Goals', 'EMIs', 'Loans', 'Reminders', 'Pending', 'Deleted'];
 var LOGS = ['Expenses', 'Income', 'Transfers', 'Investments', 'EMILog', 'GoalLog', 'LoanLog', 'Adjustments'];
-var TS_ROWS = { Pending: 1 }; /* non-log tabs whose rows need a timestamp instead of a name */
+var TS_ROWS = { Pending: 1, Deleted: 1 }; /* non-log tabs whose rows need a timestamp instead of a name */
 var NUMS = { amount: 1, opening: 1, target: 1, dueDay: 1, total: 1, paidBefore: 1, order: 1, every: 1, cost: 1, billDay: 1 };
 var INTS = { dueDay: 1, total: 1, paidBefore: 1, order: 1, every: 1, billDay: 1 };
 var BOOLS = { archived: 1, active: 1, others: 1, auto: 1, cal: 1, card: 1, atm: 1, mine: 1 };
@@ -522,7 +525,18 @@ function makeBackup_(suffix) {
   keep('backup', keepCount_()); keep('safety', 5);
   return file;
 }
-function dailyBackup() { try { tidyDrive(); } catch (e) { } makeBackup_(BK); }
+function dailyBackup() { try { tidyDrive(); } catch (e) { } try { cleanBin_(SpreadsheetApp.getActiveSpreadsheet()); } catch (e) { Logger.log('bin: ' + e); } makeBackup_(BK); }
+/* Recently deleted: rows older than the chosen number of days are removed for good */
+function binDays_(ss) { var d = +((readConfig_(ss).bin || {}).days); return d >= 1 && d <= 365 ? d : BIN_DAYS; }
+function cleanBin_(ss) {
+  var sh = sheet_(ss, 'Deleted'), last = sh.getLastRow(), lc = sh.getLastColumn(); if (last < 2) return 0;
+  var H = headMap_(sh, lc).H, cut = addDays_(today_(), -binDays_(ss)), vals = sh.getRange(2, 1, last - 1, lc).getValues(), n = 0;
+  for (var i = vals.length - 1; i >= 0; i--) {
+    var t = vals[i][H['Deleted At']], d = t instanceof Date ? Utilities.formatDate(t, TZ, 'yyyy-MM-dd') : normTs_(t).slice(0, 10);
+    if (d && d < cut) { sh.deleteRow(i + 2); n++; }
+  }
+  return n;
+}
 function backupNow() {
   var f = makeBackup_(BK);
   try { SpreadsheetApp.getUi().alert('Backup saved in Drive "' + ROOT + ' / ' + FOLDER + '" as "' + f.getName() + '".'); } catch (e) { }

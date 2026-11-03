@@ -1,10 +1,10 @@
-## Ledger v8.3 · What's new
+## Ledger v8.4 · What's new
 
 ## New
-- **My plans** (Plan → Budget → My plans): make your own salary split like "November Plan". Add Rent, Food, Mom, Gold, Emergency fund, Insurance… as a fixed ₹ amount, a % of salary, or a % of what's left. See ₹ and % for each item live, save it, open it later or copy it for next month
-- Items that match a category show what you have actually spent on it this month
-- **Save first** in the Auto plan now has a 0–100% slider, a % box and an amount box (e.g. save ₹40,000 of ₹80,000); all three stay in sync
+- **Recently deleted** (Settings → Recently deleted): anything you delete is kept for 30 days, with its linked entries and the bank SMS it came from. Open an item to see the original SMS, **Restore** it, put the SMS back in "To sort" to file it again, or delete it for good. Choose 7, 15, 30, 60, 90 or 180 days, or type your own (1–365)
+- **Smarter suggestions for repeat payments**: Ledger now looks at every past payment to the same person or shop, even when the bank writes the name differently ("Mr Rahul Kumar S" = "RAHUL KUMAR"). It picks what fits the amount best (₹70 → Breakfast, ₹2,500 → Lent to Rahul), shows "Last time…" and gives one-tap choices for what you usually do
+- **Note recall**: type a note you've used before (Auto, Breakfast, Rahul…) and the category and account from last time are filled in. Your own picks are never overwritten
+- **✨ Glass theme** (Settings → Appearance): frosted see-through cards over a soft colour wash, in Bright or Night (or follow your phone)
 
-## Fixed (from 8.2)
-- Install now works reliably
-- Scrolling, phone lock, Ask from the search box
+## Sheet script
+- Paste Code.gs **v9** to also keep Recently deleted in your Sheet (new tab "Recently deleted", cleaned every night). Until then it is kept on this phone and uploaded automatically after the update. Syncing keeps working either way
