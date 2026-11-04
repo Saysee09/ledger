@@ -8,6 +8,13 @@
 - **Expecting a refund?** Open any expense → "↩️ I'm expecting a refund for this", or add one by hand in Refunds
 
 ## Better
+- **📅 Salary month** (Money → Income): a salary credited on or after the 25th now counts for the next month. No more double-salary October when you changed jobs, and no empty-looking November. Bank balances still use the real date. Change the day or turn it off any time
+- **Where it went**: tap a slice and its name, amount and % show inside the ring (no more box covering "Spent")
+- **Goals**: cleaner buttons, just **+ Add money** and **Withdraw** (withdraw, then transfer or spend as usual)
+- **Home cards** are even and fit the screen; your **Kotak** card shows the total including Mom & Evol
+- **New entry**: category tiles are centred and long names like Transportation fit their tile
+- A little more space under the top bar on every tab
+- A newly installed app now always shows its own new screens
 - **Insights comparisons in plain words**: "↑ 36% more than Oct" / "↓ 20% less than Oct" instead of ▲▼ triangles. Green = good for you, red = not
 - **Saved %** no longer shows crazy numbers like −6261% before your salary arrives: it says "salary not in yet"
 - **Spent** shows how much came back as refunds; Entries, Biggest and No-spend days ignore refunds
