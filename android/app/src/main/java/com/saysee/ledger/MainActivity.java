@@ -481,6 +481,7 @@ public class MainActivity extends AppCompatActivity {
                 JSONObject o = new JSONObject();
                 o.put("raw", body);
                 o.put("ts", SmsStore.fmt(date));
+                o.put("from", addr == null ? "" : addr);
                 out.put(o);
             }
         } catch (Exception ignored) {

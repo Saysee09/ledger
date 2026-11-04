@@ -24,7 +24,7 @@ public class SmsReceiver extends BroadcastReceiver {
         boolean money = SmsStore.looksFinancial(sender, text);
         SmsStore.noteLast(context, sender, money);
         if (!money) return;
-        SmsStore.add(context, text, SmsStore.now());
+        SmsStore.add(context, text, SmsStore.now(), sender);
         Widgets.bumpSort(context);
         if (!MainActivity.ping()) SmsStore.notify(context, text);
     }

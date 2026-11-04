@@ -26,7 +26,7 @@ public final class SmsStore {
     static final String CHANNEL = "bank_sms";
 
     private static final Pattern AMOUNT = Pattern.compile("(?:rs\\.?|inr|₹)\\s*([\\d,]+(?:\\.\\d{1,2})?)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern MONEY_WORD = Pattern.compile("\\b(debited|credited|spent|sent|withdrawn|received|paid|deducted|refund(?:ed)?|deposited|purchase|txn)\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern MONEY_WORD = Pattern.compile("\\b(debited|credited|spent|sent|withdrawn|received|paid|deducted|refund(?:ed|s)?|deposited|purchase|txn|cash ?back|reversal|reversed)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern SKIP = Pattern.compile("\\b(otp|one[- ]time password|verification code|passcode|cvv)\\b|pre-?approved|apply now|\\boffer\\b", Pattern.CASE_INSENSITIVE);
     /* personal numbers (+91XXXXXXXXXX / 10 digits) are skipped; banks send from IDs like AX-KOTAKB */
     private static final Pattern PERSON = Pattern.compile("^\\+?\\d{10,13}$");
@@ -55,7 +55,10 @@ public final class SmsStore {
     static String now() { return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date()); }
     static String fmt(long ms) { return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date(ms)); }
 
-    static synchronized void add(Context c, String body, String ts) {
+    static synchronized void add(Context c, String body, String ts) { add(c, body, ts, ""); }
+
+    /** sender = the SMS sender ID (e.g. VM-IRCTCI), so the app can tell who a refund is from */
+    static synchronized void add(Context c, String body, String ts, String sender) {
         SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         try {
             JSONArray a = new JSONArray(p.getString(KEY, "[]"));
@@ -63,6 +66,7 @@ public final class SmsStore {
             JSONObject o = new JSONObject();
             o.put("raw", body);
             o.put("ts", ts);
+            o.put("from", sender == null ? "" : sender);
             a.put(o);
             while (a.length() > MAX) a.remove(0);
             p.edit().putString(KEY, a.toString()).apply();
@@ -88,15 +92,19 @@ public final class SmsStore {
         String amt = "";
         Matcher m = AMOUNT.matcher(body);
         if (m.find()) amt = "₹" + m.group(1) + " ";
-        boolean in = Pattern.compile("\\b(credited|received|deposited|refund)", Pattern.CASE_INSENSITIVE).matcher(body).find()
+        boolean in = Pattern.compile("\\b(credited|received|deposited|refund|cash ?back)", Pattern.CASE_INSENSITIVE).matcher(body).find()
                 && !Pattern.compile("\\b(debited|spent|sent)\\b", Pattern.CASE_INSENSITIVE).matcher(body).find();
+        /* "refund of Rs 400 initiated, will reflect in 5-7 days": money not here yet, so it goes to the Refunds list, not "to sort" */
+        boolean promise = Pattern.compile("\\b(refund|cash ?back|reversal)", Pattern.CASE_INSENSITIVE).matcher(body).find()
+                && Pattern.compile("\\b(initiated|processed|will be|will reflect|within \\d|working days|business days|expected)", Pattern.CASE_INSENSITIVE).matcher(body).find()
+                && !Pattern.compile("avl\\.? ?bal|available bal", Pattern.CASE_INSENSITIVE).matcher(body).find();
         Intent open = new Intent(c, MainActivity.class).putExtra(MainActivity.EXTRA_PENDING, true)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pi = PendingIntent.getActivity(c, 1, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         android.app.Notification n = new android.app.Notification.Builder(c, CHANNEL)
                 .setSmallIcon(R.drawable.ic_stat_rupee)
-                .setContentTitle(amt + (in ? "received" : "paid") + " · tap to sort")
-                .setContentText("Ledger saved this bank message for you")
+                .setContentTitle(promise ? amt + "refund on the way" : amt + (in ? "received" : "paid") + " · tap to sort")
+                .setContentText(promise ? "Ledger will watch for it and tell you if it's late" : "Ledger saved this bank message for you")
                 .setAutoCancel(true)
                 .setContentIntent(pi)
                 .build();

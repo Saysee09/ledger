@@ -23,15 +23,24 @@
 /* GLASS: frosted panels over a soft colour wash. Light or dark follows the phone (or your pick) */
 [data-glass]{--card:rgba(255,255,255,.56);--soft:rgba(255,255,255,.46);--line:rgba(255,255,255,.72);--bg:#EDEFFB;--sh:inset 0 1px 0 rgba(255,255,255,.8),0 10px 30px rgba(43,36,130,.12);--glass-wash:radial-gradient(42% 32% at 12% 6%,rgba(139,108,255,.55),transparent 70%),radial-gradient(46% 34% at 95% 22%,rgba(34,211,238,.42),transparent 70%),radial-gradient(52% 40% at 78% 88%,rgba(244,114,182,.38),transparent 70%),radial-gradient(46% 38% at 6% 72%,rgba(251,191,36,.32),transparent 70%)}
 [data-glass][data-theme=dark]{--card:rgba(30,32,58,.46);--soft:rgba(255,255,255,.07);--line:rgba(255,255,255,.12);--bg:#090A17;--sh:inset 0 1px 0 rgba(255,255,255,.07),0 12px 32px rgba(0,0,0,.45);--glass-wash:radial-gradient(42% 32% at 12% 6%,rgba(111,76,255,.5),transparent 70%),radial-gradient(46% 34% at 95% 22%,rgba(14,165,233,.32),transparent 70%),radial-gradient(52% 40% at 78% 88%,rgba(219,39,119,.3),transparent 70%),radial-gradient(46% 38% at 6% 72%,rgba(245,158,11,.18),transparent 70%)}
-html[data-glass]{background:var(--glass-wash),var(--bg);background-attachment:fixed}
+/* the colour wash is its own fixed layer (GPU-friendly), not a fixed page background that repaints on every scroll */
+html[data-glass]{background:var(--bg)}
+html[data-glass]::before{content:'';position:fixed;inset:-2px;z-index:-1;pointer-events:none;background:var(--glass-wash),var(--bg);transform:translateZ(0)}
 [data-glass] body{background:transparent}
-[data-glass] .card,[data-glass] #view .group,[data-glass] .hero,[data-glass] .alert{backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%)}
+/* SMOOTH (default, data-glass=1): cards are tinted see-through with no live blur, so scrolling stays fast on any phone */
+[data-glass="1"]{--card:rgba(255,255,255,.7);--sh:inset 0 1px 0 rgba(255,255,255,.85),0 4px 14px rgba(43,36,130,.09)}
+[data-glass="1"][data-theme=dark]{--card:rgba(30,32,58,.66);--sh:inset 0 1px 0 rgba(255,255,255,.06),0 6px 16px rgba(0,0,0,.35)}
+/* FULL BLUR (data-glass=full): real frosted glass on every card, for fast phones */
+[data-glass=full] .card,[data-glass=full] #view .group,[data-glass=full] .hero,[data-glass=full] .alert{backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%)}
 [data-glass] .chip,[data-glass] .iconbtn,[data-glass] .sync{background:color-mix(in srgb,var(--card) 80%,transparent)}
 [data-glass] .chip.on,[data-glass] .sheet .chip.on{background:var(--ink);color:var(--bg)}
 [data-glass] .strip .acard{box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 2px 6px rgba(20,16,80,.06)}
-[data-glass] header.top{background:linear-gradient(color-mix(in srgb,var(--bg) 86%,transparent) 62%,transparent);margin:0 -16px;padding-left:18px;padding-right:18px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);-webkit-mask-image:linear-gradient(#000 80%,transparent);mask-image:linear-gradient(#000 80%,transparent)}
+[data-glass="1"] header.top{background:color-mix(in srgb,var(--bg) 74%,transparent);margin:0 -16px;padding-left:18px;padding-right:18px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+[data-glass=full] header.top{background:linear-gradient(color-mix(in srgb,var(--bg) 86%,transparent) 62%,transparent);margin:0 -16px;padding-left:18px;padding-right:18px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);-webkit-mask-image:linear-gradient(#000 80%,transparent);mask-image:linear-gradient(#000 80%,transparent)}
 [data-glass] .sheet{background:rgba(250,250,255,.8);backdrop-filter:blur(30px) saturate(180%);-webkit-backdrop-filter:blur(30px) saturate(180%);border-top:1px solid rgba(255,255,255,.9)}
+[data-glass="1"] .sheet{background:rgba(250,250,255,.9);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 [data-glass][data-theme=dark] .sheet{background:rgba(22,24,44,.82);border-top-color:rgba(255,255,255,.14)}
+[data-glass="1"][data-theme=dark] .sheet{background:rgba(22,24,44,.92)}
 [data-glass] .sheet input,[data-glass] .sheet select{background:rgba(120,124,160,.12)}
 [data-glass] .hero{background:radial-gradient(140% 130% at 100% 0%,color-mix(in srgb,var(--hc) 26%,transparent) 0%,color-mix(in srgb,var(--hc) 8%,transparent) 50%,transparent 85%),var(--card)}
 [data-glass] .scrim{background:rgba(6,8,20,.32)}
@@ -150,11 +159,11 @@ h1.sm{font-size:1.25rem}
 .card h2{font-size:1rem;font-weight:800;letter-spacing:-.02em;margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .card h2 small{font-size:.72rem;color:var(--mute);font-weight:600}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:6px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:11px 12px;box-shadow:var(--sh);min-width:0}
-.kpi span{display:block;font-size:.6rem;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kpi b{display:block;font-size:.98rem;font-weight:800;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kpi small{display:block;font-size:.64rem;color:var(--mute);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kpi .dl{display:block;font-style:normal;font-size:.6rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;letter-spacing:-.01em}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:11px 10px 11px 12px;box-shadow:var(--sh);min-width:0;container-type:inline-size}
+.kpi span{display:block;font-size:min(.6rem,13cqi);font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;line-height:1.25;overflow-wrap:break-word}
+.kpi b{display:block;font-size:min(.98rem,23cqi);font-weight:800;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi small{display:block;font-size:min(.64rem,14cqi);color:var(--mute);font-weight:600;line-height:1.3;overflow-wrap:break-word}
+.kpi .dl{display:block;font-style:normal;font-size:min(.6rem,13cqi);font-weight:800;line-height:1.3;margin-top:3px;letter-spacing:-.01em}
 .kpi .dl i{font-style:normal}
 .hint.cmpk{margin:2px 6px 0;font-size:.7rem}
 .cmpbar{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:4px 12px 10px;margin:12px 0 4px;box-shadow:var(--sh)}
@@ -195,7 +204,7 @@ input[type=date],input[type=month],input[type=time]{min-width:0;max-width:100%}
 .btns .btn{flex:1;margin:0}
 .seg{display:flex;background:var(--soft);padding:4px;border-radius:15px;gap:2px;margin-bottom:14px}
 #view .seg.page{background:color-mix(in srgb,var(--line) 75%,var(--bg))}
-.seg button{flex:1;height:38px;border-radius:11px;font-size:.8rem;font-weight:800;color:var(--mute);white-space:nowrap;padding:0 4px}
+.seg button{flex:1;min-width:0;height:38px;border-radius:11px;font-size:min(.8rem,3.4vw);font-weight:800;color:var(--mute);white-space:nowrap;padding:0 4px}
 .seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--sh)}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px 10px;border-radius:18px;background:var(--soft);border:2px solid transparent;transition:.15s}
@@ -214,7 +223,7 @@ input[type=date],input[type=month],input[type=time]{min-width:0;max-width:100%}
 .box input{background:var(--card)}
 nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10px + env(safe-area-inset-bottom));pointer-events:none}
 .nav .in{pointer-events:auto;max-width:520px;margin:0 auto;display:flex;align-items:center;background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:26px;box-shadow:0 10px 30px rgba(15,18,34,.12);height:68px;padding:0 6px}
-.tb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.62rem;font-weight:800;color:var(--faint)}
+.tb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:min(.62rem,3.1vw);font-weight:800;color:var(--faint)}
 .tb svg{width:22px;height:22px}
 .tb.on{color:var(--acc)}
 .tb{position:relative}
@@ -460,6 +469,8 @@ const dayDiff = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + '
 const mLabel = (m, short) => { if (!m) return ''; const [y, mo] = m.split('-').map(Number); return new Date(y, mo - 1, 1).toLocaleDateString('en-IN', short ? { month: 'short' } : { month: 'long', year: 'numeric' }); };
 const dLabel = d => { if (!d) return ''; if (d === today()) return 'Today'; if (d === addDays(today(), -1)) return 'Yesterday'; return new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: d.slice(0, 4) === String(new Date().getFullYear()) ? undefined : 'numeric' }); };
 const h12 = h => { h = ((h % 24) + 24) % 24; return (h % 12 || 12) + (h >= 12 ? 'pm' : 'am'); };
+/* "10–11pm" (short, fits a tile); "11am–12pm" when the half changes */
+const hrRange = h => { const a = h12(h), b = h12(h + 1); return a.slice(-2) === b.slice(-2) ? a.slice(0, -2) + '–' + b : a + '–' + b; };
 const tLabel = ts => { const t = (ts || '').slice(11, 16); if (!t) return ''; let [h, m] = t.split(':').map(Number); const ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12; return h + ':' + p2(m) + ' ' + ap; };
 const sum = a => r2(a.reduce((s, e) => s + (Number(e.amount) || 0), 0));
 const uniq = a => [...new Set(a.filter(x => x !== '' && x != null))];
@@ -495,15 +506,15 @@ function download(name, text, type) {
 
 /* ---------- defaults ---------- */
 const CAT_DEF = [['Food', '🍽️', '#F97316'], ['Household', '🏠', '#EAB308'], ['Transportation', '🚕', '#14B8A6'], ['Personal & Lifestyle', '🛍️', '#A855F7'], ['Education', '📚', '#3B82F6'], ['Medical', '💊', '#EC4899'], ['Financial', '💳', '#64748B'], ['Miscellaneous', '✨', '#84CC16']];
-const defCfg = () => ({ bin: { days: 30 }, categories: CAT_DEF.map(([name, icon, color]) => ({ name, icon, color, budget: 0, hidden: false })), sources: ['Salary', 'Bonus', 'Interest', 'Refund', 'Gift', 'Other'], invTypes: ['Stocks', 'Mutual Fund', 'ETF', 'Gold', 'FD / RD / PPF'], report: { on: true, day: 1, hour: 9, email: '', weekly: false, wHour: 9, cmp: 'prev' }, matched: {}, nudges: { weekly: true, anomaly: true, pace: true, recon: 14, goals: true }, profile: { born: '', earning: '', city: '', role: '' }, payees: {}, holdings: {}, signin: { clientIds: [], emails: [] }, backup: { keep: 15 }, career: { jobs: [] }, plans: { list: [] } });
+const defCfg = () => ({ bin: { days: 30 }, categories: CAT_DEF.map(([name, icon, color]) => ({ name, icon, color, budget: 0, hidden: false })), sources: ['Salary', 'Bonus', 'Interest', 'Refund', 'Gift', 'Other'], invTypes: ['Stocks', 'Mutual Fund', 'ETF', 'Gold', 'FD / RD / PPF'], report: { on: true, day: 1, hour: 9, email: '', weekly: false, wHour: 9, cmp: 'prev' }, matched: {}, nudges: { weekly: true, anomaly: true, pace: true, recon: 14, goals: true }, profile: { born: '', earning: '', city: '', role: '' }, payees: {}, holdings: {}, signin: { clientIds: [], emails: [] }, backup: { keep: 15 }, career: { jobs: [] }, plans: { list: [] }, refunds: { list: [] } });
 const ACC_T = { bank: ['🏦', 'Bank'], cash: ['💵', 'Cash'], wallet: ['👛', 'Wallet / UPI'], card: ['💳', 'Credit card'], investment: ['📈', 'Investment'] };
 const COLL = { Expenses: 'exp', Income: 'inc', Transfers: 'trf', Investments: 'inv', EMILog: 'emi', GoalLog: 'goal', LoanLog: 'loan', Adjustments: 'adj', Accounts: 'accounts', Goals: 'goals', EMIs: 'emis', Loans: 'loans', Reminders: 'rem', Pending: 'pend', Deleted: 'bin' };
-const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings', 'signin', 'backup', 'career', 'plans', 'bin'];
+const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings', 'signin', 'backup', 'career', 'plans', 'bin', 'refunds'];
 /* Your Sheet and Google sign-in client (safe to be public: neither opens data without your Google account or secret key) */
 const CLOUD = { url: '__SHEET_URL__', clientId: '__WEB_CLIENT_ID__' };
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-04 b13';
+const APP_BUILD = '2026-11-04 b14';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -750,7 +761,7 @@ function groupDays(list, fn, showTotal) {
   list.forEach(e => { const d = e.ts.slice(0, 10); if (d !== day) { out(); day = d; buf = []; tot = 0; } buf.push(fn(e)); tot += Number(e.amount) || 0; });
   out(); return h;
 }
-const expRow = e => { const c = cat(e.category); return row({ sheet: 'Expenses', id: e.id, icon: c.icon, color: c.color, t: (e.remarks || e.category) + (e.photo ? ' 📎' : '') + (isSplit(e.id) ? ' 👥' : ''), s: `${e.category} · ${e.mine ? "from " + e.account + "'s money" : e.account}${tLabel(e.ts) ? ' · ' + tLabel(e.ts) : ''}`, amt: e.amount, sign: -1 }); };
+const expRow = e => { const c = cat(e.category); if (e.amount < 0) return row({ sheet: 'Expenses', id: e.id, icon: '↩️', color: c.color, t: String(e.remarks || 'Refund').replace(/^↩️\s*/, ''), s: `Refund · ${c.icon} ${e.category} · ${e.account}${tLabel(e.ts) ? ' · ' + tLabel(e.ts) : ''}`, amt: -e.amount, sign: 1 }); return row({ sheet: 'Expenses', id: e.id, icon: c.icon, color: c.color, t: (e.remarks || e.category) + (e.photo ? ' 📎' : '') + (isSplit(e.id) ? ' 👥' : ''), s: `${e.category} · ${e.mine ? "from " + e.account + "'s money" : e.account}${tLabel(e.ts) ? ' · ' + tLabel(e.ts) : ''}`, amt: e.amount, sign: -1 }); };
 
 /* =========================================================
    HOME — EXPENSES
@@ -824,7 +835,7 @@ ACT.updCheck = () => { if (!AND || !AND.updateCheck) return toast('Update the ph
 function heldDues() { return live(a => a.others).filter(a => heldOwed(a.name) > .004).map(a => `<div class="alert"><span class="ic" style="background:var(--soft)">🤝</span><span class="mid"><b>You owe ${esc(a.name)} ${inr(heldOwed(a.name))}</b><small>Used from ${esc(a.name)}'s money for yourself</small></span><button class="btn sm" data-act="heldPay" data-n="${esc(a.name)}">Pay back</button></div>`).join(''); }
 function inboxParts(all) {
   const keep = U.nudgeAll; U.nudgeAll = true;
-  try { return { sort: pendNew(), act: updAlert() + cardDues(all) + remDue() + emiDue() + heldDues(), info: budgetAlerts() + goalNudges() + nudges() }; } finally { U.nudgeAll = keep; }
+  try { return { sort: pendNew(), act: updAlert() + cardDues(all) + remDue() + emiDue() + heldDues(), info: refundAlerts() + budgetAlerts() + goalNudges() + nudges() }; } finally { U.nudgeAll = keep; }
 }
 const nAlerts = h => (h.match(/class="alert/g) || []).length;
 function inboxCount() { if (!S.accounts.length) return { all: 0, sort: 0, act: 0 }; const P = inboxParts(false), A = inboxParts(true); return { sort: P.sort.length, act: nAlerts(P.act), info: nAlerts(P.info), all: P.sort.length + nAlerts(A.act) + nAlerts(P.info), badge: P.sort.length + nAlerts(P.act) + nAlerts(P.info) }; }
@@ -854,7 +865,7 @@ ACT.snooze = el => { S.prefs.snooze = S.prefs.snooze || {}; const t = today(); O
 /* unusual spend: ≥3× the median of that category over the previous 6 months (needs 5+ past entries) */
 function anomalyOf(e) {
   if (!e || !(e.amount > 0) || !myX(e)) return null;
-  const since = addDays(e.ts.slice(0, 10), -180), past = S.exp.filter(x => x.category === e.category && x.id !== e.id && x.ts < e.ts && x.ts >= since && myX(x)).map(x => x.amount).sort((a, b) => a - b);
+  const since = addDays(e.ts.slice(0, 10), -180), past = S.exp.filter(x => x.category === e.category && x.id !== e.id && x.ts < e.ts && x.ts >= since && myX(x) && x.amount > 0).map(x => x.amount).sort((a, b) => a - b);
   if (past.length < 5) return null;
   const med = past.length % 2 ? past[(past.length - 1) / 2] : (past[past.length / 2 - 1] + past[past.length / 2]) / 2;
   if (!(med > 0) || e.amount < med * 3 || e.amount - med < 500) return null;
@@ -1013,7 +1024,9 @@ ACT.entry = el => entrySheet(el.dataset.s, el.dataset.id);
 function entryInfo(sheet, e) {
   const rows = []; let title = e.name || '', icon = '🧾', color = '#5B5BF7';
   switch (sheet) {
-    case 'Expenses': { const c = cat(e.category); icon = c.icon; color = c.color; title = e.remarks || e.category; rows.push(['Category', e.category], ['Paid from', e.account]); if (e.mine) rows.push(['For', 'Me · owed back to ' + e.account]); if (e.payee && e.payee !== e.remarks) rows.push(['Bank SMS name', e.payee]); break; }
+    case 'Expenses': { const c = cat(e.category); icon = c.icon; color = c.color; title = e.remarks || e.category;
+      if (e.amount < 0) { icon = '↩️'; title = String(e.remarks || 'Refund').replace(/^↩️\s*/, ''); const r = rfList().find(x => x.gotId === e.id), o = r && r.exp && S.exp.find(x => x.id === r.exp); rows.push(['Refund', 'Cancels ' + inr(-e.amount) + ' of ' + e.category], ['Came into', e.account]); if (o) rows.push(['Refund for', (o.remarks || o.category) + ' · ' + inr(o.amount) + ' · ' + dLabel(o.ts.slice(0, 10))]); if (r && r.reason) rows.push(['Why', r.reason]); if (e.payee) rows.push(['Bank SMS name', e.payee]); break; }
+      rows.push(['Category', e.category], ['Paid from', e.account]); if (e.mine) rows.push(['For', 'Me · owed back to ' + e.account]); if (e.payee && e.payee !== e.remarks) rows.push(['Bank SMS name', e.payee]); break; }
     case 'Income': title = e.source; icon = '💰'; color = '#12A150'; rows.push(['Credited to', e.account], ['Source', e.source]); if (e.payee) rows.push(['Bank SMS name', e.payee]); break;
     case 'Transfers': title = e.from + ' → ' + e.to; icon = '🔁'; color = '#64748B'; rows.push(['From', e.from], ['To', e.to]); break;
     case 'Investments': if (!isBuy(e)) { title = 'Sold · ' + (e.name || e.type); icon = '💹'; color = '#11A04F'; rows.push(['Received into', e.to], ['Was held in', e.from || 'Not tracked'], ['Put in (cost)', fmtINR(e.cost, 'x')], [e.amount - e.cost >= 0 ? 'Profit' : 'Loss', fmtINR(Math.abs(e.amount - e.cost), 'x')]); break; }
@@ -1041,11 +1054,15 @@ function entrySheet(sheet, id) {
   if (an) rows.push(['⚠️ Unusual', an.x + '× your usual ' + e.category + ' (' + inr(an.med) + ')']);
   if (split) S.loan.filter(l => l.ref === id).forEach(l => rows.push(['👥 ' + l.person + ' owes', inr(l.amount)]));
   const linked = split || S.goal.some(g => g.ref === id) || ((sheet === 'GoalLog' || sheet === 'LoanLog') && e.ref);
-  const editable = ['Expenses', 'Income', 'Transfers', 'Investments'].includes(sheet) && !split && !(sheet === 'Investments' && !isBuy(e)), logEd = ['EMILog', 'GoalLog', 'LoanLog'].includes(sheet) && !(sheet === 'LoanLog' && e.ref && S.exp.some(x => x.id === e.ref));
+  const isRf = sheet === 'Expenses' && e.amount < 0;
+  const editable = ['Expenses', 'Income', 'Transfers', 'Investments'].includes(sheet) && !split && !isRf && !(sheet === 'Investments' && !isBuy(e)), logEd = isRf || (['EMILog', 'GoalLog', 'LoanLog'].includes(sheet) && !(sheet === 'LoanLog' && e.ref && S.exp.some(x => x.id === e.ref)));
+  const rfOf = sheet === 'Expenses' && !isRf ? rfList().filter(r => r.exp === id && rfState(r) !== 'gone') : [];
+  if (rfOf.length) rfOf.forEach(r => rows.push(['↩️ Refund', inr(r.amount) + ' · ' + ({ got: 'received', dropped: 'closed', late: 'late', waiting: 'expected by ' + dLabel(r.by) })[rfState(r)]]));
   openSheet('', `<div class="detail"><div class="ic big" style="background:${color}1f">${icon}</div><div class="dv">${inrX(Math.abs(e.amount))}</div><div class="dt">${esc(title)}</div></div>
   <div class="kv">${rows.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}${e.photo ? `<div><span>Bill photo</span><a href="${esc(e.photo)}" target="_blank" rel="noopener">View 📎</a></div>` : ''}</div>
   ${linked || (sheet === 'Expenses' && e.mine) ? `<div class="hint">🔗 ${e.mine && !split ? 'Deleting also removes what you owe ' + esc(e.account) + ' for it.' : split ? 'Split bill: deleting also removes what friends owe for it. To change amounts, delete and add again.' : 'Linked entry: deleting removes the linked goal / loan entry too.'}</div>` : ''}
   <div class="btns">${editable ? `<button class="btn sec" data-act="editEntry" data-s="${sheet}" data-id="${esc(id)}">✏️ Edit</button><button class="btn sec" data-act="dupEntry" data-s="${sheet}" data-id="${esc(id)}">↻ Repeat</button>` : ''}${logEd ? `<button class="btn sec" data-act="logEdit" data-s="${sheet}" data-id="${esc(id)}">✏️ Edit</button>` : ''}</div>
+  ${sheet === 'Expenses' && !isRf && e.amount > 0 && !rfOf.some(r => ['waiting', 'late'].includes(rfState(r))) ? `<button class="btn sec" data-act="rfFromExp" data-id="${esc(id)}">↩️ I'm expecting a refund for this</button>` : ''}${rfOf.length ? `<button class="btn sec" data-act="rfOpen" data-id="${esc(rfOf[0].id)}">↩️ See the refund</button>` : ''}
   <button class="btn dng" data-act="delEntry" data-s="${sheet}" data-id="${esc(id)}">Delete</button>`);
 }
 ACT.editEntry = el => compose(COLL[el.dataset.s], el.dataset.id);
@@ -1061,20 +1078,20 @@ function logGroup(sheet, e) {
 }
 ACT.logEdit = el => {
   const sheet = el.dataset.s, e = S[COLL[sheet]].find(x => x.id === el.dataset.id); if (!e) return;
-  const linked = logGroup(sheet, e).length > 1, accs = sheet === 'GoalLog' ? goalAccs() : live(a => a.type !== 'investment');
+  const rfx = sheet === 'Expenses', linked = !rfx && logGroup(sheet, e).length > 1, accs = sheet === 'GoalLog' ? goalAccs() : live(a => a.type !== 'investment');
   U.le = { sheet, id: e.id, account: e.account || '' };
-  openSheet('Edit · ' + esc(sheet === 'EMILog' ? e.emi : sheet === 'GoalLog' ? e.action + ' · ' + e.goal : e.action + ' · ' + e.person), `<label class="amtbox"><span>₹</span><input id="leAmt" inputmode="decimal" value="${e.amount}"></label>
+  openSheet('Edit · ' + esc(rfx ? 'Refund' : sheet === 'EMILog' ? e.emi : sheet === 'GoalLog' ? e.action + ' · ' + e.goal : e.action + ' · ' + e.person), `<label class="amtbox"><span>₹</span><input id="leAmt" inputmode="decimal" value="${Math.abs(e.amount)}"></label>
   ${linked ? '<div class="hint center">🔗 Linked entry: the amount and date also update its linked expense / transfer.</div>' : `<div class="lbl">Account</div><div class="chips wrap">${accs.map(a => `<button class="chip ${a.name === e.account ? 'on' : ''}" data-act="pick" data-o="le" data-f="account" data-v="${esc(a.name)}">${(a.others ? '👥' : ACC_T[a.type][0])} ${esc(a.name)}</button>`).join('')}</div>`}
   <div class="grid2"><div><div class="lbl">Date</div><input type="date" id="leDate" value="${e.ts.slice(0, 10)}" max="${today()}"></div>${sheet === 'EMILog' ? `<div><div class="lbl">For month</div><input type="month" id="lePer" value="${esc(e.period)}"></div>` : `<div><div class="lbl">Time</div><input type="time" id="leTime" value="${e.ts.slice(11, 16) || '12:00'}"></div>`}</div>
-  <div class="lbl">Note</div><input id="leRem" value="${esc(e.remarks || '')}">
+  <div class="lbl">Note</div><input id="leRem" value="${esc(rfx ? String(e.remarks || '').replace(/^↩️\s*/, '') : e.remarks || '')}">
   <button class="btn big" data-act="leSave">Save changes</button>`);
 };
 ACT.leSave = () => {
   const L = U.le, e = S[COLL[L.sheet]].find(x => x.id === L.id), a = parseAmt($('#leAmt').value); if (!(a > 0)) return toast('Enter an amount');
   const d = $('#leDate').value || e.ts.slice(0, 10), t = $('#leTime') ? ($('#leTime').value || '12:00') + ':00' : (e.ts.slice(11) || '12:00:00'), ts = d + ' ' + t;
-  const grp = logGroup(L.sheet, e), ops = [];
+  const grp = L.sheet === 'Expenses' ? [[L.sheet, e]] : logGroup(L.sheet, e), ops = [];
   if (L.sheet === "GoalLog" && !POS.has(e.action) && grp.length === 1) { const avail = r2(((C.gIn[e.goalId] || {})[L.account] || 0) + (L.account === e.account ? e.amount : 0)); if (a > avail + .004) return toast('Only ' + fmtINR(avail) + ' of this goal is in ' + L.account); }
-  grp.forEach(([sh, x]) => { const row = Object.assign({}, x, { amount: a, ts }); if (x.id === e.id) { row.remarks = $('#leRem').value.trim(); if (grp.length === 1 && L.account) row.account = L.account; if ($('#lePer')) row.period = $('#lePer').value || x.period; } ops.push(up(sh, row)); });
+  grp.forEach(([sh, x]) => { const row = Object.assign({}, x, { amount: sh === 'Expenses' && x.amount < 0 ? -a : a, ts }); if (x.id === e.id) { row.remarks = (sh === 'Expenses' && x.amount < 0 ? '↩️ ' : '') + $('#leRem').value.trim(); if (grp.length === 1 && L.account) row.account = L.account; if ($('#lePer')) row.period = $('#lePer').value || x.period; } ops.push(up(sh, row)); });
   commit(ops); shut(); render(); toast('Updated');
 };
 ACT.dupEntry = el => compose(COLL[el.dataset.s], el.dataset.id, true);
@@ -1657,6 +1674,7 @@ function renderMoney() {
   if (k === 'inc') {
     const by = {}; list.forEach(e => by[e.source] = (by[e.source] || 0) + e.amount);
     h += `<div class="hero" style="--hc:#11A04F"><div class="hl">Income · ${mLabel(U.month)}</div><div class="hv">${inrS(sum(list))}</div><div class="hs">${Object.entries(by).sort((a, b) => b[1] - a[1]).map(([s, v]) => esc(s) + ' <b>' + inr(v, 1) + '</b>').join(' · ') || 'No income logged yet'}</div></div>`;
+    h += refundsCard() || `<button class="alert info" data-act="refundsOpen" style="width:100%;text-align:left;border-left-color:var(--green)"><span class="ic" style="background:#12A1501f">↩️</span><span class="mid"><b>Refunds & cashback</b><small>Track refunds you're waiting for (IRCTC, Swiggy, Amazon…)</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`;
   } else h += `<div class="hero" style="--hc:#64748B"><div class="hl">Moved between accounts</div><div class="hv">${inrS(sum(list))}</div><div class="hs">Transfers don't count as spending or income</div></div>`;
   h += `<button class="btn" data-act="new" data-k="${k}">+ Add ${k === 'inc' ? 'income' : 'transfer'}</button>`;
   h += list.length ? groupDays(list, e => k === 'inc'
@@ -2038,12 +2056,15 @@ function parseSms(raw, recvTs) {
   const t = String(raw || '').replace(/\s+/g, ' ').trim();
   if (!t || t.length < 20) return null;
   if (/\b(otp|one[- ]time password|verification code|passcode|cvv)\b/i.test(t)) return null;
-  if (/pre-?approved|\boffer\b|apply now|eligible|\bwin\b|cashback (?:up ?to|of up)|will be (?:debited|deducted|auto)|\bis due\b|due (?:on|date|by)|\brequested\b|collect request|\bmandate\b.*(?:created|registered)|minimum amount due|statement (?:is )?generated|failed|declined|reversed? (?:will|shall)/i.test(t)) return null;
+  const backIn = /\b(refund(?:ed)?|revers(?:al|ed)|cash ?back)\b/i.test(t) && /\b(credited|refunded|reversed|received|deposited|added)\b/i.test(t) && !/\bwill\b/i.test(t);
+  if (/pre-?approved|\boffer\b|apply now|eligible|\bwin\b|cashback (?:up ?to|of up)|will be (?:debited|deducted|auto)|\bis due\b|due (?:on|date|by)|\brequested\b|collect request|\bmandate\b.*(?:created|registered)|minimum amount due|statement (?:is )?generated|reversed? (?:will|shall)/i.test(t)) return null;
+  if (!backIn && /failed|declined/i.test(t)) return null;
   const am = t.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)/i); if (!am) return null;
   const amount = Math.round(parseFloat(am[1].replace(/,/g, '')) * 100) / 100; if (!(amount > 0)) return null;
   let dir = null;
   if (/\b(debited|sent|spent|paid|withdrawn|purchase|txn of|transferred to|deducted|used at|payment of)\b/i.test(t)) dir = 'debit';
   if (/\b(credited|received|deposited|refund(?:ed)?|added to)\b/i.test(t) && !/\b(debited|spent|sent)\b/i.test(t)) dir = 'credit';
+  if (backIn) dir = 'credit';
   if (/\bdebited\b/i.test(t) && /;\s*[^;]+?\bcredited\b/i.test(t)) dir = 'debit';
   if (!dir) return null;
   const card = /\bcard\b/i.test(t) && !/\bdebit card\b.*\batm\b/i.test(t) && /(credit card|card x+|card no|card ending|bank card)/i.test(t) && !/\bdebit card\b/i.test(t);
@@ -2122,8 +2143,9 @@ function pastFiling(p) {
   const id = p.done; let e;
   if (p.status === 'ignored') return { id: p.id, act: 'ignore', amount: p.amount, ts: p.ts };
   if (!id) return null;
-  if ((e = S.exp.find(x => x.id === id))) return { id, act: 'exp', category: e.category, note: e.remarks, acc: e.account, amount: e.amount, ts: e.ts };
-  if ((e = S.inc.find(x => x.id === id))) return { id, act: e.source === 'Refund' ? 'refund' : 'inc', note: e.source === 'Refund' ? String(e.remarks || '').split(' · ')[0] : e.remarks, category: e.source === 'Refund' ? String(e.remarks || '').split(' · ')[1] || '' : '', acc: e.account, amount: e.amount, ts: e.ts };
+  if ((e = S.exp.find(x => x.id === id))) return e.amount < 0 ? { id, act: 'refund', category: e.category, note: '', acc: e.account, amount: -e.amount, ts: e.ts } : { id, act: 'exp', category: e.category, note: e.remarks, acc: e.account, amount: e.amount, ts: e.ts };
+  if ((e = S.inc.find(x => x.id === id)) && e.source === 'Cashback') return { id, act: 'cashback', note: '', acc: e.account, amount: e.amount, ts: e.ts };
+  if (e) return { id, act: e.source === 'Refund' ? 'refund' : 'inc', note: e.source === 'Refund' ? String(e.remarks || '').split(' · ')[0] : e.remarks, category: e.source === 'Refund' ? String(e.remarks || '').split(' · ')[1] || '' : '', acc: e.account, amount: e.amount, ts: e.ts };
   if ((e = S.trf.find(x => x.id === id))) return { id, act: 'trf', note: e.remarks, acc: p.dir === 'credit' ? e.to : e.from, to: p.dir === 'credit' ? e.from : e.to, amount: e.amount, ts: e.ts };
   if ((e = S.inv.find(x => x.id === id))) return { id, act: 'inv', note: e.name, acc: e.from, to: e.to, amount: e.amount, ts: e.ts };
   if ((e = S.loan.find(x => x.id === id))) return { id, act: { Lend: 'lend', Borrow: 'borrow', Repay: 'repay', Receive: 'back' }[e.action], loan: e.loanId, note: e.remarks, acc: e.account, amount: e.amount, ts: e.ts };
@@ -2132,7 +2154,7 @@ function pastFiling(p) {
 function payeeHistory(payee, dir, skip) {
   const H = [], seen = new Set(), add = (sim, h) => { if (!h || !h.act || seen.has(h.id)) return; seen.add(h.id); H.push(Object.assign({ sim }, h)); };
   S.pend.forEach(p => { if (p.id === skip || p.status === 'new' || !p.payee || (dir && p.dir !== dir)) return; const sim = payeeSame(payee, p.payee); if (sim) add(sim, pastFiling(p)); });
-  if (dir !== 'credit') S.exp.forEach(e => { if (!e.payee) return; const sim = payeeSame(payee, e.payee); if (sim) add(sim, { id: e.id, act: 'exp', category: e.category, note: e.remarks, acc: e.account, amount: e.amount, ts: e.ts }); });
+  if (dir !== 'credit') S.exp.forEach(e => { if (!e.payee || e.amount < 0) return; const sim = payeeSame(payee, e.payee); if (sim) add(sim, { id: e.id, act: 'exp', category: e.category, note: e.remarks, acc: e.account, amount: e.amount, ts: e.ts }); });
   if (dir !== 'debit') S.inc.forEach(e => { if (!e.payee) return; const sim = payeeSame(payee, e.payee); if (sim) add(sim, pastFiling({ done: e.id, dir: 'credit' })); });
   return H;
 }
@@ -2158,7 +2180,8 @@ function sgLabel(h, short) {
   if (h.act === 'trf') return '⇄ ' + (h.to ? esc(h.to) : 'Transfer');
   if (h.act === 'inv') return '📈 ' + (nt || 'Invest');
   if (['lend', 'repay', 'back', 'borrow'].includes(h.act)) { const l = loanById(h.loan); return '🤝 ' + { lend: 'Lent', repay: 'Repaid', back: 'Got back', borrow: 'Borrowed' }[h.act] + (l ? ' · ' + esc(l.name) : ''); }
-  if (h.act === 'refund') return '↩️ Refund' + (nt ? ' · ' + nt : '');
+  if (h.act === 'refund') return '↩️ Refund' + (nt ? ' · ' + nt : h.category ? ' · ' + esc(h.category) : '');
+  if (h.act === 'cashback') return '🎁 Cashback';
   return '💰 ' + (nt || 'Income');
 }
 const sgAmt = x => x.lo === x.hi ? inr(x.lo, 1) : inr(x.lo, 1) + '–' + inr(x.hi, 1);
@@ -2172,13 +2195,18 @@ function pdApply(P, p, h) {
   if (h.to && acc(h.to) && !acc(h.to).archived) P.to = h.to;
   if (h.loan) { const l = loanById(h.loan); if (l && !l.archived) P.loan = l.id; }
 }
-const PEND_ACT = { debit: [['exp', '🧾 Expense'], ['lend', '🤝 Lent'], ['repay', '↩️ Repaid a loan'], ['trf', '⇄ Transfer'], ['inv', '📈 Invest'], ['ignore', '🚫 Ignore']], credit: [['inc', '💰 Income'], ['back', '🤝 Got back (loan)'], ['borrow', '🤲 Borrowed'], ['trf', '⇄ Transfer in'], ['refund', '↩️ Refund'], ['ignore', '🚫 Ignore']] };
+const PEND_ACT = { debit: [['exp', '🧾 Expense'], ['lend', '🤝 Lent'], ['repay', '↩️ Repaid a loan'], ['trf', '⇄ Transfer'], ['inv', '📈 Invest'], ['ignore', '🚫 Ignore']], credit: [['inc', '💰 Income'], ['refund', '↩️ Refund'], ['cashback', '🎁 Cashback'], ['back', '🤝 Got back (loan)'], ['borrow', '🤲 Borrowed'], ['trf', '⇄ Transfer in'], ['ignore', '🚫 Ignore']] };
 ACT.pendPick = el => {
   const p = S.pend.find(x => x.id === el.dataset.id); if (!p) return;
   const pk = payeeFind(p.payee) || {};
   const sg = payeeSuggest(p.payee, p.amount, p.dir, p.id);
   U.pd = { sg, sgi: sg.length ? 0 : -1, id: p.id, note: pk.note || p.payee || '', act: pk.act && PEND_ACT[p.dir].some(a => a[0] === pk.act) ? pk.act : p.dir === 'credit' ? 'inc' : p.atm ? 'trf' : 'exp', account: p.account || (pk.acc && acc(pk.acc) ? pk.acc : ''), cat: pk.category || guessCat(p.payee) || '', loan: pk.loan || '', to: p.atm ? (live(a => a.type === 'cash')[0] || {}).name || '' : (pk.to && acc(pk.to) ? pk.to : '') };
   if (sg.length) pdApply(U.pd, p, sg[0].last);
+  /* a credit that matches a waiting refund, or says refund / cashback */
+  const rm = rfMatch(p), rw = rfWord(p);
+  if (rm) { U.pd.act = rm.kind; U.pd.rf = rm.id; if (!U.pd.account && rm.acc) U.pd.account = rm.acc; U.pd.note = ''; }
+  else if (rw && p.dir === 'credit' && !sg.length) { U.pd.act = rw; U.pd.note = ''; }
+  if (U.pd.act === 'refund' && !U.pd.rf && !U.pd.exp) { const c = rfSpendCands(p.amount, merchOf(p.raw || '', ''), p.payee, p.ts); if (c.length && Math.abs(c[0].amount - p.amount) < 1) U.pd.exp = c[0].id; }
   pendForm();
 };
 function pdSugBox(P, p) {
@@ -2199,7 +2227,20 @@ function pendForm() {
     if (p.l4 && P.account && !pa.others && !pa.l4) h += `<label class="check"><input type="checkbox" id="pdRem" checked> Always use ${esc(P.account)} for ·${esc(p.l4)}</label>`;
     if (pa.others) h += `<div class="hint">👥 Paid out of ${esc(pa.name)}'s money${pa.keptIn ? ' inside ' + esc(pa.keptIn) : ''}. Your own balance doesn't change.</div>`;
     if (p.card && !live(a => a.type === 'card').length) h += `<div class="hint amber">This was a credit card spend. Add your card as a <b>Card</b> account in Settings, so it does not reduce your bank balance.</div>`;
-    if (P.act === 'exp' || P.act === 'refund') h += `<div class="lbl">Category</div><div class="chips wrap">${visCats().map(c => chip('cat', c.name, c.icon + ' ' + esc(c.name))).join('')}</div>`;
+    if (P.act === 'refund' || P.act === 'cashback') {
+      const wait = rfOpen().filter(r => r.kind === P.act).sort((a, b) => Math.abs(a.amount - p.amount) - Math.abs(b.amount - p.amount)).slice(0, 4);
+      if (wait.length) h += `<div class="lbl">Which ${P.act} is this?</div><div class="chips wrap">${wait.map(r => chip('rf', r.id, (r.kind === 'cashback' ? '🎁 ' : '↩️ ') + esc(rfName(r)) + ' <small>' + inr(r.amount, 1) + (r.reason && r.reason !== 'Refund' ? ' · ' + esc(r.reason) : '') + '</small>')).join('')}</div>`;
+      const rr = P.rf && rfList().find(r => r.id === P.rf);
+      if (P.act === 'refund' && !(rr && rr.exp)) {
+        const cands = rfSpendCands(p.amount, (rr && rr.merchant) || merchOf(p.raw || '', ''), p.payee, p.ts);
+        if (cands.length) h += `<div class="lbl">Refund for which spend? <small class="mute">(cancels it)</small></div><div class="chips wrap">${cands.map(e => chip('exp', e.id, cat(e.category).icon + ' ' + esc(e.remarks || e.category) + ' <small>' + inr(e.amount, 1) + ' · ' + dLabel(e.ts.slice(0, 10)) + '</small>')).join('')}</div>`;
+      }
+      const le = S.exp.find(e => e.id === ((rr && rr.exp) || P.exp));
+      if (P.act === 'refund' && le) h += `<div class="hint green">↩️ Cancels ${esc(le.remarks || le.category)} · ${esc(le.category)} goes down by ${inr(p.amount)}</div>`;
+      else if (P.act === 'refund') h += `<div class="lbl">Category it cancels</div><div class="chips wrap">${visCats().map(c => chip('cat', c.name, c.icon + ' ' + esc(c.name))).join('')}</div>`;
+      else h += `<div class="hint">🎁 Logged as income · Cashback</div>`;
+    }
+    if (P.act === 'exp') h += `<div class="lbl">Category</div><div class="chips wrap">${visCats().map(c => chip('cat', c.name, c.icon + ' ' + esc(c.name))).join('')}</div>`;
     if (['lend', 'repay', 'back', 'borrow'].includes(P.act)) { const dir = ['lend', 'back'].includes(P.act) ? 'owed' : 'owe', ls = S.loans.filter(l => !l.archived && l.dir === dir); h += `<div class="lbl">${dir === 'owed' ? 'Who owes you' : 'Who you owe'}</div><div class="chips wrap">${ls.map(l => chip('loan', l.id, '👤 ' + esc(l.name))).join('')}${['lend', 'borrow'].includes(P.act) ? chip('loan', 'new', '+ New person') : ''}</div>${P.loan === 'new' ? `<input id="pdPerson" value="${esc(p.payee)}" placeholder="Name">` : ''}`; }
     if (P.act === 'trf') h += `<div class="lbl">${p.dir === 'credit' ? 'From' : 'To'}</div><div class="chips wrap">${acChips('to')}</div>`;
     if (P.act === 'inv') h += `<div class="lbl">Invested into</div><div class="chips wrap">${live(a => a.type === 'investment').map(a => chip('to', a.name, '📈 ' + esc(a.name))).join('')}</div>`;
@@ -2217,7 +2258,14 @@ ACT.pdSave = () => {
   if (!P.account) return toast('Pick the account');
   const ops = [], note = ($('#pdRemk') || {}).value || p.payee, ts = p.ts, a = p.amount, id = 'S' + p.id.slice(1);
   if (P.act === 'exp') { if (!P.cat) return toast('Pick a category'); ops.push(up('Expenses', { id, ts, account: P.account, amount: a, category: P.cat, remarks: note, photo: '', payee: p.payee || '', mine: false })); }
-  else if (P.act === 'refund') { ops.push(up('Income', { id, ts, account: P.account, amount: a, source: S.cfg.sources.includes('Refund') ? 'Refund' : S.cfg.sources[0], remarks: note + (P.cat ? ' · ' + P.cat : ''), payee: p.payee || '' })); }
+  else if (P.act === 'refund' || P.act === 'cashback') {
+    let r = P.rf && rfList().find(x => x.id === P.rf);
+    const nt = ($('#pdRemk') || {}).value || '';
+    if (!r) r = { id: uid('RF'), src: 'bank', direct: true, kind: P.act, amount: a, merchant: merchOf(p.raw || '', '') || (p.payee || ''), reason: P.act === 'cashback' ? 'Cashback' : 'Refund', ts, by: ts.slice(0, 10), acc: P.account, bank: p.bank || '', l4: p.l4 || '', raw: String(p.raw || '').slice(0, 300), exp: '', gotId: '', dropped: false };
+    if (P.act === 'refund' && !r.exp && P.exp) r = Object.assign({}, r, { exp: P.exp });
+    if (P.act === 'refund' && !r.exp && !P.cat) return toast('Pick the spend or a category');
+    rfFileOps(r, { id, amount: a, ts, account: P.account, cat: P.cat, payee: p.payee || '', note: nt.trim() && nt.trim() !== p.payee ? nt.trim() : '' }).forEach(o => ops.push(o));
+  }
   else if (P.act === 'inc') ops.push(up('Income', { id, ts, account: P.account, amount: a, source: /salary/i.test(note + ' ' + p.payee) ? 'Salary' : S.cfg.sources[0], remarks: note, payee: p.payee || '' }));
   else if (P.act === 'trf') { if (!P.to || P.to === P.account) return toast('Pick the other account'); ops.push(up('Transfers', p.dir === 'credit' ? { id, ts, from: P.to, to: P.account, amount: a, remarks: note } : { id, ts, from: P.account, to: P.to, amount: a, remarks: note })); }
   else if (P.act === 'inv') { if (!P.to) return toast('Pick the investment account'); ops.push(up('Investments', { id, ts, from: P.account, amount: a, type: S.cfg.invTypes[0], name: note, to: P.to, remarks: '' })); }
@@ -2230,20 +2278,223 @@ ACT.pdSave = () => {
   }
   const accRow = acc(P.account);
   if (p.l4 && $('#pdRem') && $('#pdRem').checked && accRow) ops.push(up('Accounts', Object.assign({}, accRow, { l4: [accRow.l4, p.l4].filter(Boolean).join(',') })));
-  if (p.payee) { const lbl = { exp: P.cat, lend: 'Lent', repay: 'Loan repay', trf: 'Transfer', inv: 'Invest', inc: 'Income', back: 'Got back', borrow: 'Borrowed', refund: 'Refund' }[P.act]; ops.push(payeeLearn(p.payee, { act: P.act, category: P.cat || '', loan: P.loan && P.loan !== 'new' ? P.loan : '', label: lbl, note: note.trim() && note.trim() !== p.payee ? note.trim() : '', acc: P.account, to: ['trf', 'inv'].includes(P.act) ? P.to || '' : '' })); }
+  if (p.payee) { const lbl = { exp: P.cat, lend: 'Lent', repay: 'Loan repay', trf: 'Transfer', inv: 'Invest', inc: 'Income', back: 'Got back', borrow: 'Borrowed', refund: 'Refund', cashback: 'Cashback' }[P.act]; ops.push(payeeLearn(p.payee, { act: P.act, category: P.cat || '', loan: P.loan && P.loan !== 'new' ? P.loan : '', label: lbl, note: note.trim() && note.trim() !== p.payee ? note.trim() : '', acc: P.account, to: ['trf', 'inv'].includes(P.act) ? P.to || '' : '' })); }
   ops.push(up('Pending', Object.assign({}, p, { status: 'done', done: id, account: P.account })));
   commit(ops); buzz(10); pendNext();
 };
 function pendNext() { render(); if (!pendNew().length) toast('All sorted ✓'); if (inboxCount().all) inboxSheet(); else shut(); }
 ACT.smsTry = () => openSheet('Test a bank SMS', `<div class="hint" style="margin-top:0">Paste a bank SMS. If it is a real payment it goes to your "to sort" list on the Expenses tab. OTPs and offers are ignored.</div><textarea id="smsTxt" rows="5" placeholder="Sent Rs.664.71 from XX1211 to MC DONALDS on 21-Oct-26…"></textarea><button class="btn big" data-act="smsGo">Read it</button><div id="smsOut"></div>`);
 ACT.smsGo = () => {
-  const raw = $('#smsTxt').value, x = parseSms(raw, nowTs());
+  const raw = $('#smsTxt').value, rp = parseRefund(raw, nowTs(), '');
+  if (rp) { const r = addRefund(rp); $('#smsOut').innerHTML = `<div class="kv"><div><span>Refund</span><b>${inr(rp.amount)}</b></div><div><span>From</span><b>${esc(rp.merchant || '—')}</b></div><div><span>Why</span><b>${esc(rp.reason)}</b></div><div><span>Expected by</span><b>${dLabel(rp.by)}</b></div><div><span>Back to</span><b>${esc(rfWhere(r || rp))}</b></div></div><div class="hint ${r ? 'green' : ''}">${r ? '✓ Added to Refunds. Ledger will match it when the money arrives.' : 'Already in your Refunds list.'}</div><button class="btn" data-act="refundsOpen">Open Refunds</button>`; render(); return; }
+  const x = parseSms(raw, nowTs());
   if (!x) { $('#smsOut').innerHTML = '<div class="hint red">Ignored: not a completed payment (OTP, offer, reminder or no amount).</div>'; return; }
   const row = addPending(x, raw);
   $('#smsOut').innerHTML = `<div class="kv"><div><span>Amount</span><b>${inr(x.amount)}</b></div><div><span>Type</span><b>${x.dir === 'credit' ? 'Money in' : x.card ? 'Card spend' : x.atm ? 'ATM' : 'Money out'}</b></div><div><span>Payee</span><b>${esc(x.payee || '—')}</b></div><div><span>Bank · number</span><b>${esc(x.bank || '?')} ${x.l4 ? '·' + esc(x.l4) : ''}</b></div><div><span>Account</span><b>${esc(accForSms(x) || 'you pick')}</b></div><div><span>When</span><b>${esc(dLabel(x.ts.slice(0, 10)))}</b></div>${x.ref ? `<div><span>Ref</span><b>${esc(x.ref)}</b></div>` : ''}</div><div class="hint ${row ? 'green' : ''}">${row ? '✓ Added to "to sort".' : 'Already in your list.'}</div>${row ? '<button class="btn" data-act="pendOpen">Sort now</button>' : ''}`;
 };
 /* Android app bridge: the Ledger Android app calls this for each new bank SMS */
-window.LedgerSms = (raw, recvTs) => { const x = parseSms(raw, recvTs); if (!x) return false; const r = addPending(x, raw); if (r && U.tab === 'home') render(); return !!r; };
+/* returns true for a payment to sort, 'rf' for a refund/cashback promise (Refunds list), false if ignored */
+window.LedgerSms = (raw, recvTs, from) => {
+  const rp = parseRefund(raw, recvTs, from); if (rp) { const r = addRefund(rp); if (r) { U.rfNew = r; bellBadge(); if (U.tab === 'home') render(); } return r ? 'rf' : false; }
+  const x = parseSms(raw, recvTs); if (!x) return false; const r = addPending(x, raw); if (r && U.tab === 'home') render(); return !!r;
+};
+/* =========================================================
+   ↩️ REFUNDS & CASHBACK
+   A "refund initiated" SMS (IRCTC, Swiggy, Amazon, a bank…) is a promise, not money: it goes to the Refunds list
+   with where from, why, how much, which bank/card and an expected-by date. When the bank credit arrives it is
+   matched and filed. A refund cancels the original spend (a minus entry in the same category); cashback is income.
+   Kept in Settings → refunds (no Sheet script change needed).
+   ========================================================= */
+const MERCH = [['amazon ?pay', 'Amazon Pay'], ['irctc', 'IRCTC'], ['swiggy|instamart', 'Swiggy'], ['zomato', 'Zomato'], ['blinkit', 'Blinkit'], ['zepto', 'Zepto'], ['bigbasket|bbnow', 'BigBasket'], ['amazon|amzn', 'Amazon'], ['flipkart|fkrt', 'Flipkart'], ['myntra', 'Myntra'], ['ajio', 'Ajio'], ['nykaa', 'Nykaa'], ['meesho', 'Meesho'], ['tata ?cliq', 'Tata CLiQ'], ['jiomart', 'JioMart'], ['croma', 'Croma'], ['reliance ?digital', 'Reliance Digital'], ['decathlon', 'Decathlon'], ['lenskart', 'Lenskart'], ['tata ?1mg|\\b1mg', 'Tata 1mg'], ['pharmeasy', 'PharmEasy'], ['apollo', 'Apollo'], ['uber', 'Uber'], ['\\bola\\b|olacabs', 'Ola'], ['rapido', 'Rapido'], ['makemytrip|\\bmmt\\b', 'MakeMyTrip'], ['goibibo', 'Goibibo'], ['cleartrip', 'Cleartrip'], ['ixigo', 'ixigo'], ['redbus', 'redBus'], ['indigo|6e ', 'IndiGo'], ['air ?india', 'Air India'], ['akasa', 'Akasa Air'], ['spicejet', 'SpiceJet'], ['bookmyshow|\\bbms\\b', 'BookMyShow'], ['district', 'District'], ['urban ?company', 'Urban Company'], ['dunzo', 'Dunzo'], ['phonepe', 'PhonePe'], ['google ?pay|\\bgpay\\b', 'Google Pay'], ['paytm', 'Paytm'], ['mobikwik', 'MobiKwik'], ['\\bcred\\b', 'CRED'], ['airtel', 'Airtel'], ['\\bjio\\b', 'Jio'], ['\\bvi\\b|vodafone', 'Vi']];
+const merchOf = (t, from) => {
+  const sid = String(from || '').toUpperCase().replace(/^[A-Z]{2}-/, '').replace(/-[A-Z]$/, '');
+  const hit = MERCH.find(([r]) => new RegExp(r, 'i').test(t)) || (sid && !/^\+?\d+$/.test(sid) && MERCH.find(([r]) => new RegExp(r.replace(/\\b/g, ''), 'i').test(sid)));
+  return hit ? hit[1] : '';
+};
+const addWorkDays = (d, n) => { let x = d, k = 0; while (k < n) { x = addDays(x, 1); const w = new Date(x + 'T00:00:00').getDay(); if (w !== 0 && w !== 6) k++; } return x; };
+/* "refund initiated / will be credited in 5-7 days" → promise. A credit that already landed (has Avl Bal / "has been credited") is not. */
+function parseRefund(raw, recvTs, from) {
+  const t = String(raw || '').replace(/\s+/g, ' ').trim();
+  if (t.length < 20 || /\b(otp|one[- ]time password|verification code|cvv)\b/i.test(t)) return null;
+  const cb = /\bcash ?back\b/i.test(t), rf = /\brefund(?:ed|s)?\b|\breversal\b|\breversed\b/i.test(t);
+  if (!cb && !rf) return null;
+  if (/cashback (?:up ?to|of up)|\bget (?:flat |extra )?(?:rs\.?|₹|inr)?\s*[\d,]*\s*cash ?back|\bwin\b|\boffer\b|apply now|use code|\bcoupon\b/i.test(t)) return null;
+  const future = /\b(initiated|processed|will be (?:credited|refunded|reflected|reversed|processed|added|transferred)|will reflect|will get|within \d|in \d+\s*(?:-|to)?\s*\d*\s*(?:working|business|bank)?\s*days|expected|should reflect|has been raised|is being processed|on its way|requested a refund)\b/i.test(t);
+  const landed = /\b(?:avl|available)\.?\s*(?:bal|balance|limit|lmt)\b/i.test(t) || (/\b(?:has been|is|was|been|got) credited\b|\bcredited (?:to|in|into) (?:your )?(?:a\/?c|acct|account|card)\b|\badded to your\b/i.test(t) && !/\bwill\b/i.test(t));
+  if (!future || landed) return null;
+  const am = t.match(/(?:refund|cash ?back|reversal)(?:\s+(?:amount|of|for|worth|amounting to))*\s*(?:of\s+)?[:\-]?\s*(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)/i) || t.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)[^.]{0,40}?(?:refund|cash ?back|revers)/i) || t.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)/i);
+  if (!am) return null;
+  const amount = Math.round(parseFloat(am[1].replace(/,/g, '')) * 100) / 100; if (!(amount > 0)) return null;
+  const merchant = merchOf(t, from);
+  /* why */
+  let m, idTxt = '';
+  if ((m = t.match(/\bpnr\s*(?:no\.?|number)?\s*[:#\-]?\s*(\d{10})\b/i))) idTxt = 'PNR ' + m[1];
+  else if ((m = t.match(/\b(?:order|booking|trip|ride)\s*(?:id|no\.?|number|#|ref)?\s*[:#\-]?\s*([A-Z0-9][A-Z0-9\-]{4,24})\b/i)) && /\d/.test(m[1])) idTxt = (/booking/i.test(m[0]) ? 'Booking ' : /trip|ride/i.test(m[0]) ? 'Trip ' : 'Order ') + m[1];
+  const why = /\btdr\b/i.test(t) ? 'TDR' : /cancel/i.test(t) ? (/pnr|ticket|irctc|train|flight|bus/i.test(t) ? 'Ticket cancelled' : 'Cancelled') : /\breturn/i.test(t) ? 'Returned' : /fail|declin|unsuccess/i.test(t) ? 'Failed payment' : /not delivered|undelivered|missing|damaged/i.test(t) ? 'Not delivered' : cb ? 'Cashback' : '';
+  const reason = [why, idTxt].filter(Boolean).join(' · ') || (cb ? 'Cashback' : 'Refund');
+  /* by when */
+  const rt = recvTs || nowTs(), d0 = rt.slice(0, 10);
+  let by = '';
+  if ((m = t.match(/(\d{1,2})\s*(?:-|to|–)\s*(\d{1,2})\s*(working|business|bank)?\s*days/i))) by = m[3] ? addWorkDays(d0, +m[2]) : addDays(d0, +m[2]);
+  else if ((m = t.match(/(?:within|in|next)\s*(\d{1,3})\s*(working|business|bank)?\s*days/i))) by = m[2] ? addWorkDays(d0, +m[1]) : addDays(d0, +m[1]);
+  else if ((m = t.match(/(?:within|in)\s*(\d{1,3})\s*(?:hours|hrs)/i))) by = addDays(d0, Math.max(1, Math.ceil(+m[1] / 24)));
+  else if ((m = t.match(/\bby\s+(\d{1,2}[-\/ ][A-Za-z]{3}[a-z]*[-\/ ,]+\d{2,4})/i)) && smsDate(m[1])) by = smsDate(m[1]);
+  if (!by || by < d0) by = addDays(d0, cb ? 30 : 7);
+  const bk = (t.match(/\b(kotak|icici|hdfc|sbi|axis|idfc|yes bank|indusind|federal|rbl|au bank)\b/i) || [, ''])[1];
+  const l4m = t.match(/(?:a\/?c|acct|account|card)\s*(?:no\.?|ending(?: with)?)?\s*[:.]?\s*(?:[x*]+|\.{2,})\s*(\d{3,6})/i) || t.match(/\b[xX*]{2,}(\d{3,6})\b/);
+  const wallet = /amazon ?pay balance|paytm wallet|wallet|gift card|store credit|supercoin/i.test(t);
+  return { kind: cb && !rf ? 'cashback' : 'refund', amount, merchant, reason, ts: rt, by, bank: bk ? titleCase(bk).replace('Icici', 'ICICI').replace('Hdfc', 'HDFC').replace('Sbi', 'SBI') : '', l4: l4m ? l4m[1] : '', wallet, raw: t.slice(0, 300), from: String(from || '').slice(0, 20) };
+}
+const rfList = () => ((S.cfg.refunds || {}).list || []);
+const rfSave = L => {
+  /* closed ones are kept a year for your history; at most 250 */
+  const cut = addDays(today(), -400);
+  L = L.filter(r => rfState(r) === 'waiting' || (r.ts || '') >= cut).slice(-250);
+  return cfgOp('refunds', Object.assign({}, S.cfg.refunds, { list: L }));
+};
+const rfGot = r => r.gotId && (S.exp.some(e => e.id === r.gotId) || S.inc.some(e => e.id === r.gotId));
+function rfState(r) { if (rfGot(r)) return 'got'; if (r.dropped) return 'dropped'; if (r.direct) return 'gone'; return r.by && r.by < today() ? 'late' : 'waiting'; }
+const rfOpen = () => rfList().filter(r => ['waiting', 'late'].includes(rfState(r)));
+const rfName = r => (r.merchant || (r.kind === 'cashback' ? 'Cashback' : 'Refund')) + (r.kind === 'cashback' ? (r.merchant ? ' cashback' : '') : r.merchant ? ' refund' : '');
+const rfWhere = r => r.acc || (r.wallet ? 'wallet / store credit' : r.bank ? r.bank + (r.l4 ? ' ·' + r.l4 : '') : 'your bank');
+/* the spend a refund most likely undoes: same shop, amount ≥ refund, last 75 days; closest amount first */
+function rfSpendCands(amount, merchant, payee, before) {
+  const lim = before ? before.slice(0, 10) : today(), since = addDays(lim, -75), name = (merchant || payee || '').toLowerCase();
+  return S.exp.filter(e => e.amount > 0 && myX(e) && e.ts.slice(0, 10) >= since && e.ts.slice(0, 10) <= lim && e.amount >= amount - 1)
+    .map(e => { const hay = ((e.remarks || '') + ' ' + (e.payee || '')).toLowerCase(), same = name && (hay.includes(name.split(' ')[0]) || (payee && payeeSame(payee, e.payee || '') > 0)) ? 1 : 0, eq = Math.abs(e.amount - amount) < 1 ? 1 : 0; return { e, w: same * 3 + eq * 2 + (1 - Math.min(1, (e.amount - amount) / Math.max(1, e.amount))) }; })
+    .filter(x => x.w >= 2 || (x.w > 1 && !name)).sort((a, b) => b.w - a.w || b.e.ts.localeCompare(a.e.ts)).slice(0, 5).map(x => x.e);
+}
+/* a new promise from SMS */
+function addRefund(x) {
+  const L = rfList();
+  if (L.some(r => r.raw === x.raw || (r.amount === x.amount && r.merchant === x.merchant && r.reason === x.reason && Math.abs(dayDiff(r.ts.slice(0, 10), x.ts.slice(0, 10))) <= 2))) return null;
+  const cands = rfSpendCands(x.amount, x.merchant, '', x.ts), sure = cands.filter(e => Math.abs(e.amount - x.amount) < 1);
+  const r = Object.assign({ id: uid('RF'), src: 'sms', exp: sure.length === 1 ? sure[0].id : '', acc: '', gotId: '', dropped: false }, x);
+  if (r.l4 || r.bank) r.acc = accForSms({ l4: r.l4, bank: r.bank, card: /card/i.test(x.raw) });
+  if (!r.acc && r.exp) { const e = S.exp.find(y => y.id === r.exp); if (e && !(acc(e.account) || {}).others) r.acc = e.account; }
+  commit([rfSave(L.concat([r]))]); return r;
+}
+/* which waiting refund a bank credit is: same amount (±₹1), arrived after it was promised */
+function rfMatch(p) {
+  if (!p || p.dir !== 'credit') return null;
+  const c = rfOpen().filter(r => Math.abs(r.amount - p.amount) < 1 && p.ts.slice(0, 10) >= addDays(r.ts.slice(0, 10), -1));
+  return c.sort((a, b) => (b.acc && b.acc === p.account ? 1 : 0) - (a.acc && a.acc === p.account ? 1 : 0) || a.ts.localeCompare(b.ts))[0] || null;
+}
+const rfWord = p => /\brefund|revers|\bcash ?back/i.test(p.raw || '') ? (/\bcash ?back/i.test(p.raw || '') && !/\brefund|revers/i.test(p.raw || '') ? 'cashback' : 'refund') : '';
+
+/* ---------- the Refunds page ---------- */
+function rfRowHtml(r) {
+  const st = rfState(r), late = st === 'late' ? dayDiff(r.by, today()) : 0;
+  const tag = st === 'got' ? `<small class="green">✓ got it ${r.gotTs ? dLabel(r.gotTs.slice(0, 10)) : ''}</small>` : st === 'dropped' ? '<small class="mute">closed · never came</small>' : st === 'late' ? `<small class="red">${late} day${late === 1 ? '' : 's'} late · was due ${dLabel(r.by)}</small>` : `<small>expected by ${dLabel(r.by)}</small>`;
+  return `<button class="item" data-act="rfOpen" data-id="${esc(r.id)}"><span class="ic" style="background:${r.kind === 'cashback' ? '#EC48991f' : '#12A1501f'}">${r.kind === 'cashback' ? '🎁' : '↩️'}</span><span class="mid"><b>${esc(rfName(r))}</b><small>${esc(r.reason || '')} · to ${esc(rfWhere(r))}</small>${tag}</span><span class="amt ${st === 'got' ? 'green' : st === 'late' ? 'red' : ''}">${st === 'got' ? '+' : ''}${inr(r.amount)}</span></button>`;
+}
+function refundsSheet() {
+  const L = rfList().slice().sort((a, b) => b.ts.localeCompare(a.ts)), open = L.filter(r => ['waiting', 'late'].includes(rfState(r))), done = L.filter(r => ['got', 'dropped'].includes(rfState(r)));
+  const late = open.filter(r => rfState(r) === 'late'), tot = r2(open.reduce((s, r) => s + r.amount, 0));
+  const yr = today().slice(0, 4), gotY = r2(done.filter(r => rfState(r) === 'got' && (r.gotTs || r.ts).slice(0, 4) === yr).reduce((s, r) => s + r.amount, 0));
+  let h = `<div class="hero" style="--hc:#11A04F;margin-top:0"><div class="hl">Waiting to come back</div><div class="hv">${inrS(tot)}</div><div class="hs">${open.length ? open.length + ' refund' + (open.length > 1 ? 's' : '') + (late.length ? ' · <b class="red">' + late.length + ' late</b>' : ' · all on time') : 'Nothing pending'}${gotY ? ' · got back <b>' + inr(gotY, 1) + '</b> in ' + yr : ''}</div></div>`;
+  h += `<button class="btn" data-act="rfNew">+ Add a refund you're waiting for</button>`;
+  if (open.length) h += `<div class="ibx-h"><span>⏳ Waiting · ${open.length}</span></div><div class="group">${open.sort((a, b) => a.by.localeCompare(b.by)).map(rfRowHtml).join('')}</div>`;
+  if (done.length) h += `<div class="ibx-h"><span>✓ History</span></div><div class="group">${done.slice(0, 40).map(rfRowHtml).join('')}</div>`;
+  if (!L.length) h += `<div class="empty"><span class="big">↩️</span>No refunds yet.<br>When IRCTC, Swiggy, Amazon or your bank texts "refund initiated", it lands here with the reason and date, and Ledger tells you if it's late.</div>`;
+  h += `<div class="hint">A refund cancels the spend it came from (your Food or Travel total goes down). Cashback counts as income.</div>`;
+  openSheet('↩️ Refunds & cashback', h, 'tall');
+}
+ACT.refundsOpen = () => refundsSheet();
+ACT.rfOpen = el => {
+  const r = rfList().find(x => x.id === el.dataset.id); if (!r) return;
+  const st = rfState(r), e = r.exp && S.exp.find(x => x.id === r.exp), g = r.gotId && (S.exp.find(x => x.id === r.gotId) || S.inc.find(x => x.id === r.gotId));
+  const rows = [['From', r.merchant || '—'], ['Why', r.reason || '—'], ['Back to', rfWhere(r)], ['Started', dLabel(r.ts.slice(0, 10))], [st === 'got' ? 'Was due' : 'Expected by', dLabel(r.by) + (st === 'late' ? ' · ' + dayDiff(r.by, today()) + ' days late' : '')]];
+  if (e) rows.push(['Refund for', (e.remarks || e.category) + ' · ' + inr(e.amount) + ' · ' + dLabel(e.ts.slice(0, 10))]);
+  if (g) rows.push(['Got it', dLabel(g.ts.slice(0, 10)) + ' · into ' + g.account]);
+  let h = `<div class="detail"><div class="ic big" style="background:${r.kind === 'cashback' ? '#EC48991f' : '#12A1501f'}">${r.kind === 'cashback' ? '🎁' : '↩️'}</div><div class="dv ${st === 'got' ? 'green' : st === 'late' ? 'red' : ''}">${inrX(r.amount)}</div><div class="dt">${esc(rfName(r))} · ${st === 'got' ? '✓ received' : st === 'dropped' ? 'closed' : st === 'late' ? 'late' : 'on its way'}</div></div>
+  <div class="kv">${rows.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}</div>`;
+  if (st === 'late') h += `<div class="hint amber">Still not here? Check your ${esc(rfWhere(r))} statement, then contact ${esc(r.merchant || 'the seller')} with ${r.reason && /PNR|Order|Booking|Trip/.test(r.reason) ? 'the ' + esc(r.reason.split(' · ').pop()) : 'this message'}${r.merchant === 'IRCTC' ? ' (IRCTC: My Account → Refund history, or file a TDR)' : ''}.</div>`;
+  if (['waiting', 'late'].includes(st)) {
+    if (!e) { const c = rfSpendCands(r.amount, r.merchant, '', r.ts); if (c.length) h += `<div class="lbl">Which spend is it for?</div><div class="chips wrap">${c.map(x => `<button class="chip" data-act="rfLink" data-id="${esc(r.id)}" data-e="${esc(x.id)}">${cat(x.category).icon} ${esc(x.remarks || x.category)} <small>${inr(x.amount, 1)} · ${dLabel(x.ts.slice(0, 10))}</small></button>`).join('')}</div>`; }
+    h += `<div class="btns"><button class="btn" data-act="rfGotIt" data-id="${esc(r.id)}">✓ Got it</button><button class="btn sec" data-act="rfEdit" data-id="${esc(r.id)}">✏️ Edit</button></div><button class="btn sec" data-act="rfDrop" data-id="${esc(r.id)}">It's not coming · close it</button>`;
+  } else if (st === 'dropped') h += `<button class="btn sec" data-act="rfReopen" data-id="${esc(r.id)}">Still waiting · reopen</button>`;
+  if (g) h += `<button class="btn sec" data-act="entry" data-s="${S.exp.some(x => x.id === g.id) ? 'Expenses' : 'Income'}" data-id="${esc(g.id)}">Open the entry</button>`;
+  if (r.raw) h += `<details class="hint"><summary>Original SMS${r.from ? ' · ' + esc(r.from) : ''}</summary>${esc(r.raw)}</details>`;
+  if (st !== 'got') h += `<button class="btn dng" data-act="rfDel" data-id="${esc(r.id)}">Delete</button>`;
+  openSheet('', h, 'tall');
+};
+const rfPut = (id, patch) => commit([rfSave(rfList().map(r => r.id === id ? Object.assign({}, r, patch) : r))]);
+ACT.rfLink = el => { const e = S.exp.find(x => x.id === el.dataset.e), r = rfList().find(x => x.id === el.dataset.id); rfPut(el.dataset.id, Object.assign({ exp: el.dataset.e }, r && !r.acc && e && !(acc(e.account) || {}).others ? { acc: e.account } : {})); ACT.rfOpen({ dataset: { id: el.dataset.id } }); toast('Linked'); };
+ACT.rfDrop = el => { rfPut(el.dataset.id, { dropped: true }); refundsSheet(); render(); };
+ACT.rfReopen = el => { rfPut(el.dataset.id, { dropped: false }); ACT.rfOpen(el); render(); };
+ACT.rfDel = el => { if (!confirm('Delete this refund from the list?')) return; commit([rfSave(rfList().filter(r => r.id !== el.dataset.id))]); refundsSheet(); render(); };
+/* add / edit by hand (or "I'm expecting a refund" from an expense) */
+function rfForm(r) {
+  U.rf = Object.assign({ id: '', kind: 'refund', merchant: '', reason: '', amount: '', by: addDays(today(), 7), acc: '', exp: '' }, r || {});
+  const R = U.rf, e = R.exp && S.exp.find(x => x.id === R.exp), accs = live(a => a.type !== 'investment' && !a.others);
+  openSheet(R.id ? 'Edit refund' : 'Refund you are waiting for', `<div class="seg" style="margin-top:0">${[['refund', '↩️ Refund'], ['cashback', '🎁 Cashback']].map(([k, l]) => `<button class="${R.kind === k ? 'on' : ''}" data-act="pick" data-o="rf" data-f="kind" data-v="${k}" data-re="rf">${l}</button>`).join('')}</div>
+  <label class="amtbox"><span>₹</span><input id="rfAmt" inputmode="decimal" value="${R.amount || (e ? e.amount : '')}" placeholder="0"></label>
+  ${e ? `<div class="hint center">For ${cat(e.category).icon} ${esc(e.remarks || e.category)} · ${inr(e.amount)} · ${dLabel(e.ts.slice(0, 10))}</div>` : ''}
+  <div class="lbl">From</div><input id="rfMer" value="${esc(R.merchant || (e ? (e.payee || e.remarks || '') : ''))}" placeholder="e.g. IRCTC, Swiggy, Amazon">
+  <div class="lbl">Why</div><input id="rfWhy" value="${esc(R.reason)}" placeholder="e.g. Ticket cancelled · PNR 1234567890">
+  <div class="lbl">Comes back to</div><div class="chips wrap">${accs.map(a => `<button class="chip ${R.acc === a.name ? 'on' : ''}" data-act="pick" data-o="rf" data-f="acc" data-v="${esc(a.name)}">${ACC_T[a.type][0]} ${esc(a.name)}</button>`).join('')}</div>
+  <div class="lbl">Expected by</div><input type="date" id="rfBy" value="${esc(R.by)}">
+  <button class="btn big" data-act="rfSaveForm">${R.id ? 'Save changes' : 'Add to Refunds'}</button>`);
+}
+ACT.rfNew = () => rfForm();
+ACT.rfEdit = el => rfForm(rfList().find(x => x.id === el.dataset.id));
+ACT.rfFromExp = el => { const e = S.exp.find(x => x.id === el.dataset.id); if (!e) return; rfForm({ exp: e.id, amount: e.amount, merchant: e.payee || '', acc: !(acc(e.account) || {}).others ? e.account : '' }); };
+ACT.rfSaveForm = () => {
+  const R = U.rf, a = parseAmt($('#rfAmt').value); if (!(a > 0)) return toast('Enter the amount');
+  const row = Object.assign({}, rfList().find(x => x.id === R.id) || { id: uid('RF'), src: 'manual', ts: nowTs(), gotId: '', dropped: false, raw: '' }, { kind: R.kind, amount: a, merchant: $('#rfMer').value.trim(), reason: $('#rfWhy').value.trim() || (R.kind === 'cashback' ? 'Cashback' : 'Refund'), acc: R.acc, by: $('#rfBy').value || addDays(today(), 7), exp: R.exp || '' });
+  const L = rfList(), i = L.findIndex(x => x.id === row.id); commit([rfSave(i >= 0 ? L.map(x => x.id === row.id ? row : x) : L.concat([row]))]);
+  toast(R.id ? 'Updated' : '↩️ Added · Ledger will watch for it'); refundsSheet(); render();
+};
+/* the money arrived (no SMS, e.g. wallet): log it like a filed refund */
+ACT.rfGotIt = el => {
+  const r = rfList().find(x => x.id === el.dataset.id); if (!r) return;
+  U.rg = { id: r.id, acc: r.acc || '', cat: '' };
+  const e = r.exp && S.exp.find(x => x.id === r.exp), accs = live(a => a.type !== 'investment' && !a.others);
+  openSheet('Got ' + esc(rfName(r)), `<label class="amtbox"><span>₹</span><input id="rgAmt" inputmode="decimal" value="${r.amount}"></label>
+  <div class="lbl">Came into</div><div class="chips wrap">${accs.map(a => `<button class="chip ${U.rg.acc === a.name ? 'on' : ''}" data-act="pick" data-o="rg" data-f="acc" data-v="${esc(a.name)}">${ACC_T[a.type][0]} ${esc(a.name)}</button>`).join('')}</div>
+  ${r.kind === 'refund' && !e ? `<div class="lbl">Category it cancels</div><div class="chips wrap">${visCats().map(c => `<button class="chip" data-act="pick" data-o="rg" data-f="cat" data-v="${esc(c.name)}">${c.icon} ${esc(c.name)}</button>`).join('')}</div>` : ''}
+  <div class="grid2"><div><div class="lbl">Date</div><input type="date" id="rgDate" value="${today()}" max="${today()}"></div><div></div></div>
+  <button class="btn big" data-act="rgSave">Save</button><div class="hint">${r.kind === 'cashback' ? 'Logged as income · Cashback.' : e ? 'Cancels ' + esc(e.remarks || e.category) + ' (' + esc(e.category) + ' goes down by this amount).' : 'Lowers that category\'s spending by this amount.'}</div>`);
+};
+ACT.rgSave = () => {
+  const G = U.rg, r = rfList().find(x => x.id === G.id), a = parseAmt($('#rgAmt').value); if (!r || !(a > 0)) return toast('Enter the amount');
+  if (!G.acc) return toast('Pick the account');
+  const e = r.exp && S.exp.find(x => x.id === r.exp); if (r.kind === 'refund' && !e && !G.cat) return toast('Pick the category');
+  const ts = ($('#rgDate').value || today()) + ' ' + nowTs().slice(11), ops = rfFileOps(r, { amount: a, ts, account: G.acc, cat: G.cat, payee: '' });
+  commit(ops); buzz(10); toast('✓ ' + rfName(r) + ' received'); refundsSheet(); render();
+};
+/* the entry a received refund/cashback becomes, plus the list update. Refund = minus expense in the original spend's category. */
+function rfFileOps(r, x) {
+  const ops = [], id = x.id || uid(r.kind === 'cashback' ? 'I' : 'E'), note = x.note || [rfName(r), r.reason && !/^(refund|cashback)$/i.test(r.reason) ? r.reason : ''].filter(Boolean).join(' · ');
+  if (r.kind === 'cashback') {
+    if (!S.cfg.sources.includes('Cashback')) ops.push(cfgOp('sources', S.cfg.sources.concat(['Cashback'])));
+    ops.push(up('Income', { id, ts: x.ts, account: x.account, amount: x.amount, source: 'Cashback', remarks: note, payee: x.payee || '' }));
+  } else {
+    const e = r.exp && S.exp.find(y => y.id === r.exp), c = (e && e.category) || x.cat || 'Miscellaneous';
+    ops.push(up('Expenses', { id, ts: x.ts, account: x.account, amount: -x.amount, category: c, remarks: '↩️ ' + note, photo: '', payee: x.payee || '', mine: false }));
+  }
+  const L = rfList(), done = Object.assign({}, r, { gotId: id, gotTs: x.ts, acc: r.acc || x.account, dropped: false });
+  ops.push(rfSave(L.some(y => y.id === r.id) ? L.map(y => y.id === r.id ? done : y) : L.concat([done])));
+  return ops;
+}
+/* bell: new refunds on the way (3 days) and late ones */
+function refundAlerts() {
+  const out = [];
+  rfOpen().forEach(r => {
+    const st = rfState(r), k = 'rf|' + r.id + '|' + st;
+    if (snoozed(k)) return;
+    if (st === 'late') out.push(`<div class="alert warn"><span class="ic" style="background:#E5484D1f">↩️</span><span class="mid"><b>${esc(rfName(r))} ${inr(r.amount)} is late</b><small>Was due ${dLabel(r.by)} · ${esc(r.reason || '')} · to ${esc(rfWhere(r))}</small></span><button class="ago" data-act="rfOpen" data-id="${esc(r.id)}">View</button><button class="ax" data-act="snooze" data-k="${esc(k)}" data-d="3" aria-label="Later">✕</button></div>`);
+    else if (dayDiff(r.ts.slice(0, 10), today()) <= 2) out.push(`<div class="alert info" style="border-left-color:var(--green)"><span class="ic" style="background:#12A1501f">${r.kind === 'cashback' ? '🎁' : '↩️'}</span><span class="mid"><b>${esc(rfName(r))} ${inr(r.amount)} on its way</b><small>${esc(r.reason || '')} · expected by ${dLabel(r.by)} · to ${esc(rfWhere(r))}</small></span><button class="ago" data-act="rfOpen" data-id="${esc(r.id)}">View</button><button class="ax" data-act="snooze" data-k="${esc(k)}" data-d="9" aria-label="OK">✓</button></div>`);
+  });
+  return out.join('');
+}
+function refundsCard() {
+  const o = rfOpen(); if (!o.length && !rfList().length) return '';
+  const late = o.filter(r => rfState(r) === 'late').length, tot = r2(o.reduce((s, r) => s + r.amount, 0));
+  return `<button class="alert info" data-act="refundsOpen" style="width:100%;text-align:left;border-left-color:${late ? 'var(--red)' : 'var(--green)'}"><span class="ic" style="background:#12A1501f">↩️</span><span class="mid"><b>Refunds & cashback${o.length ? ' · ' + inr(tot, 1) + ' waiting' : ''}</b><small>${o.length ? o.length + ' on the way' + (late ? ' · <span class="red">' + late + ' late</span>' : '') : 'Nothing waiting · see history'}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`;
+}
+
 
 /* =========================================================
    ANDROID APP: bank SMS queue, fingerprint, updates
@@ -2251,7 +2502,8 @@ window.LedgerSms = (raw, recvTs) => { const x = parseSms(raw, recvTs); if (!x) r
 function drainSms() {
   if (!AND) return 0; let L = [];
   try { L = JSON.parse(AND.takeSms() || '[]'); } catch (e) { return 0; }
-  let n = 0; L.forEach(x => { try { if (window.LedgerSms(x.raw, x.ts)) n++; } catch (e) { } });
+  let n = 0, nr = 0; L.forEach(x => { try { const v = window.LedgerSms(x.raw, x.ts, x.from); if (v === 'rf') nr++; else if (v) n++; } catch (e) { } });
+  if (nr && !n) { const r = U.rfNew; toast(nr === 1 && r ? '↩️ ' + rfName(r) + ' ' + inr(r.amount) + ' on its way · by ' + dLabel(r.by) : '↩️ ' + nr + ' refunds on their way', 'View', () => nr === 1 && r ? ACT.rfOpen({ dataset: { id: r.id } }) : refundsSheet()); bellBadge(); }
   if (n) { toast('📩 ' + n + ' new bank message' + (n > 1 ? 's' : '') + ' to sort', 'Open', () => ACT.pendOpen()); bellBadge(); if (U.tab === 'home') render(); }
   return n;
 }
@@ -2277,8 +2529,8 @@ ACT.andBattery = () => { try { AND.openBattery(); } catch (e) { } };
 ACT.andUpd = () => { window.__ledgerManualUpd = true; try { AND.checkUpdate(); toast('Checking…'); } catch (e) { } };
 ACT.andScan = () => {
   let L = []; try { L = JSON.parse(AND.readInbox(30) || '[]'); } catch (e) { return toast('Could not read SMS'); }
-  let n = 0; L.forEach(x => { if (window.LedgerSms(x.raw, x.ts)) n++; });
-  toast(n ? n + ' bank message' + (n > 1 ? 's' : '') + ' added to sort. Ignore any you already logged by hand.' : 'Nothing new in the last 30 days');
+  let n = 0, nr = 0; L.forEach(x => { const v = window.LedgerSms(x.raw, x.ts, x.from); if (v === 'rf') nr++; else if (v) n++; });
+  toast(n || nr ? [n ? n + ' bank message' + (n > 1 ? 's' : '') + ' added to sort' : '', nr ? nr + ' refund' + (nr > 1 ? 's' : '') + ' added to Refunds' : ''].filter(Boolean).join(' · ') + '. Ignore any you already logged by hand.' : 'Nothing new in the last 30 days');
   if (n) ACT.pendOpen();
 };
 
@@ -2738,6 +2990,12 @@ function askAnswer(q) {
     if (bud > 0) return { h: aBig(inr(Math.max(0, bud - sp) / dl) + '<small> /day</small>', `safe for the next ${dl} days to stay in your ${inr(bud)} budget`) + aRows([['Spent this month', inr(sp)], ['Budget left', inr(bud - sp), bud - sp < 0 ? 'red' : 'green'], ['Free money in banks', inr(fr)]]), f: ['Where did my money go this month?'] };
     return { h: aBig(inr(Math.max(0, fr) / dl) + '<small> /day</small>', `your ${inr(fr)} free money spread over ${dl} days till month end`) + `<div class="a-sub">Set category budgets (Settings → Categories) for a sharper number.</div>`, f: ['What is my balance?'] };
   }
+  /* refunds & cashback */
+  if (has(/refund|cash ?back|money back/)) {
+    const o = rfOpen(), yr = today().slice(0, 4), got = rfList().filter(r => rfState(r) === 'got' && (r.gotTs || r.ts).slice(0, 4) === yr);
+    if (!o.length) return { h: aBig('Nothing waiting', got.length ? `You got ${inr(sum(got))} back this year (${got.length} refund${got.length > 1 ? 's' : ''} / cashback).` : 'No refunds tracked yet.'), act: ['Open Refunds', 'refundsOpen', ''] };
+    return { h: aBig(inr(sum(o)), `waiting in ${o.length} refund${o.length > 1 ? 's' : ''}`) + aRows(o.map(r => [(r.kind === 'cashback' ? '🎁 ' : '↩️ ') + esc(rfName(r)) + '<br><small class="mute">' + esc(r.reason || '') + ' · to ' + esc(rfWhere(r)) + '</small>', inr(r.amount) + '<br><small class="' + (rfState(r) === 'late' ? 'red' : 'mute') + '">' + (rfState(r) === 'late' ? dayDiff(r.by, today()) + 'd late' : 'by ' + dLabel(r.by)) + '</small>'])), act: ['Open Refunds', 'refundsOpen', ''] };
+  }
   /* loans / owe */
   if (has(/\bowe|owes|lent|borrow|loan|iou|pay back|mom'?s money/)) {
     const owe = S.loans.filter(l => l.dir === 'owe' && (C.lout[l.id] || 0) > .004), owed = S.loans.filter(l => l.dir === 'owed' && (C.lout[l.id] || 0) > .004);
@@ -3151,10 +3409,10 @@ function rng() {
 /* the numbers behind the KPI tiles, for any window */
 function pstats(from, to) {
   const ex = exFilter(from, to), inR = e => { const d = e.ts.slice(0, 10); return d >= from && d <= to; };
-  const spent = sum(ex), n = ex.length, inc = sum(S.inc.filter(e => inR(e) && accOk(e.account))), emis = sum(S.emi.filter(e => inR(e) && accOk(e.account))), inv = sum(S.inv.filter(e => isBuy(e) && inR(e) && accOk(e.from)));
-  const end = to > today() ? today() : to, days = from > today() ? 0 : dayDiff(from, end) + 1, dset = new Set(ex.map(e => e.ts.slice(0, 10)));
+  const exP = ex.filter(e => e.amount > 0), spent = sum(ex), n = exP.length, inc = sum(S.inc.filter(e => inR(e) && accOk(e.account))), emis = sum(S.emi.filter(e => inR(e) && accOk(e.account))), inv = sum(S.inv.filter(e => isBuy(e) && inR(e) && accOk(e.from)));
+  const end = to > today() ? today() : to, days = from > today() ? 0 : dayDiff(from, end) + 1, dset = new Set(exP.map(e => e.ts.slice(0, 10)));
   const cash = sum(ex.filter(e => (acc(e.account) || {}).type === 'cash'));
-  return { ex, spent, n, inc, emis, inv, days, avgDay: days ? spent / days : 0, avgEntry: n ? spent / n : 0, big: ex.reduce((m, e) => Math.max(m, e.amount), 0), rate: inc > 0 ? Math.round((inc - spent - emis) / inc * 100) : null, noSpend: days ? Math.max(0, days - [...dset].filter(d => d <= end).length) : 0, cashPct: spent ? Math.round(cash / spent * 100) : null };
+  return { ex, spent, n, inc, emis, inv, days, avgDay: days ? spent / days : 0, avgEntry: n ? sum(exP) / n : 0, big: exP.reduce((m, e) => Math.max(m, e.amount), 0), rate: inc > 0 ? Math.round((inc - spent - emis) / inc * 100) : null, noSpend: days ? Math.max(0, days - [...dset].filter(d => d <= end).length) : 0, cashPct: spent ? Math.round(cash / spent * 100) : null };
 }
 /* net worth at a moment (exclusive timestamp); accounts opened later are left out */
 function nwAt(until) {
@@ -3170,9 +3428,11 @@ function dline(cur, prev, good, pts, short) {
   if (prev === undefined) return '';
   if (prev == null || cur == null) return `<em class="dl"><i class="mute">${short ? 'no data for ' + esc(short) : '&nbsp;'}</i></em>`;
   const d = pts ? Math.round(cur - prev) : pctCh(cur, prev);
-  if (d == null) return `<em class="dl"><i class="mute">${prev === 0 && cur > 0 ? 'new vs ' + esc(short) : 'same as ' + esc(short)}</i></em>`;
+  if (d == null) return `<em class="dl"><i class="mute">${prev === 0 && cur > 0 ? esc(short) + ' had none' : 'same as ' + esc(short)}</i></em>`;
+  /* words, not triangles: "↑ 36% more than Oct". Green = good for you, red = bad, grey = neither */
   const cls = !d || !good ? 'mute' : (d > 0) === (good > 0) ? 'green' : 'red';
-  return `<em class="dl"><i class="${cls}">${d > 0 ? '▲' : d < 0 ? '▼' : ''}${d ? Math.abs(d) + (pts ? 'pt' : '%') : 'same'}</i> <i class="mute">vs ${esc(short)}</i></em>`;
+  if (!d) return `<em class="dl"><i class="mute">same as ${esc(short)}</i></em>`;
+  return `<em class="dl"><i class="${cls}">${d > 0 ? '↑' : '↓'} ${Math.abs(d)}${pts ? ' pts' : '%'} ${d > 0 ? 'more' : 'less'}</i> <i class="mute">than ${esc(short)}</i></em>`;
 }
 /* first date with any data (to say "no data" instead of showing a fake 100%) */
 function firstData() {
@@ -3209,22 +3469,25 @@ function exFilter(from, to) {
 }
 const kpi = (l, v, cls, sub, d) => `<div class="kpi"><span>${l}</span><b class="${cls || ''}">${v}</b>${sub ? `<small>${esc(sub)}</small>` : ''}${d || ''}</div>`;
 function renderInsights() {
-  const f = U.f, r = rng(), ex = exFilter(r.from, r.to), spent = sum(ex), n = ex.length;
+  const f = U.f, r = rng(), ex = exFilter(r.from, r.to), spent = sum(ex), exP = ex.filter(e => e.amount > 0), n = exP.length, refunded = r2(-sum(ex.filter(e => e.amount < 0)));
   const inR = e => { const d = e.ts.slice(0, 10); return d >= r.from && d <= r.to; };
   const inc = sum(S.inc.filter(e => inR(e) && accOk(e.account))), emis = sum(S.emi.filter(e => inR(e) && accOk(e.account))), inv = sum(S.inv.filter(e => isBuy(e) && inR(e) && accOk(e.from)));
   const endD = r.to < today() ? r.to : today(), days = r.from > today() ? 0 : dayDiff(r.from, endD) + 1;
-  const big = ex.reduce((m, e) => !m || e.amount > m.amount ? e : m, null), rate = inc > 0 ? Math.round((inc - spent - emis) / inc * 100) : null;
+  const big = exP.reduce((m, e) => !m || e.amount > m.amount ? e : m, null), rate = inc > 0 ? Math.round((inc - spent - emis) / inc * 100) : null;
+  /* savings %: meaningless before the salary lands (₹100 in, ₹6.4K out = -6261%) */
+  const salIn = S.inc.some(e => inR(e) && accOk(e.account) && /salary/i.test(e.source || '')), keptAmt = r2(inc - spent - emis);
+  const savedT = !inc || (!salIn && keptAmt < 0) ? { v: '—', cls: '', sub: salIn || !inc ? 'no income yet' : 'salary not in yet', d: false } : rate < -100 ? { v: inr(keptAmt, 1), cls: 'red', sub: 'more than income', d: false } : { v: rate + '%', cls: rate >= 0 ? 'green' : 'red', sub: 'of income kept', d: true };
   const cm = ym(), budget = r2(visCats().reduce((s, c) => s + (+c.budget || 0), 0)), spentM = sum(S.exp.filter(e => inP(e, cm) && myX(e))), dLeft = daysIn(cm) - new Date().getDate() + 1;
   const accsAll = S.accounts.filter(a => mineA(a) && (!a.archived || (C.bal[a.name] || 0) !== 0));
   const liq = r2(accsAll.filter(holderType).reduce((s, a) => s + (C.bal[a.name] || 0), 0)), invv = r2(accsAll.filter(a => a.type === 'investment').reduce((s, a) => s + (C.bal[a.name] || 0), 0)), owedCard = r2(accsAll.filter(a => a.type === 'card').reduce((s, a) => s + (C.bal[a.name] || 0), 0));
   const loanOwe = loanTotal('owe'), loanOwed = loanTotal('owed'), nw = r2(liq + invv + owedCard - loanOwe + loanOwed);
   const freeAll = r2(liq - accsAll.filter(holderType).reduce((s, a) => s + (C.held[a.name] || 0), 0));
-  const dayTot = {}; ex.forEach(e => { const d = e.ts.slice(0, 10); dayTot[d] = (dayTot[d] || 0) + e.amount; });
+  const dayTot = {}; exP.forEach(e => { const d = e.ts.slice(0, 10); dayTot[d] = (dayTot[d] || 0) + e.amount; });
   const noSpend = days > 0 ? Math.max(0, days - Object.keys(dayTot).filter(d => d <= endD).length) : 0;
-  const wd = [0, 0, 0, 0, 0, 0, 0], hr = new Array(24).fill(0); ex.forEach(e => { wd[new Date(e.ts.slice(0, 10) + 'T00:00:00').getDay()] += e.amount; const h = parseInt(e.ts.slice(11, 13)); if (!isNaN(h)) hr[h]++; });
+  const wd = [0, 0, 0, 0, 0, 0, 0], hr = new Array(24).fill(0); exP.forEach(e => { wd[new Date(e.ts.slice(0, 10) + 'T00:00:00').getDay()] += e.amount; const h = parseInt(e.ts.slice(11, 13)); if (!isNaN(h)) hr[h]++; });
   const WN = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'], bw = wd.indexOf(Math.max(...wd)), bh = hr.indexOf(Math.max(...hr));
   const cashAmt = sum(ex.filter(e => (acc(e.account) || {}).type === 'cash')), cashPct = spent ? Math.round(cashAmt / spent * 100) : 0;
-  const rm = {}; ex.forEach(e => { const k = (e.remarks || '').replace(/\s*·\s*split.*$/i, '').trim(); if (k) { const key = k.toLowerCase(); rm[key] = rm[key] || { t: k, n: 0, v: 0 }; rm[key].n++; rm[key].v += e.amount; } });
+  const rm = {}; exP.forEach(e => { const k = (e.remarks || '').replace(/\s*·\s*split.*$/i, '').trim(); if (k) { const key = k.toLowerCase(); rm[key] = rm[key] || { t: k, n: 0, v: 0 }; rm[key].n++; rm[key].v += e.amount; } });
   const topRem = Object.values(rm).sort((a, b) => b.n - a.n || b.v - a.v).slice(0, 6);
   const emiDueAmt = r2(S.emis.filter(m => m.active !== false && !['done', 'later', 'off'].includes(emiState(m).st) && !emiPaid(m, cm)).reduce((s, m) => s + (+m.amount || 0), 0));
   const gs = S.goals.filter(g => !g.archived), gSaved = gs.reduce((s, g) => s + (C.saved[g.id] || 0), 0), gT = gs.reduce((s, g) => s + (+g.target || 0), 0);
@@ -3236,6 +3499,7 @@ function renderInsights() {
   h += `<div class="chips"><button class="chip ${fc ? 'on' : ''}" data-act="fOpen">⚙ Filters${fc ? ' · ' + fc : ''}</button>${f.accs.map(a => `<button class="chip x" data-act="fDrop" data-k="accs" data-v="${esc(a)}">${esc(a)} ✕</button>`).join('')}${f.cats.map(a => `<button class="chip x" data-act="fDrop" data-k="cats" data-v="${esc(a)}">${cat(a).icon} ${esc(a)} ✕</button>`).join('')}${parseAmt(f.min) > 0 ? `<button class="chip x" data-act="fDrop" data-k="min">≥ ${fmtINR(parseAmt(f.min))} ✕</button>` : ''}${f.q.trim() ? `<button class="chip x" data-act="fDrop" data-k="q">"${esc(f.q.trim())}" ✕</button>` : ''}</div>`;
   h += `<button class="alert info" data-act="ask" style="width:100%;text-align:left;border-left-color:var(--acc)"><span class="ic" style="background:var(--acc2)">✨</span><span class="mid"><b>Ask Ledger</b><small>"Food last month" · "Can I afford ₹50,000?" · "Top 5 expenses"</small></span><span class="ago">Ask</span></button>`;
   { const wm = f.range === 'month' ? U.month : shiftM(ym(), -1); h += `<button class="alert info" data-act="wrapOpen" data-m="${wm}" style="width:100%;text-align:left;border-left-color:#EC4899"><span class="ic" style="background:#EC48991f">🎁</span><span class="mid"><b>${esc(mLabel(wm))} wrap</b><small>Your month as swipeable cards · share without amounts</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`; }
+  if (rfOpen().length) h += refundsCard();
   const plI = pulseNow();
   if (plI) h += `<button class="alert info" data-act="pulseOpen" style="width:100%;text-align:left;border-left-color:${plI.col}"><span class="ic" style="background:var(--acc2)">💗</span><span class="mid"><b>Money Pulse · <span style="color:${plI.col}">${plI.score} ${plI.label}</span></b><small>This month's financial health. Tap for day, week, year and tips.</small></span><span class="ago">Open</span></button>`;
   h += `<div class="hero"><div class="hl">Net worth today</div><div class="hv">${inrS(nw)}</div><div class="hs">Banks & cash <b>${inr(liq, 1)}</b> · Investments <b>${inr(invv, 1)}</b>${owedCard ? ' · Cards <b>' + inr(owedCard, 1) + '</b>' : ''}${loanOwe || loanOwed ? ' · Loans <b>' + inr(loanOwed - loanOwe, 1) + '</b>' : ''}</div></div>`;
@@ -3247,9 +3511,9 @@ function renderInsights() {
   const topCat = Object.entries(ex.reduce((o, e) => (o[e.category] = (o[e.category] || 0) + e.amount, o), {})).sort((x, y) => y[1] - x[1])[0];
   const billsDue = r2(S.rem.filter(x => x.active !== false && x.kind !== 'task' && remDueDate(x) <= cm + '-' + p2(daysIn(cm))).reduce((s2, x) => s2 + remAmt(x), 0));
   h += cmpBar(W);
-  h += `<div class="section-t">Spending · ${esc(r.label)}</div><div class="kpis">${kpi('Spent', inr(spent, 1), 'red', '', D('spent', -1))}${kpi('Transactions', n, '', n ? 'entries logged' : '', D('n', 0))}${kpi('Avg / day', inr(spent / Math.max(1, days), 1), '', days + ' days', D('avgDay', -1))}${kpi('Avg / entry', inr(n ? spent / n : 0, 1), '', '', D('avgEntry', 0))}${kpi('Biggest', big ? inr(big.amount, 1) : '—', '', big ? (big.remarks || big.category) : '', D('big', 0))}${kpi('EMIs paid', inr(emis, 1), '', '', D('emis', 0))}</div>`;
-  h += `<div class="section-t">Savings</div><div class="kpis">${kpi('Income', inr(inc, 1), 'green', '', D('inc', 1))}${kpi('Saved', rate === null ? '—' : rate + '%', rate === null ? '' : rate >= 0 ? 'green' : 'red', 'of income', D('rate', 1, true))}${kpi('Invested', inr(inv, 1), 'blue', '', D('inv', 1))}${budget > 0 ? kpi('Budget left', inr(budget - spentM, 1), budget - spentM < 0 ? 'red' : '', 'this month') + kpi('Safe / day', inr(Math.max(0, budget - spentM) / Math.max(1, dLeft), 1), '', dLeft + ' days left') : kpi('Free balance', inr(freeAll, 1), '', 'not in goals') + kpi('Safe / day', inr(Math.max(0, freeAll) / Math.max(1, dLeft), 1), '', 'till month end')}${kpi('Net worth', inr(nw, 1), '', 'today', nwD)}</div>`;
-  h += `<div class="section-t">Habits</div><div class="kpis">${kpi('No-spend days', noSpend, 'green', 'of ' + days, D('noSpend', 1))}${kpi('Busiest day', spent ? WN[bw].slice(0, 3) : '—', '', spent ? inr(wd[bw], 1) + ' total' : '')}${kpi('Busiest hour', spent ? h12(bh) + '–' + h12(bh + 1) : '—', '', spent ? hr[bh] + ' entries' : '')}${kpi('Cash', cashPct + '%', '', inr(cashAmt, 1), D('cashPct', 0, true))}${kpi('UPI / bank', (spent ? 100 - cashPct : 0) + '%', '', inr(spent - cashAmt, 1))}${kpi('Top category', topCat ? cat(topCat[0]).icon + ' ' + inr(topCat[1], 1) : '—', '', topCat ? topCat[0] : '')}</div>`;
+  h += `<div class="section-t">Spending · ${esc(r.label)}</div><div class="kpis">${kpi('Spent', inr(spent, 1), 'red', refunded ? inr(refunded, 1) + ' refunded' : '', D('spent', -1))}${kpi('Entries', n, '', n ? 'logged' : '', D('n', 0))}${kpi('Avg / day', inr(spent / Math.max(1, days), 1), '', days + ' day' + (days === 1 ? '' : 's'), D('avgDay', -1))}${kpi('Avg / entry', inr(n ? sum(exP) / n : 0, 1), '', '', D('avgEntry', 0))}${kpi('Biggest', big ? inr(big.amount, 1) : '—', '', big ? (big.remarks || big.category) : '', D('big', 0))}${kpi('EMIs paid', inr(emis, 1), '', '', D('emis', 0))}</div>`;
+  h += `<div class="section-t">Savings</div><div class="kpis">${kpi('Income', inr(inc, 1), 'green', '', D('inc', 1))}${kpi('Saved', savedT.v, savedT.cls, savedT.sub, savedT.d ? D('rate', 1, true) : '')}${kpi('Invested', inr(inv, 1), 'blue', '', D('inv', 1))}${budget > 0 ? kpi('Budget left', inr(budget - spentM, 1), budget - spentM < 0 ? 'red' : '', 'this month') + kpi('Safe / day', inr(Math.max(0, budget - spentM) / Math.max(1, dLeft), 1), '', dLeft + ' days left') : kpi('Free money', inr(freeAll, 1), '', 'not in goals') + kpi('Safe / day', inr(Math.max(0, freeAll) / Math.max(1, dLeft), 1), '', 'till month end')}${kpi('Net worth', inr(nw, 1), '', 'today', nwD)}</div>`;
+  h += `<div class="section-t">Habits</div><div class="kpis">${kpi('No-spend', noSpend, 'green', 'of ' + days + ' day' + (days === 1 ? '' : 's'), D('noSpend', 1))}${kpi('Busiest day', spent ? WN[bw].slice(0, 3) : '—', '', spent ? inr(wd[bw], 1) + ' total' : '')}${kpi('Busiest hour', n ? hrRange(bh) : '—', '', n ? hr[bh] + ' entr' + (hr[bh] === 1 ? 'y' : 'ies') : '')}${kpi('Cash', cashPct + '%', '', inr(cashAmt, 1), D('cashPct', 0, true))}${kpi('UPI / bank', (spent ? 100 - cashPct : 0) + '%', '', inr(spent - cashAmt, 1))}${kpi('Top category', topCat ? cat(topCat[0]).icon + ' ' + inr(topCat[1], 1) : '—', '', topCat ? topCat[0] : '')}</div>`;
   if (topRem.length) h += `<div class="toprem">${topRem.map(x => `<button class="chip" data-act="fRem" data-v="${esc(x.t)}">${esc(x.t)} <small>×${x.n} · ${inr(x.v, 1)}</small></button>`).join('')}</div>`;
   h += `<div class="section-t">Commitments</div><div class="kpis">${kpi('EMIs due', inr(emiDueAmt, 1), emiDueAmt ? 'amber' : '', 'this month')}${kpi('Bills due', inr(billsDue, 1), billsDue ? 'amber' : '', 'reminders, this month')}${kpi('You owe', inr(loanOwe, 1), loanOwe ? 'red' : '')}${kpi('Owed to you', inr(loanOwed, 1), loanOwed ? 'green' : '')}${kpi('Goals', gT ? Math.round(gSaved / gT * 100) + '%' : '—', 'acc', inr(gSaved, 1) + ' saved')}${kpi('Card dues', inr(-owedCard, 1), owedCard < 0 ? 'red' : '')}</div>`;
 
@@ -3430,16 +3694,16 @@ function wrapData(m) {
   const inc = sum(S.inc.filter(e => inP(e, m) && !isOthers(e.account))), emi = sum(S.emi.filter(e => inP(e, m) && !isOthers(e.account))), inv = sum(S.inv.filter(e => isBuy(e) && inP(e, m) && !isOthers(e.from)));
   const byC = {}; ex.forEach(e => byC[e.category] = (byC[e.category] || 0) + e.amount);
   const cats = Object.entries(byC).sort((a, b) => b[1] - a[1]);
-  const spendDays = new Set(ex.map(e => e.ts.slice(0, 10))), dim = cur ? new Date().getDate() : daysIn(m);
+  const exP = ex.filter(e => e.amount > 0), spendDays = new Set(exP.map(e => e.ts.slice(0, 10))), dim = cur ? new Date().getDate() : daysIn(m);
   const logDays = new Set([].concat(S.exp, S.inc, S.trf, S.inv).filter(e => inP(e, m)).map(e => e.ts.slice(0, 10)));
-  const nt = {}; ex.forEach(e => { const k = wrNote(e.remarks); if (!k) return; const key = k.toLowerCase(); nt[key] = nt[key] || { t: k, n: 0, v: 0 }; nt[key].n++; nt[key].v += e.amount; });
+  const nt = {}; exP.forEach(e => { const k = wrNote(e.remarks); if (!k) return; const key = k.toLowerCase(); nt[key] = nt[key] || { t: k, n: 0, v: 0 }; nt[key].n++; nt[key].v += e.amount; });
   const topNote = Object.values(nt).sort((a, b) => b.n - a.n || b.v - a.v)[0];
   const wd = [0, 0, 0, 0, 0, 0, 0]; ex.forEach(e => wd[new Date(e.ts.slice(0, 10) + 'T00:00:00').getDay()] += e.amount);
-  const bw = wd.indexOf(Math.max(...wd)), big = ex.reduce((b, e) => !b || e.amount > b.amount ? e : b, null);
+  const bw = wd.indexOf(Math.max(...wd)), big = exP.reduce((b, e) => !b || e.amount > b.amount ? e : b, null);
   const bud = visCats().filter(c => +c.budget > 0), inBud = bud.filter(c => (byC[c.name] || 0) <= +c.budget);
   let pl = null; try { pl = pulse(m + '-01', mEnd); } catch (e) { }
   const gs = S.goals.filter(g => !g.archived && +g.target > 0).map(g => ({ g, p: Math.min(100, Math.round((C.saved[g.id] || 0) / +g.target * 100)), add: sum(S.goal.filter(x => x.goalId === g.id && inP(x, m) && POS.has(x.action))) })).sort((a, b) => b.add - a.add || b.p - a.p);
-  return { m, cur, spent, prev, inc, emi, inv, cats, n: ex.length, spendDays: spendDays.size, noSpend: Math.max(0, dim - [...spendDays].filter(d => d <= today()).length), logDays: logDays.size, dim, topNote, bw, wd, big, bud: bud.length, inBud: inBud.length, pl, gs };
+  return { m, cur, spent, prev, inc, emi, inv, cats, n: exP.length, spendDays: spendDays.size, noSpend: Math.max(0, dim - [...spendDays].filter(d => d <= today()).length), logDays: logDays.size, dim, topNote, bw, wd, big, bud: bud.length, inBud: inBud.length, pl, gs };
 }
 /* slide model: amounts (₹) only appear when amt is true; shared pictures always use amt = false */
 function wrapSlides(m, amt) {
@@ -3560,7 +3824,7 @@ function renderSettings() {
   <label class="check"><input type="checkbox" data-in="ndg" data-k="anomaly" ${N.anomaly !== false ? 'checked' : ''}> Flag unusual spends (3× your usual for that category)</label>
   <div class="lbl">Remind me to match bank balances</div><div class="seg" style="margin:0">${[[0, 'Off'], [7, '7 days'], [14, '14 days'], [30, '30 days']].map(([k, l]) => `<button class="${(+N.recon || 0) === k ? 'on' : ''}" data-act="ndgRec" data-v="${k}">${l}</button>`).join('')}</div></div>`);
   pg('look', `<div class="card"><h2>Appearance</h2><div class="seg" style="margin:0">${[['', 'Auto'], ['light', 'Light'], ['dark', 'Dark'], ['glass', '✨ Glass']].map(([k, l]) => `<button class="${(S.theme || '') === k ? 'on' : ''}" data-act="themeSet" data-k="${k}">${l}</button>`).join('')}</div>
-  ${S.theme === 'glass' ? `<div class="lbl">Glass tone</div><div class="seg" style="margin:0">${[['', 'Auto'], ['light', 'Bright'], ['dark', 'Night']].map(([k, l]) => `<button class="${(S.glassTone || '') === k ? 'on' : ''}" data-act="glassTone" data-k="${k}">${l}</button>`).join('')}</div>` : ''}
+  ${S.theme === 'glass' ? `<div class="lbl">Glass tone</div><div class="seg" style="margin:0">${[['', 'Auto'], ['light', 'Bright'], ['dark', 'Night']].map(([k, l]) => `<button class="${(S.glassTone || '') === k ? 'on' : ''}" data-act="glassTone" data-k="${k}">${l}</button>`).join('')}</div><div class="lbl">Glass effect</div><div class="seg" style="margin:0">${[['', '⚡ Smooth'], ['full', '💎 Full blur']].map(([k, l]) => `<button class="${(S.glassFx || '') === k ? 'on' : ''}" data-act="glassFx" data-k="${k}">${l}</button>`).join('')}</div><div class="hint">${S.glassFx === 'full' ? 'Full blur frosts every card live. Looks richest, but needs a fast phone; switch to Smooth if scrolling feels slow.' : 'Smooth keeps the see-through look but only blurs pop-ups, so scrolling stays fast. Try Full blur on a fast phone.'}</div>` : ''}
   <div class="hint">${S.theme === 'glass' ? 'Glass: see-through frosted cards over a soft colour wash. Picks bright or night to match your phone, unless you choose one.' : 'Auto follows your phone\'s light / dark setting. Try ✨ Glass for frosted see-through cards.'}</div></div>`);
   pg('bin', binCard());
   pg('backup', `<div class="card"><h2>Google Drive backups <small>Ledger App / Backups</small></h2><button class="btn" data-act="bkNow">☁️ Back up now</button>
@@ -3570,14 +3834,14 @@ function renderSettings() {
   <div class="card"><h2>Files on this phone</h2><button class="btn sec" data-act="exportJson">⬇ Download backup file (JSON)</button><button class="btn sec" data-act="impJson">⬆ Restore from a JSON file</button><input type="file" id="impFile" accept=".json,application/json" hidden><button class="btn sec" data-act="exportCsv">⬇ Download all entries (CSV)</button><button class="btn dng" data-act="clearLocal">Clear this phone's copy</button><div class="hint">The Google Sheet is your master copy. Before any restore a safety copy of the Sheet is made, so a restore can always be undone.</div></div>`);
   if (U.sp === 'backup' && S.url) U.after = bkLoad;
   pg('sms', `<div class="card"><h2>Bank SMS</h2><div class="lbl" style="margin-top:0">Card / account last 4 digits</div>${live(a => a.type !== 'cash' && a.type !== 'investment' && mineA(a)).map(a => `<div class="grid2" style="grid-template-columns:1fr 110px;align-items:center;margin-bottom:6px"><span style="font-weight:700">${esc(a.name)}</span><input data-in="acL4" data-n="${esc(a.name)}" inputmode="numeric" maxlength="12" value="${esc(a.l4 || '')}" placeholder="e.g. 1211"></div>`).join('')}<div class="hint">Matches SMS like "from XX1211" to the right account. Several numbers? Separate them with commas. The Ledger phone app fills these in for you the first time it sees each one.</div><button class="btn sec" data-act="smsTry">🧪 Paste an SMS to test</button></div>`);
-  pg('about', `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Ledger Android app (Settings → Phone app).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v8.5${AND ? ' · app ' + esc(andInfo().version || '') : ''}</div>`);
+  pg('about', `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Ledger Android app (Settings → Phone app).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v8.6${AND ? ' · app ' + esc(andInfo().version || '') : ''}</div>`);
   return settingsView(PG);
 }
 /* settings: a short menu, each item opens its own page (Android back / ‹ returns to the menu) */
 const SP = () => [
   ['Your data', [['sync', '☁️', 'Google Sheet & sync', !S.url ? 'Not connected' : lastErr ? 'Problem · tap to see' : 'Connected' + (S.lastSync ? ' · ' + S.lastSync : '')], ['backup', '🗂️', 'Backups & restore', 'Drive · Ledger App / Backups'], ['bin', '🗑️', 'Recently deleted', (S.bin.length ? S.bin.length + ' item' + (S.bin.length === 1 ? '' : 's') : 'Empty') + ' · kept ' + binDays() + ' days']]],
   ['Money', [['accounts', '🏦', 'Accounts', S.accounts.length + ' account' + (S.accounts.length === 1 ? '' : 's')], ['cats', '🏷️', 'Categories, budgets & types', S.cfg.categories.length + ' categories'], ['sms', '📩', 'Bank SMS', 'Card digits · test an SMS']]],
-  ['App', [['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off'], ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Ledger v8.5']]]
+  ['App', [['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off'], ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Ledger v8.6']]]
 ];
 function settingsView(PG) {
   const all = SP().flatMap(g => g[1]), cur = U.sp && all.find(x => x[0] === U.sp);
@@ -3633,6 +3897,7 @@ IN.ndg = t => { commit([cfgOp('nudges', Object.assign({}, S.cfg.nudges, { [t.dat
 ACT.ndgRec = el => { commit([cfgOp('nudges', Object.assign({}, S.cfg.nudges, { recon: +el.dataset.v }))]); $$('[data-act=ndgRec]').forEach(b => b.classList.toggle('on', b === el)); };
 ACT.themeSet = el => { S.theme = el.dataset.k; save(); applyTheme(); render(); };
 ACT.glassTone = el => { S.glassTone = el.dataset.k; save(); applyTheme(); render(); };
+ACT.glassFx = el => { S.glassFx = el.dataset.k; save(); applyTheme(); render(); };
 ACT.clearLocal = () => { if (S.outbox.length && !confirm(S.outbox.length + ' change(s) are not uploaded yet and will be lost. Continue?')) return; if (!confirm('Remove this phone’s copy?')) return; localStorage.removeItem(KEY); location.reload(); };
 IN.acL4 = t => { clearTimeout(U.l4T); U.l4T = setTimeout(() => { const a = acc(t.dataset.n), v = t.value.replace(/[^\d,]/g, ''); if (a && (a.l4 || '') !== v) commit([up('Accounts', Object.assign({}, a, { l4: v }))]); }, 600); };
 ACT.bkNow = async () => {
@@ -3863,7 +4128,7 @@ function applyTheme() {
   const glass = S.theme === 'glass', t = glass ? (S.glassTone || '') : S.theme, R = document.documentElement;
   const dark = t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
   R.dataset.theme = dark ? 'dark' : 'light';
-  if (glass) R.dataset.glass = '1'; else delete R.dataset.glass;
+  if (glass) R.dataset.glass = S.glassFx === 'full' ? 'full' : '1'; else delete R.dataset.glass;
   $('#themeColor').setAttribute('content', glass ? (dark ? '#090A17' : '#EDEFFB') : dark ? '#0B0D14' : '#F6F7FB');
 }
 function setupIcons() {
