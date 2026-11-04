@@ -108,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle saved) {
         super.onCreate(saved);
+        dropOldScreens();
         openPending = getIntent() != null && getIntent().getBooleanExtra(EXTRA_PENDING, false);
         widgetAction = getIntent() != null ? getIntent().getStringExtra(Widgets.EXTRA) : null;
         if (getIntent() != null && ACTION_INSTALL.equals(getIntent().getAction())) { final Intent st = getIntent(); ui.postDelayed(() -> installStatus(st), 800); }
@@ -430,6 +431,26 @@ public class MainActivity extends AppCompatActivity {
         return out.toByteArray();
     }
 
+    /** A freshly installed app brings its own screens: forget screens downloaded before this install
+     *  (otherwise an older copy from the website keeps showing after an update). */
+    private void dropOldScreens() {
+        try {
+            File f = new File(getFilesDir(), "www/index.html");
+            if (!f.exists()) return;
+            long installed = getPackageManager().getPackageInfo(getPackageName(), 0).lastUpdateTime;
+            if (f.lastModified() < installed) {
+                String dl = new String(readAll(new java.io.FileInputStream(f)), StandardCharsets.UTF_8);
+                String own = new String(readAll(getAssets().open("www/index.html")), StandardCharsets.UTF_8);
+                if (appV(dl) < appV(own) || (appV(dl) == appV(own) && build(dl).compareTo(build(own)) <= 0)) f.delete();
+            }
+        } catch (Throwable ignored) { }
+    }
+
+    private static String build(String html) {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("const APP_BUILD = '([^']*)'").matcher(html);
+        return m.find() ? m.group(1) : "";
+    }
+
     private static int appV(String html) {
         java.util.regex.Matcher m = java.util.regex.Pattern.compile("const APP_V = (\\d+)").matcher(html);
         return m.find() ? Integer.parseInt(m.group(1)) : 0;
@@ -449,7 +470,9 @@ public class MainActivity extends AppCompatActivity {
                 String all = new String(b, StandardCharsets.UTF_8);
                 if (b.length < 100000 || !head.contains("<title>") || !all.contains("LedgerSms")) return;
                 /* never go back to older screens (e.g. a test build talking to the live site) */
-                if (appV(all) < appV(new String(currentHtml(), StandardCharsets.UTF_8))) return;
+                String cur = new String(currentHtml(), StandardCharsets.UTF_8);
+                if (appV(all) < appV(cur)) return;
+                if (appV(all) == appV(cur) && build(all).compareTo(build(cur)) < 0) return;
                 if (sha(b).equals(sha(currentHtml()))) {
                     ui.post(() -> js("window.toast&&window.__ledgerManualUpd&&toast('You have the latest version')"));
                     return;
