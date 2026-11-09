@@ -1,5 +1,11 @@
 ## Ledger v8.7 · What's new
 
+## Also new in this build
+- 👆 **Fingerprint pops up by itself** when Ledger is locked (PIN / pattern stays underneath if you cancel). Switch: Settings → Lock & privacy
+- **Ignore = "already logged"**: Ledger never learns from ignored SMS. Ignored SMS you already logged by hand, or whose payee you filed later, leave the list on their own
+- **🗑 Delete** ignored SMS one by one or all at once (with Undo)
+- **Page titles never get cut** ("Money moves"): buttons sit on the top line, the title has the full width below
+
 ## Cleaner pages
 - **✨ button (top right)** opens a side panel with tabs: **Ask · Pulse · Wrap**. They are no longer cards on Expenses and Insights. Swipe right to close
 - **Expenses search** only searches your expenses now (note, category, account, amount, payee). Ask lives in the ✨ panel

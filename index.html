@@ -84,10 +84,11 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{font-family:'Plus Jakarta Sans',system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);font-size:15px;line-height:1.4;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;overscroll-behavior-y:none;min-height:100vh}
 button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer;font-size:inherit}
 #app{max-width:560px;margin:0 auto;padding:0 16px calc(112px + env(safe-area-inset-bottom))}
-header.top{position:sticky;top:0;z-index:20;display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:calc(14px + env(safe-area-inset-top)) 2px 12px;background:linear-gradient(var(--bg) 75%,transparent)}
+header.top{position:sticky;top:0;z-index:20;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:10px;row-gap:2px;padding:calc(14px + env(safe-area-inset-top)) 2px 12px;background:linear-gradient(var(--bg) 75%,transparent)}
 .hello{font-size:.76rem;color:var(--mute);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 header.top>div:first-child{flex:1 1 auto;min-width:0}
 header.top h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top>div:first-child{display:contents}#hello{grid-row:1;grid-column:1}.top .hact{grid-row:1;grid-column:2}#title{grid-row:2;grid-column:1/-1;min-width:0}
 h1{font-size:1.65rem;font-weight:800;letter-spacing:-.035em;line-height:1.15}
 h1.sm{font-size:1.25rem}
 .hact{display:flex;gap:6px;align-items:center;flex:0 0 auto}
@@ -410,6 +411,7 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .sparkb{font-size:1.05rem;line-height:1}
 html.kbd .nav,html.kbd .fab{display:none!important}
 #view input,#view textarea,#sheet input,#sheet textarea{scroll-margin:90px 0 120px}
+.igp>.mid{flex:1;min-width:0;display:flex;flex-direction:column;align-items:stretch}.igp>.mid b,.igp>.mid small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.igp .amt{flex:0 0 auto;padding-left:8px}.igp .amt{margin-left:auto}
 .sh-foot{flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
 .a-bar{display:flex;gap:8px;align-items:flex-end;margin:0}
 .a-bar textarea{flex:1;min-width:0;display:block;min-height:48px;max-height:132px;resize:none;overflow-y:auto;background:var(--soft);border:1.5px solid transparent;border-radius:14px;padding:12px 14px;font:inherit;font-size:16px;line-height:1.35;color:var(--ink);-webkit-appearance:none;appearance:none}
@@ -2168,7 +2170,13 @@ function pendingChip() {
 }
 ACT.pendOpen = () => inboxSheet();
 function pendSheet() { inboxSheet(); }
-const pendIgnored = () => { const since = addDays(today(), -60); return S.pend.filter(p => p.status === 'ignored' && String(p.ts || '').slice(0, 10) >= since).sort((a, b) => b.ts.localeCompare(a.ts)); };
+/* an ignored SMS you already logged by hand (same amount within 3 days), or whose payee you have since filed, is settled: it leaves the Ignored list */
+function smsLogged(p) {
+  const d = String(p.ts || '').slice(0, 10), near = e => e && Math.abs(+e.amount) === +p.amount && Math.abs(dayDiff(String(e.ts).slice(0, 10), d)) <= 3;
+  return (p.dir === 'credit' ? S.inc : S.exp).some(near) || S.trf.some(near) || S.inv.some(near) || S.loan.some(near) || S.emi.some(near);
+}
+const payeeFiledAfter = p => p.payee && S.pend.some(q => q.status === 'done' && q.ts > p.ts && q.dir === p.dir && payeeSame(p.payee, q.payee));
+const pendIgnored = () => { const since = addDays(today(), -60); return S.pend.filter(p => p.status === 'ignored' && String(p.ts || '').slice(0, 10) >= since && !smsLogged(p) && !payeeFiledAfter(p)).sort((a, b) => b.ts.localeCompare(a.ts)); };
 function pendListHtml(L, ig) {
   return `<div class="group">${L.map(p => { const pk = payeeFind(p.payee); return `<button class="item" data-act="pendPick" data-id="${p.id}"><span class="ic" style="background:${p.dir === 'credit' ? '#12A15022' : 'var(--soft)'}">${p.dir === 'credit' ? '⬇️' : p.card ? '💳' : p.atm ? '🏧' : '⬆️'}</span><span class="mid"><b>${esc((pk && pk.note) || p.payee || (p.dir === 'credit' ? 'Money received' : 'Payment'))}${pk && pk.note ? ' <small class="mute" style="font-weight:600">· ' + esc(pk.category || pk.label || '') + '</small>' : ''}</b><small>${pk && pk.note && p.payee ? esc(p.payee) + ' · ' : ''}${esc(p.account || p.bank + (p.l4 ? ' ·' + p.l4 : '') || 'Unknown account')} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}</small></span><span class="amt ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</span></button>`; }).join('')}</div>${ig ? '' : `<button class="btn sec" data-act="pendIgnoreAll">Ignore all ${L.length}</button>`}`;
 }
@@ -2191,7 +2199,7 @@ function payeeSame(a, b) {
 /* what an already-filed SMS became */
 function pastFiling(p) {
   const id = p.done; let e;
-  if (p.status === 'ignored') return p.done === 'bulk' ? null : { id: p.id, act: 'ignore', amount: p.amount, ts: p.ts };
+  if (p.status === 'ignored' || p.status === 'gone') return null; /* you ignore SMS you already logged by hand: never a suggestion */
   if (!id) return null;
   if ((e = S.exp.find(x => x.id === id))) return e.amount < 0 ? { id, act: 'refund', category: e.category, note: '', acc: e.account, amount: -e.amount, ts: e.ts } : { id, act: 'exp', category: e.category, note: e.remarks, acc: e.account, amount: e.amount, ts: e.ts };
   if ((e = S.inc.find(x => x.id === id)) && e.source === 'Cashback') return { id, act: 'cashback', note: '', acc: e.account, amount: e.amount, ts: e.ts };
@@ -2304,6 +2312,7 @@ function pendForm() {
     const sg = payeeNotes(p.payee, payeeFind(p.payee)).filter(x => x !== P.note);
     h += `<div class="lbl">Note ${p.payee ? '<small class="mute">(bank name kept: ' + esc(p.payee) + ')</small>' : ''}</div><input id="pdRemk" value="${esc(P.note)}" placeholder="e.g. Breakfast">${sg.length ? `<div class="chips" style="margin-top:8px">${sg.map(x => `<button class="chip" data-act="pdNote" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>` : ''}`;
   }
+  if (P.act === 'ignore') h += `<div class="hint">Use Ignore when you already logged this by hand, or it isn't yours. Ledger never learns from it.</div>`;
   h += `<button class="btn big" data-act="pdSave">${P.act === 'ignore' ? 'Ignore this message' : 'Save'}</button><details class="hint"><summary>Original SMS</summary>${esc(p.raw || '')}</details>`;
   openSheet(p.dir === 'credit' ? 'Money received' : 'Money paid', h, 'tall');
 }
@@ -2311,7 +2320,7 @@ ACT.pdNote = el => { $('#pdRemk').value = el.dataset.v; U.pd.note = el.dataset.v
 ACT.pdSet = el => { if ($('#pdRemk')) U.pd.note = $('#pdRemk').value; U.pd.sgi = -1; U.pd[el.dataset.f] = U.pd[el.dataset.f] === el.dataset.v && el.dataset.f !== 'act' ? '' : el.dataset.v; const y = $('#shBody') ? $('#shBody').scrollTop : 0; pendForm(); if ($('#shBody')) $('#shBody').scrollTop = y; };
 ACT.pdSave = () => {
   const P = U.pd, p = S.pend.find(x => x.id === P.id); if (!p) return;
-  if (P.act === 'ignore') { commit([up('Pending', Object.assign({}, p, { status: 'ignored' }))]); return pendNext(); }
+  if (P.act === 'ignore') { commit([up('Pending', Object.assign({}, p, { status: smsLogged(p) ? 'gone' : 'ignored' }))]); return pendNext(); }
   if (!P.account) return toast('Pick the account');
   const ops = [], note = ($('#pdRemk') || {}).value || p.payee, ts = p.ts, a = p.amount, id = 'S' + p.id.slice(1);
   if (P.act === 'exp') { if (!P.cat) return toast('Pick a category'); ops.push(up('Expenses', { id, ts, account: P.account, amount: a, category: P.cat, remarks: note, photo: '', payee: p.payee || '', mine: false })); }
@@ -4109,6 +4118,12 @@ function showLock(mode, kind, intro) {
   kind = kind || (mode === 'unlock' ? S.lock.type : 'pin');
   if (kind === 'device' && (!AND || (mode === 'unlock' && S.sec))) kind = S.sec ? S.sec.kind : 'pin';
   U.pin = { mode, kind, val: '', first: '', seq: [] }; const L = $('#lock'); L.classList.remove('bye'); L.classList.toggle('intro', !!intro); L.hidden = false; drawLock();
+  /* fingerprint first: the phone's fingerprint pop-up opens straight away; PIN / pattern stays underneath if you cancel */
+  if (mode === 'unlock' && S.lock.bioFirst !== false && canBio()) bioAuto();
+}
+function bioAuto() {
+  const go = () => setTimeout(() => { if (U.pin && U.pin.mode === 'unlock' && !$('#lock').hidden && document.visibilityState === 'visible') bioAsk(); }, 350);
+  if (document.visibilityState === 'visible') go(); else document.addEventListener('visibilitychange', function f() { if (document.visibilityState === 'visible') { document.removeEventListener('visibilitychange', f); go(); } });
 }
 function bioAsk() { if (!AND || !U.pin || $('#lock').hidden) return; U.noLock = Date.now() + 60000; try { AND.unlock('Unlock Ledger'); } catch (e) { } }
 window.onLedgerUnlock = (ok, msg) => {
@@ -4164,6 +4179,7 @@ function patBind() {
 }
 ACT.pinCancel = () => { $('#lock').hidden = true; U.pin = null; render(); };
 ACT.bioAsk = () => bioAsk();
+IN.bioFirst = t => { S.lock.bioFirst = t.checked; save(); toast(t.checked ? 'Fingerprint will pop up by itself' : 'Tap 👆 to use fingerprint'); };
 ACT.bioUseApp = () => { U.pin = { mode: 'unlock', kind: S.sec.kind, val: '', first: '', seq: [] }; drawLock(); };
 ACT.bioBack = () => showLock('unlock', 'device');
 document.addEventListener('keydown', e => {
@@ -4188,6 +4204,7 @@ function lockCard() {
   const I = AND ? andInfo() : {};
   return `<div class="card"><h2>App lock</h2><div class="lbl" style="margin-top:0">Unlock with</div><div class="chips wrap">${LOCK_T().map(([k, i, l]) => `<button class="chip ${S.lock.type === k ? 'on' : ''}" data-act="lockType" data-v="${k}">${i} ${l}</button>`).join('')}</div>
   <div class="hint">${S.lock.type === 'device' ? "Opens with your PIN, or tap 👆 Use fingerprint (face works too if your phone allows apps to use it)." : S.lock.type === 'none' ? 'Anyone holding your unlocked phone can open Ledger.' : 'Tap it again to change your ' + ({ pin: 'PIN', pwd: 'password', pat: 'pattern' }[S.lock.type]) + '.'}${AND ? '' : " Phone's lock (fingerprint / face) is available in the Ledger Android app."}</div>
+  ${lockOn() && canBio() ? `<label class="check"><input type="checkbox" data-in="bioFirst" ${S.lock.bioFirst !== false ? 'checked' : ''}> 👆 Show fingerprint as soon as Ledger opens</label>` : ''}
   ${S.lock.type === 'device' ? `<button class="btn sec sm" data-act="lockBackup" style="margin-top:6px">${S.sec ? 'Change' : 'Add'} backup PIN</button>` : ''}${AND && ['pin', 'pwd', 'pat'].includes(S.lock.type) && canBio() ? '<div class="hint">👆 The lock screen also has a "Use fingerprint" button.</div>' : ''}
   ${lockOn() ? `<div class="lbl">Lock again after leaving the app</div><div class="chips wrap">${LOCK_D.map(([k, l]) => `<button class="chip ${S.lock.delay === k ? 'on' : ''}" data-act="lockDelay" data-v="${k}">${l}</button>`).join('')}</div>` : ''}
   <div class="hint">Forgot it? Tap "Forgot?" on the lock screen and type your Sheet secret key.</div></div>
@@ -4252,18 +4269,18 @@ function learnedPayees() {
     .map(x => Object.assign(x, { sg: payeeSuggest(x.payee, 0, x.dir) })).filter(x => x.sg.length);
 }
 function smartCard() {
-  const SC = smartCfg(), ig = pendIgnored(), igAll = S.pend.filter(p => p.status === 'ignored'), learnIg = igAll.filter(p => p.done !== 'bulk').length;
-  let h = `<div class="card"><h2>🚫 Ignored messages <small>${ig.length} in the last 60 days</small></h2>`;
-  if (!ig.length) h += `<div class="hint" style="margin:0">Nothing ignored recently.</div>`;
+  const SC = smartCfg(), ig = pendIgnored(), igAll = S.pend.filter(p => p.status === 'ignored'), settled = igAll.length - ig.length;
+  let h = `<div class="card"><h2 style="display:block">🚫 Ignored messages<small style="display:block;margin-top:3px">${ig.length} still open · last 60 days</small></h2>`;
+  if (!ig.length) h += `<div class="hint" style="margin:0">Nothing left here. SMS you already logged by hand, or whose payee you filed later, are tidied away automatically.</div>`;
   else {
-    h += `<div class="hint" style="margin-top:0">Tap any one to file it properly (expense, transfer, loan…).</div>`;
-    h += `<div class="btns"><button class="btn sec sm" data-act="igShow">${U.igOpen ? 'Hide the list' : 'Show all ' + ig.length}</button><button class="btn sec sm" data-act="igBack">↩️ Put all back to sort</button></div>`;
-    if (U.igOpen) h += pendListHtml(ig, true);
+    h += `<div class="hint" style="margin-top:0">Tap one to file it. 🗑 removes it for good. Ignored SMS never change suggestions.</div>`;
+    h += `<div class="grid2" style="margin-top:8px"><button class="btn sec sm" data-act="igShow">${U.igOpen ? 'Hide list' : 'Show ' + ig.length}</button><button class="btn sec sm" data-act="igBack">↩️ Re-sort all</button></div><button class="btn sec sm" data-act="igDelAll" style="margin-top:8px;width:100%;color:var(--red)">🗑 Delete all ${ig.length}</button>`;
+    if (U.igOpen) h += `<div class="group" style="margin-top:10px">${ig.map(p => `<div class="item" style="padding-right:6px"><button class="igp" data-act="pendPick" data-id="${p.id}" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-align:left;background:none;border:0;padding:0;font:inherit;color:inherit;flex:1;min-width:0"><span class="ic" style="background:${p.dir === 'credit' ? '#12A15022' : 'var(--soft)'}">${p.dir === 'credit' ? '⬇️' : '⬆️'}</span><span class="mid" style="min-width:0"><b>${esc(p.payee || (p.dir === 'credit' ? 'Money received' : 'Payment'))}</b><small>${esc(p.account || p.bank || '')} · ${dLabel(p.ts.slice(0, 10))}</small></span><span class="amt ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</span></button><button class="x" data-act="igDel" data-id="${p.id}" aria-label="Delete" style="margin-left:6px">🗑</button></div>`).join('')}</div>`;
   }
-  if (learnIg) h += `<button class="btn sec" data-act="igUnlearn">Stop learning from ${learnIg} ignored message${learnIg === 1 ? '' : 's'}</button><div class="hint">They stay ignored, but Ledger stops treating "ignored" as what you usually do with those payees.</div>`;
+  if (settled > 0) h += `<div class="hint">${settled} other ignored SMS ${settled === 1 ? 'is' : 'are'} already logged or filed, so ${settled === 1 ? 'it is' : 'they are'} hidden.</div>`;
   h += `</div>`;
   const L = U.lpOpen ? learnedPayees() : null;
-  h += `<div class="card"><h2>🔁 Smart suggestions <small>learned from what you filed</small></h2>
+  h += `<div class="card"><h2 style="display:block">🔁 Smart suggestions<small style="display:block;margin-top:3px">learned from what you filed</small></h2>
   <label class="check" style="margin-top:0"><input type="checkbox" data-in="smPre" ${SC.prefill !== false ? 'checked' : ''}> Fill in new SMS from what I did before</label>
   <div class="hint">On: a new SMS from a payee you know comes filled in (never with Ignore). Off: Ledger only shows what you did before, and you tap to use it.</div>
   <button class="btn sec sm" data-act="lpShow">${U.lpOpen ? 'Hide' : 'See'} what Ledger learned</button>`;
@@ -4274,6 +4291,8 @@ function smartCard() {
 ACT.igShow = () => { U.igOpen = !U.igOpen; render(); };
 ACT.lpShow = () => { U.lpOpen = !U.lpOpen; render(); };
 ACT.igBack = () => { const L = pendIgnored(); if (!L.length || !confirm('Put all ' + L.length + ' ignored messages back in 🔔 To sort?')) return; commit(L.map(p => up('Pending', Object.assign({}, p, { status: 'new', done: '' })))); U.igOpen = false; render(); bellBadge(); toast(L.length + ' back in To sort'); };
+ACT.igDel = el => { const p = S.pend.find(x => x.id === el.dataset.id); if (!p) return; commit([up('Pending', Object.assign({}, p, { status: 'gone' }))]); render(); toast('Deleted', 'Undo', () => { commit([up('Pending', p)]); render(); }); };
+ACT.igDelAll = () => { const L = pendIgnored(); if (!L.length || !confirm('Delete all ' + L.length + ' ignored messages? You can still log the next payment to these payees normally.')) return; commit(L.map(p => up('Pending', Object.assign({}, p, { status: 'gone' })))); U.igOpen = false; render(); toast(L.length + ' deleted', 'Undo', () => { commit(L.map(p => up('Pending', p))); render(); }); };
 ACT.igUnlearn = () => { const L = S.pend.filter(p => p.status === 'ignored' && p.done !== 'bulk'); commit(L.map(p => up('Pending', Object.assign({}, p, { done: 'bulk' })))); render(); toast('Ignored messages no longer teach Ledger'); };
 ACT.lpForget = el => { const SC = smartCfg(), F = Object.assign({}, SC.forget); F[el.dataset.p.toLowerCase()] = nowTs(); commit([cfgOp('smart', Object.assign(SC, { forget: F }))]); render(); toast('Forgot ' + el.dataset.p); };
 ACT.lpReset = () => { const SC = smartCfg(); commit([cfgOp('smart', Object.assign(SC, { forget: {} }))]); render(); toast('Suggestions restored'); };
