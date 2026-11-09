@@ -11,7 +11,7 @@ import android.os.Build;
 
 /**
  * Android closes an app while it installs its update and never reopens it by itself.
- * Right after the new version is in place, this shows "Ledger updated · tap to open".
+ * Right after the new version is in place, this shows "Brokeless updated · tap to open".
  */
 public class UpdatedReceiver extends BroadcastReceiver {
     static final String CHANNEL = "app_updated";
@@ -27,7 +27,7 @@ public class UpdatedReceiver extends BroadcastReceiver {
             if (nm == null) return;
             if (nm.getNotificationChannel(CHANNEL) == null) {
                 NotificationChannel ch = new NotificationChannel(CHANNEL, "App updated", NotificationManager.IMPORTANCE_HIGH);
-                ch.setDescription("Tells you when a Ledger update has finished installing");
+                ch.setDescription("Tells you when a Brokeless update has finished installing");
                 nm.createNotificationChannel(ch);
             }
             nm.cancel(2001); /* the "ready to install" notice is done */
@@ -35,8 +35,8 @@ public class UpdatedReceiver extends BroadcastReceiver {
             PendingIntent pi = PendingIntent.getActivity(c, 51, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
             android.app.Notification n = new android.app.Notification.Builder(c, CHANNEL)
                     .setSmallIcon(R.drawable.ic_stat_rupee)
-                    .setContentTitle("✅ Ledger updated to " + ver)
-                    .setContentText("Tap to open Ledger")
+                    .setContentTitle("✅ Brokeless updated to " + ver)
+                    .setContentText("Tap to open Brokeless")
                     .setAutoCancel(true)
                     .setContentIntent(pi)
                     .setTimeoutAfter(10 * 60 * 1000)

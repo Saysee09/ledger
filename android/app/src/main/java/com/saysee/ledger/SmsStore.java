@@ -104,7 +104,7 @@ public final class SmsStore {
         android.app.Notification n = new android.app.Notification.Builder(c, CHANNEL)
                 .setSmallIcon(R.drawable.ic_stat_rupee)
                 .setContentTitle(promise ? amt + "refund on the way" : amt + (in ? "received" : "paid") + " · tap to sort")
-                .setContentText(promise ? "Ledger will watch for it and tell you if it's late" : "Ledger saved this bank message for you")
+                .setContentText(promise ? "Brokeless will watch for it and tell you if it's late" : "Brokeless saved this bank message for you")
                 .setAutoCancel(true)
                 .setContentIntent(pi)
                 .build();

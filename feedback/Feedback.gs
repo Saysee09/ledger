@@ -1,12 +1,12 @@
 /**
- * Ledger · Feedback inbox
+ * Brokeless · Feedback inbox
  * ------------------------------------------------------------
- * A tiny web app that receives feedback from Ledger users, keeps it in a
+ * A tiny web app that receives feedback from Brokeless users, keeps it in a
  * "Feedback" tab of this Sheet and emails it to you (the owner).
  * Users never see your email address: the app only knows this script's URL.
  *
  * One-time setup (5 minutes, use YOUR Gmail):
- *  1. sheets.new → name it "Ledger Feedback".
+ *  1. sheets.new → name it "Brokeless Feedback".
  *  2. Extensions → Apps Script → delete everything → paste this file → Save.
  *  3. Run → setup → allow the permissions it asks for.
  *  4. Deploy → New deployment → type: Web app
@@ -39,7 +39,7 @@ function sheet_() {
 }
 
 function doGet() {
-  return out_({ ok: true, app: 'Ledger feedback', version: VERSION });
+  return out_({ ok: true, app: 'Brokeless feedback', version: VERSION });
 }
 
 function doPost(e) {
@@ -65,7 +65,7 @@ function doPost(e) {
     var owner = Session.getEffectiveUser().getEmail();
     if (owner) {
       var body = type + '\n\n' + text + '\n\n— — —\nApp: ' + ver + '\nDevice: ' + dev + '\nScreen: ' + scr + '\nInstall: ' + iid + (reply ? '\nReply to: ' + reply : '\n(No reply address given)');
-      var opt = { to: owner, subject: 'Ledger feedback · ' + type + ' · ' + text.slice(0, 50).replace(/\s+/g, ' '), body: body, name: 'Ledger feedback' };
+      var opt = { to: owner, subject: 'Brokeless feedback · ' + type + ' · ' + text.slice(0, 50).replace(/\s+/g, ' '), body: body, name: 'Brokeless feedback' };
       if (reply) opt.replyTo = reply;
       MailApp.sendEmail(opt);
     }

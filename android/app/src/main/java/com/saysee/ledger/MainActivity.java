@@ -205,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
                 c.setInstanceFollowRedirects(true);
                 c.setConnectTimeout(15000);
                 c.setReadTimeout(30000);
-                c.setRequestProperty("User-Agent", "Ledger-Android");
+                c.setRequestProperty("User-Agent", "Brokeless-Android");
                 c.setRequestProperty("Accept", "application/octet-stream");
                 int code = c.getResponseCode();
                 for (int hop = 0; hop < 5 && (code == 301 || code == 302 || code == 303 || code == 307 || code == 308); hop++) {
@@ -214,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
                     c = (HttpURLConnection) new URL(new URL(url), loc).openConnection();
                     c.setConnectTimeout(15000);
                     c.setReadTimeout(30000);
-                    c.setRequestProperty("User-Agent", "Ledger-Android");
+                    c.setRequestProperty("User-Agent", "Brokeless-Android");
                     code = c.getResponseCode();
                 }
                 if (code != 200) throw new Exception("server said " + code);
@@ -234,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
                 if (expect > 0 && tmp.length() != expect) throw new Exception("download incomplete (" + tmp.length() + " of " + expect + " bytes). Try again on Wi-Fi");
                 /* make sure it really is a newer Ledger before asking Android to install it */
                 android.content.pm.PackageInfo pi = getPackageManager().getPackageArchiveInfo(tmp.getAbsolutePath(), 0);
-                if (pi == null || !getPackageName().equals(pi.packageName)) throw new Exception("the downloaded file is not a valid Ledger app. Try again");
+                if (pi == null || !getPackageName().equals(pi.packageName)) throw new Exception("the downloaded file is not a valid Brokeless app. Try again");
                 if (f.exists()) f.delete();
                 if (!tmp.renameTo(f)) throw new Exception("could not save the update");
                 ui.post(() -> { js("window.onLedgerDl&&onLedgerDl(100)"); openInstaller(f); });
@@ -253,7 +253,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName())));
             } catch (Exception e) {
-                js("window.onLedgerDl&&onLedgerDl(-1,'Open Settings → Apps → Ledger → Install unknown apps')");
+                js("window.onLedgerDl&&onLedgerDl(-1,'Open Settings → Apps → Brokeless → Install unknown apps')");
             }
             return;
         }
@@ -361,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         BiometricPrompt.PromptInfo info = new BiometricPrompt.PromptInfo.Builder()
-                .setTitle(title == null || title.isEmpty() ? "Unlock Ledger" : title)
+                .setTitle(title == null || title.isEmpty() ? "Unlock Brokeless" : title)
                 .setSubtitle("Fingerprint, face or your phone's screen lock")
                 .setAllowedAuthenticators(authenticators())
                 .build();
@@ -550,14 +550,14 @@ public class MainActivity extends AppCompatActivity {
                     ContentValues v = new ContentValues();
                     v.put(MediaStore.Images.Media.DISPLAY_NAME, safe);
                     v.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
-                    v.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Ledger");
+                    v.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Brokeless");
                     Uri u = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
                     if (u == null) return "";
                     try (OutputStream o = getContentResolver().openOutputStream(u)) {
                         if (o == null) return "";
                         o.write(b);
                     }
-                    return "Pictures/Ledger/" + safe;
+                    return "Pictures/Brokeless/" + safe;
                 }
                 File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
                 if (dir == null) return "";

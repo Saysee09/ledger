@@ -7,8 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Ledger">
-<title>Ledger</title>
+<meta name="apple-mobile-web-app-title" content="Brokeless">
+<title>Brokeless</title>
 <link rel="apple-touch-icon" id="appleIcon">
 <link rel="icon" id="favIcon">
 <link rel="manifest" id="manifest">
@@ -431,7 +431,7 @@ html.kbd .nav,html.kbd .fab{display:none!important}
     <div><div class="hello" id="hello"></div><h1 id="title">Expenses</h1></div>
     <div class="hact">
       <button class="sync" id="syncBtn" data-act="syncNow"><i></i><span id="syncTxt">Offline</span></button>
-      <button class="iconbtn sparkb" id="sideBtn" data-act="side" aria-label="Ask Ledger, Money Pulse and Wrap">✨</button>
+      <button class="iconbtn sparkb" id="sideBtn" data-act="side" aria-label="Ask Brokeless, Money Pulse and Wrap">✨</button>
       <button class="iconbtn" id="bellBtn" data-act="inbox" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><i class="badge" id="bellBadge" hidden></i></button>
       <button class="iconbtn" id="eyeBtn" data-act="hide" aria-label="Hide amounts"></button>
       <button class="iconbtn" data-act="openSettings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
@@ -450,7 +450,7 @@ html.kbd .nav,html.kbd .fab{display:none!important}
 <div class="sheet" id="sheet"></div>
 <div class="toast" id="toast"></div>
 <div class="lock" id="lock" hidden></div>
-<div id="splash"><div class="sp-glow"></div><div class="sp-logo"></div><div class="sp-name">Ledger</div><div class="sp-tag"></div></div>
+<div id="splash"><div class="sp-glow"></div><div class="sp-logo"></div><div class="sp-name">Brokeless</div><div class="sp-tag"></div></div>
 
 <script>
 'use strict';
@@ -517,7 +517,7 @@ function toast(msg, action, fn) {
   t.classList.add('show'); if (action) $('#tAct').onclick = () => { t.classList.remove('show'); fn(); };
   clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), action ? 5000 : 2400);
 }
-/* Android app bridge (present only inside the Ledger Android app) */
+/* Android app bridge (present only inside the Brokeless Android app) */
 const AND = window.LedgerAndroid || null;
 const andInfo = () => { try { return JSON.parse(AND.info()); } catch (e) { return {}; } };
 
@@ -834,7 +834,7 @@ window.onLedgerNewVersion = j => {
   let u = null; try { u = j ? JSON.parse(j) : null; } catch (e) { }
   const isNew = u && (!U.upd || U.upd.tag !== u.tag); U.upd = u; bellBadge(); if (isNew && U.tab === 'home' && !sheetOpen()) render();
   if (U.updManual) { U.updManual = false; if (!u) toast("You're on the latest version (" + (andInfo().version || '') + ')'); else updSheet(); return; }
-  if (isNew && !S.prefs['updSeen_' + u.tag]) toast('⬆️ Ledger ' + updVer(u) + ' is ready', "What's new", () => updSheet());
+  if (isNew && !S.prefs['updSeen_' + u.tag]) toast('⬆️ Brokeless ' + updVer(u) + ' is ready', "What's new", () => updSheet());
 };
 function updAlert() {
   const u = U.upd; if (!u) return '';
@@ -848,7 +848,7 @@ function updNotes(u) {
   let h = '', open = false;
   updLines(u).forEach(l => {
     const t = l.trim(); if (!t) return;
-    if (/^#{1,3}\s/.test(t)) { if (open) { h += '</ul>'; open = false; } const ti = t.replace(/^#+\s*/, ''); if (!/^ledger v?\d/i.test(ti)) h += `<div class="section-t" style="margin:14px 2px 6px">${esc(ti)}</div>`; return; }
+    if (/^#{1,3}\s/.test(t)) { if (open) { h += '</ul>'; open = false; } const ti = t.replace(/^#+\s*/, ''); if (!/^(ledger|brokeless) v?\d/i.test(ti)) h += `<div class="section-t" style="margin:14px 2px 6px">${esc(ti)}</div>`; return; }
     if (/^[-*•]\s+/.test(t)) { if (!open) { h += '<ul class="upd-ul">'; open = true; } h += `<li>${esc(t.replace(/^[-*•]\s+/, '')).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</li>`; return; }
     if (open) { h += '</ul>'; open = false; } h += `<div class="hint" style="color:var(--ink)">${esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')}</div>`;
   });
@@ -859,7 +859,7 @@ function updSheet() {
   const u = U.upd; if (!u) return toast("You're on the latest version");
   S.prefs['updSeen_' + u.tag] = 1; save(); bellBadge();
   const mb = u.size ? (Math.round(u.size / 1048576 * 10) / 10) + ' MB' : '';
-  openSheet('⬆️ Update available', `<div class="upd-card"><div class="logo" style="width:64px;height:64px;margin:0 0 0 0;flex:0 0 auto">${LOGO('up')}</div><div class="mid"><b style="font-size:1.1rem">Ledger ${esc(updVer(u))}</b><small>${esc(u.name || '')}</small><small>Released ${esc(updDate(u.date))}${mb ? ' · ' + mb : ''}</small><small>You have ${esc(andInfo().version || '?')}</small></div></div>
+  openSheet('⬆️ Update available', `<div class="upd-card"><div class="logo" style="width:64px;height:64px;margin:0 0 0 0;flex:0 0 auto">${LOGO('up')}</div><div class="mid"><b style="font-size:1.1rem">Brokeless ${esc(updVer(u))}</b><small>${esc(u.name || '')}</small><small>Released ${esc(updDate(u.date))}${mb ? ' · ' + mb : ''}</small><small>You have ${esc(andInfo().version || '?')}</small></div></div>
   <button class="btn big" data-act="updInstall" id="updBtn">Install now</button><div class="bar" id="updBar" style="margin-top:10px;display:none"><i style="width:0%;background:var(--acc)"></i></div><div class="hint center" id="updMsg">Downloads in the app, then Android asks you to confirm. Your data stays.</div>
   <div class="section-t">What's new</div><div class="card" style="padding:4px 16px 12px">${updNotes(u) || '<div class="hint">Bug fixes and improvements.</div>'}</div>
   <button class="btn sec sm" data-act="updWeb">Download from GitHub instead</button>`, 'tall');
@@ -870,8 +870,8 @@ window.onLedgerDl = (p, msg) => {
   const b = $('#updBtn'), bar = $('#updBar'), m = $('#updMsg'); if (!b) return;
   if (p >= 0 && p < 100) { bar.querySelector('i').style.width = p + '%'; b.textContent = 'Downloading… ' + p + '%'; return; }
   if (p === 100) { bar.querySelector('i').style.width = '100%'; b.textContent = 'Checking the download…'; return; }
-  if (p === 101) { b.textContent = 'Installing…'; m.innerHTML = 'Tap <b>Update</b> / <b>Install</b> on Android\'s screen. Ledger closes and reopens on the new version.'; return; }
-  if (p === -2) { b.disabled = false; b.textContent = 'Install now'; m.innerHTML = 'One time only: turn on <b>Allow from this source</b> for Ledger, then come back. The install continues by itself.'; return; }
+  if (p === 101) { b.textContent = 'Installing…'; m.innerHTML = 'Tap <b>Update</b> / <b>Install</b> on Android\'s screen. Brokeless closes and reopens on the new version.'; return; }
+  if (p === -2) { b.disabled = false; b.textContent = 'Install now'; m.innerHTML = 'One time only: turn on <b>Allow from this source</b> for Brokeless, then come back. The install continues by itself.'; return; }
   b.disabled = false; b.textContent = 'Try again'; m.innerHTML = '<span class="red">Download failed' + (msg ? ': ' + esc(msg) : '') + '.</span> Check the internet, or use "Download from GitHub instead".';
 };
 ACT.updCheck = () => { if (!AND || !AND.updateCheck) return toast('Update the phone app to get in-app updates'); U.updManual = true; toast('Checking for updates…'); try { AND.updateCheck(); } catch (e) { } try { AND.checkUpdate(); } catch (e) { } };
@@ -1422,7 +1422,7 @@ function forBox() {
   const c = U.c, el = $('#forBox'); if (!el) return;
   if (c.kind !== 'exp' || !isOthers(c.acc)) { el.innerHTML = ''; return; }
   const n = esc(c.acc);
-  el.innerHTML = `<div class="box"><div class="lbl" style="margin-top:10px">Who was it for?</div><div class="seg" style="margin:0"><button class="${!c.mine ? 'on' : ''}" data-act="forSet" data-v="">For ${n}</button><button class="${c.mine ? 'on' : ''}" data-act="forSet" data-v="1">For me · I'll pay back</button></div><div class="hint">${c.mine ? `Counted as <b>your</b> expense, and Ledger shows <b>you owe ${n}</b> until you tap Pay back on ${n}'s card.` : `${n}'s own spend. Not counted as yours.`}</div></div>`;
+  el.innerHTML = `<div class="box"><div class="lbl" style="margin-top:10px">Who was it for?</div><div class="seg" style="margin:0"><button class="${!c.mine ? 'on' : ''}" data-act="forSet" data-v="">For ${n}</button><button class="${c.mine ? 'on' : ''}" data-act="forSet" data-v="1">For me · I'll pay back</button></div><div class="hint">${c.mine ? `Counted as <b>your</b> expense, and Brokeless shows <b>you owe ${n}</b> until you tap Pay back on ${n}'s card.` : `${n}'s own spend. Not counted as yours.`}</div></div>`;
 }
 ACT.forSet = el => { U.c.mine = !!el.dataset.v; forBox(); updCompose(); };
 function updCompose() {
@@ -1612,7 +1612,7 @@ ACT.stShare = async () => { const t = stmtText(); try { if (navigator.share) { a
 ACT.stCopy = async () => { const t = stmtText(); try { await navigator.clipboard.writeText(t); toast('Copied ✓ Paste it in WhatsApp'); } catch (e) { const x = document.createElement('textarea'); x.value = t; document.body.appendChild(x); x.select(); try { document.execCommand('copy'); toast('Copied ✓'); } catch (e2) { toast('Could not copy'); } x.remove(); } };
 ACT.recon = el => {
   const a = acc(el.dataset.n), pk = pockets(a.name), extra = r2(pk.reduce((s, x) => s + (C.bal[x.name] || 0), 0)), b = (C.bal[a.name] || 0) + extra; U.r = a.name; U.rExtra = extra;
-  openSheet((a.type === 'investment' ? 'Update ' : 'Match ') + esc(a.name), `<div class="kv"><div><span>Ledger shows${pk.length ? ' (yours + ' + pk.map(x => esc(x.name)).join(' + ') + ')' : ''}</span><b>${inrX(b)}</b></div></div>
+  openSheet((a.type === 'investment' ? 'Update ' : 'Match ') + esc(a.name), `<div class="kv"><div><span>Brokeless shows${pk.length ? ' (yours + ' + pk.map(x => esc(x.name)).join(' + ') + ')' : ''}</span><b>${inrX(b)}</b></div></div>
   <div class="lbl">${a.type === 'investment' ? 'Current value in the app' : a.type === 'card' ? 'Card balance now (minus if you owe)' : 'Total balance your bank app shows now'}</div>
   <label class="amtbox"><span>₹</span><input id="rAmt" inputmode="decimal" data-in="rAmt" placeholder="0"></label>
   <div class="hint center" id="rHint">A small correction entry is added for the difference. Your history stays untouched.</div>
@@ -1641,7 +1641,7 @@ function acctSheet(a, type0) {
   <div class="lbl">Credit limit ₹</div><input id="aLimit" inputmode="decimal" value="${fixLim ? +v.opening : lim0 || ''}" placeholder="e.g. 150000">
   <div class="hint">How much the bank lets you spend. It is <b>not</b> your money and never counts in net worth.</div>
   <div class="lbl">You owed at that moment ₹</div><input id="aOwe" inputmode="decimal" value="${isC && a ? (fixLim ? 0 : Math.max(0, -(+v.opening || 0))) : ''}" placeholder="0 if fully paid">
-  <div class="lbl">Bill day</div><input id="aBill" type="number" min="1" max="28" inputmode="numeric" value="${v.billDay || 28}"><div class="hint">From this day each month Ledger nudges you to pay the card until it is paid.</div></div>
+  <div class="lbl">Bill day</div><input id="aBill" type="number" min="1" max="28" inputmode="numeric" value="${v.billDay || 28}"><div class="hint">From this day each month Brokeless nudges you to pay the card until it is paid.</div></div>
   <div class="lbl">Balance as of</div><div class="grid2"><input type="date" id="aDate" value="${(v.openingDate || nowTs()).slice(0, 10)}"><input type="time" id="aTime" value="${(v.openingDate || '').slice(11, 16) || '00:00'}"></div>
   <div class="hint">Only entries <b>after</b> this moment change the balance. Older entries, and any old data you paste into the Sheet later, stay in history and charts but never disturb the balance.</div>
   <div class="lbl">Whose money is this?</div><div class="seg" style="margin-bottom:0"><button class="${U.a.others === 'n' ? 'on' : ''}" data-act="pick" data-o="a" data-f="others" data-v="n">💰 Mine</button><button class="${U.a.others === 'y' ? 'on' : ''}" data-act="pick" data-o="a" data-f="others" data-v="y">👥 Held for others</button></div>
@@ -1676,8 +1676,8 @@ ACT.aDel = () => {
 ACT.onboard = () => onboardAccounts();
 ACT.welcome = () => welcome();
 function welcome() {
-  openSheet('', `<div class="detail"><div class="logo">${LOGO('lk')}</div><div class="dv" style="font-size:1.6rem">Welcome to Ledger</div><div class="dt">Every rupee across banks, cash, investments, EMIs, loans and goals.</div></div>
-  ${cloudOk() ? `<div id="gBtnBox" class="gbox">${gButton()}</div><div class="hint center">Use the Google account that owns your Ledger Sheet.</div><details class="hint"><summary>Use the secret key instead</summary>` : ''}
+  openSheet('', `<div class="detail"><div class="logo">${LOGO('lk')}</div><div class="dv" style="font-size:1.6rem">Welcome to Brokeless</div><div class="dt">Every rupee across banks, cash, investments, EMIs, loans and goals.</div></div>
+  ${cloudOk() ? `<div id="gBtnBox" class="gbox">${gButton()}</div><div class="hint center">Use the Google account that owns your Brokeless Sheet.</div><details class="hint"><summary>Use the secret key instead</summary>` : ''}
   <div class="lbl">Google Sheet web app URL</div><input id="wUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
   <div class="lbl">Secret key</div><input id="wKey" placeholder="Shown when you ran setup()" autocomplete="off">
   <button class="btn big" data-act="wConnect">Connect & continue</button><button class="btn sec" data-act="wSkip">Start without Sheet for now</button>
@@ -1700,7 +1700,7 @@ async function gisRender() {
     const el = $('#gBtn'); if (el) google.accounts.id.renderButton(el, { theme: 'filled_blue', size: 'large', shape: 'pill', text: 'signin_with', width: Math.min(360, el.clientWidth || 320) });
   } catch (e) { const el = $('#gBtn'); if (el) el.innerHTML = '<div class="hint red">' + esc(e.message) + '</div>'; }
 }
-ACT.gSignIn = () => { try { AND.googleSignIn(CLOUD.clientId); } catch (e) { toast('Update the Ledger phone app to sign in with Google'); } };
+ACT.gSignIn = () => { try { AND.googleSignIn(CLOUD.clientId); } catch (e) { toast('Update the Brokeless phone app to sign in with Google'); } };
 window.onLedgerGoogle = (tok, err) => { if (tok) gotGoogle(tok, ''); else if (err) toast(err); };
 async function gotGoogle(tok, _) {
   toast('Signing in…');
@@ -1722,7 +1722,7 @@ function pushSignin() {
 function signinCard() {
   if (!cloudOk()) return '';
   const si = S.cfg.signin || {}, on = (si.clientIds || []).includes(CLOUD.clientId);
-  if (!S.key) { if (!AND) U.after = () => gisRender(); return `<div class="card"><h2>Sign in</h2><div class="gbox">${gButton()}</div><div class="hint center">Use the Gmail that owns your Ledger Sheet. Or paste the URL and key below.</div></div>`; }
+  if (!S.key) { if (!AND) U.after = () => gisRender(); return `<div class="card"><h2>Sign in</h2><div class="gbox">${gButton()}</div><div class="hint center">Use the Gmail that owns your Brokeless Sheet. Or paste the URL and key below.</div></div>`; }
   return `<div class="card"><h2>Google sign-in</h2>${S.gEmail ? `<div class="hint" style="margin-top:0">✓ This device signed in as <b>${esc(S.gEmail)}</b></div>` : S.key ? `<div class="hint" style="margin-top:0">Connected with the secret key.</div>` : ''}
   <div class="hint">${on ? '✓ On. A new phone or laptop only needs "Sign in with Google" with the Gmail that owns the Sheet.' : 'Switching on… (needs this device connected to the Sheet)'}</div>
   <div class="lbl">Other Google accounts allowed <small>(optional, e.g. a new Gmail later)</small></div><input id="siEmails" value="${esc((si.emails || []).join(', '))}" placeholder="name@gmail.com, …"><button class="btn sec sm" data-act="siSave">Save</button>
@@ -1734,7 +1734,7 @@ ACT.siSave = () => {
   commit([cfgOp('signin', Object.assign({}, S.cfg.signin, { clientIds: uniq((S.cfg.signin.clientIds || []).concat(cloudOk() ? CLOUD.clientId : [])), emails: em }))]); render(); toast('Saved');
 };
 ACT.signOut = async () => {
-  if (!confirm('Sign out? Ledger\'s data is removed from this device (your Sheet keeps everything). You can sign in again with Google.')) return;
+  if (!confirm('Sign out? Brokeless\'s data is removed from this device (your Sheet keeps everything). You can sign in again with Google.')) return;
   if (S.outbox.length) { await flush(); if (S.outbox.length && !confirm(S.outbox.length + ' change(s) could not be uploaded and will be lost. Sign out anyway?')) return; }
   localStorage.removeItem(KEY); location.reload();
 };
@@ -2270,7 +2270,7 @@ function nickOp(payee, nick) { const P = S.cfg.payees || {}, k = payeeKey(payee)
 function nickSheet(payee, back) {
   U.nk = { payee, back };
   openSheet('Rename payee', `<div class="lbl" style="margin-top:0">Show "${esc(payee)}" as</div><input id="nkIn" value="${esc(nickOf(payee) || payee)}" placeholder="e.g. Rapido" autocomplete="off" autocapitalize="words">
-  <div class="hint">Only the name shown in Ledger changes. Bank SMS are still matched by the bank's name, and past entries keep their notes.</div>
+  <div class="hint">Only the name shown in Brokeless changes. Bank SMS are still matched by the bank's name, and past entries keep their notes.</div>
   <button class="btn big" data-act="nkSave">Save name</button>${nickOf(payee) ? '<button class="btn sec" data-act="nkClear">Use the bank\'s name again</button>' : ''}`);
   setTimeout(() => { const i = $('#nkIn'); if (i) { i.focus(); i.select(); } }, 300);
 }
@@ -2342,7 +2342,7 @@ function pastFiling(p) {
 }
 const smartCfg = () => Object.assign({ prefill: true, forget: {} }, S.cfg.smart || {});
 function payeeHistory(payee, dir, skip) {
-  /* "Forget" in Settings: anything before that moment no longer teaches Ledger about this payee */
+  /* "Forget" in Settings: anything before that moment no longer teaches Brokeless about this payee */
   const fg = Object.entries(smartCfg().forget || {}).filter(([k]) => payeeSame(payee, k)).map(([, t]) => t).sort().pop() || '';
   const H = [], seen = new Set(), add = (sim, h) => { if (!h || !h.act || seen.has(h.id) || (fg && String(h.ts || '') <= fg)) return; seen.add(h.id); H.push(Object.assign({ sim }, h)); };
   S.pend.forEach(p => { if (p.id === skip || p.status === 'new' || !p.payee || (dir && p.dir !== dir)) return; const sim = payeeSame(payee, p.payee); if (sim) add(sim, pastFiling(p)); });
@@ -2443,7 +2443,7 @@ function pendForm() {
     const sg = payeeNotes(p.payee, payeeFind(p.payee)).filter(x => x !== P.note);
     h += `<div class="lbl">Note ${p.payee ? '<small class="mute">(bank name kept: ' + esc(p.payee) + ')</small>' : ''}</div><input id="pdRemk" value="${esc(P.note)}" placeholder="e.g. Breakfast">${sg.length ? `<div class="chips" style="margin-top:8px">${sg.map(x => `<button class="chip" data-act="pdNote" data-v="${esc(x)}">${esc(x)}</button>`).join('')}</div>` : ''}`;
   }
-  if (P.act === 'ignore') h += `<div class="hint">Use Ignore when you already logged this by hand, or it isn't yours. Ledger never learns from it.</div>`;
+  if (P.act === 'ignore') h += `<div class="hint">Use Ignore when you already logged this by hand, or it isn't yours. Brokeless never learns from it.</div>`;
   h += `<button class="btn big" data-act="pdSave">${P.act === 'ignore' ? 'Ignore this message' : 'Save'}</button><details class="hint"><summary>Original SMS</summary>${esc(p.raw || '')}</details>`;
   openSheet(p.dir === 'credit' ? 'Money received' : 'Money paid', h, 'tall');
 }
@@ -2491,13 +2491,13 @@ function pendNext() { render(); if (!pendNew().length) toast('All sorted ✓'); 
 ACT.smsTry = () => openSheet('Test a bank SMS', `<div class="hint" style="margin-top:0">Paste a bank SMS. If it is a real payment it goes to your "to sort" list on the Expenses tab. OTPs and offers are ignored.</div><textarea id="smsTxt" rows="5" placeholder="Sent Rs.664.71 from XX1211 to MC DONALDS on 21-Oct-26…"></textarea><button class="btn big" data-act="smsGo">Read it</button><div id="smsOut"></div>`);
 ACT.smsGo = () => {
   const raw = $('#smsTxt').value, rp = parseRefund(raw, nowTs(), '');
-  if (rp) { const r = addRefund(rp); $('#smsOut').innerHTML = `<div class="kv"><div><span>Refund</span><b>${inr(rp.amount)}</b></div><div><span>From</span><b>${esc(rp.merchant || '—')}</b></div><div><span>Why</span><b>${esc(rp.reason)}</b></div><div><span>Expected by</span><b>${dLabel(rp.by)}</b></div><div><span>Back to</span><b>${esc(rfWhere(r || rp))}</b></div></div><div class="hint ${r ? 'green' : ''}">${r ? '✓ Added to Refunds. Ledger will match it when the money arrives.' : 'Already in your Refunds list.'}</div><button class="btn" data-act="refundsOpen">Open Refunds</button>`; render(); return; }
+  if (rp) { const r = addRefund(rp); $('#smsOut').innerHTML = `<div class="kv"><div><span>Refund</span><b>${inr(rp.amount)}</b></div><div><span>From</span><b>${esc(rp.merchant || '—')}</b></div><div><span>Why</span><b>${esc(rp.reason)}</b></div><div><span>Expected by</span><b>${dLabel(rp.by)}</b></div><div><span>Back to</span><b>${esc(rfWhere(r || rp))}</b></div></div><div class="hint ${r ? 'green' : ''}">${r ? '✓ Added to Refunds. Brokeless will match it when the money arrives.' : 'Already in your Refunds list.'}</div><button class="btn" data-act="refundsOpen">Open Refunds</button>`; render(); return; }
   const x = parseSms(raw, nowTs());
   if (!x) { $('#smsOut').innerHTML = '<div class="hint red">Ignored: not a completed payment (OTP, offer, reminder or no amount).</div>'; return; }
   const row = addPending(x, raw);
   $('#smsOut').innerHTML = `<div class="kv"><div><span>Amount</span><b>${inr(x.amount)}</b></div><div><span>Type</span><b>${x.dir === 'credit' ? 'Money in' : x.card ? 'Card spend' : x.atm ? 'ATM' : 'Money out'}</b></div><div><span>Payee</span><b>${esc(x.payee || '—')}</b></div><div><span>Bank · number</span><b>${esc(x.bank || '?')} ${x.l4 ? '·' + esc(x.l4) : ''}</b></div><div><span>Account</span><b>${esc(accForSms(x) || 'you pick')}</b></div><div><span>When</span><b>${esc(dLabel(x.ts.slice(0, 10)))}</b></div>${x.ref ? `<div><span>Ref</span><b>${esc(x.ref)}</b></div>` : ''}</div><div class="hint ${row ? 'green' : ''}">${row ? '✓ Added to "to sort".' : 'Already in your list.'}</div>${row ? '<button class="btn" data-act="pendOpen">Sort now</button>' : ''}`;
 };
-/* Android app bridge: the Ledger Android app calls this for each new bank SMS */
+/* Android app bridge: the Brokeless Android app calls this for each new bank SMS */
 /* returns true for a payment to sort, 'rf' for a refund/cashback promise (Refunds list), false if ignored */
 window.LedgerSms = (raw, recvTs, from) => {
   const rp = parseRefund(raw, recvTs, from); if (rp) { const r = addRefund(rp); if (r) { U.rfNew = r; bellBadge(); if (U.tab === 'home') render(); } return r ? 'rf' : false; }
@@ -2601,7 +2601,7 @@ function refundsSheet() {
   h += `<button class="btn" data-act="rfNew">+ Add a refund you're waiting for</button>`;
   if (open.length) h += `<div class="ibx-h"><span>⏳ Waiting · ${open.length}</span></div><div class="group">${open.sort((a, b) => a.by.localeCompare(b.by)).map(rfRowHtml).join('')}</div>`;
   if (done.length) h += `<div class="ibx-h"><span>✓ History</span></div><div class="group">${done.slice(0, 40).map(rfRowHtml).join('')}</div>`;
-  if (!L.length) h += `<div class="empty"><span class="big">↩️</span>No refunds yet.<br>When IRCTC, Swiggy, Amazon or your bank texts "refund initiated", it lands here with the reason and date, and Ledger tells you if it's late.</div>`;
+  if (!L.length) h += `<div class="empty"><span class="big">↩️</span>No refunds yet.<br>When IRCTC, Swiggy, Amazon or your bank texts "refund initiated", it lands here with the reason and date, and Brokeless tells you if it's late.</div>`;
   h += `<div class="hint">A refund cancels the spend it came from (your Food or Travel total goes down). Cashback counts as income.</div>`;
   openSheet('↩️ Refunds & cashback', h, 'tall');
 }
@@ -2649,7 +2649,7 @@ ACT.rfSaveForm = () => {
   const R = U.rf, a = parseAmt($('#rfAmt').value); if (!(a > 0)) return toast('Enter the amount');
   const row = Object.assign({}, rfList().find(x => x.id === R.id) || { id: uid('RF'), src: 'manual', ts: nowTs(), gotId: '', dropped: false, raw: '' }, { kind: R.kind, amount: a, merchant: $('#rfMer').value.trim(), reason: $('#rfWhy').value.trim() || (R.kind === 'cashback' ? 'Cashback' : 'Refund'), acc: R.acc, by: $('#rfBy').value || addDays(today(), 7), exp: R.exp || '' });
   const L = rfList(), i = L.findIndex(x => x.id === row.id); commit([rfSave(i >= 0 ? L.map(x => x.id === row.id ? row : x) : L.concat([row]))]);
-  toast(R.id ? 'Updated' : '↩️ Added · Ledger will watch for it'); refundsSheet(); render();
+  toast(R.id ? 'Updated' : '↩️ Added · Brokeless will watch for it'); refundsSheet(); render();
 };
 /* the money arrived (no SMS, e.g. wallet): log it like a filed refund */
 ACT.rfGotIt = el => {
@@ -2727,18 +2727,18 @@ function drainSms() {
 }
 window.__ledgerSmsPing = () => drainSms();
 window.__ledgerOpenPending = () => { drainSms(); if (pendNew().length) ACT.pendOpen(); };
-window.onLedgerUpdate = () => toast('A new version of Ledger is ready', 'Restart', () => { try { AND.reload(); } catch (e) { location.reload(); } });
+window.onLedgerUpdate = () => toast('A new version of Brokeless is ready', 'Restart', () => { try { AND.reload(); } catch (e) { location.reload(); } });
 window.onLedgerPerm = () => { if (U.tab === 'settings') render(); };
 function phoneCard() {
-  if (!AND) return `<div class="card"><h2>Ledger Android app</h2><div class="hint" style="margin:0">The Android app reads bank SMS for you, unlocks with your fingerprint and works offline. Download it from your GitHub page (Releases → ledger.apk).</div></div>`;
+  if (!AND) return `<div class="card"><h2>Brokeless Android app</h2><div class="hint" style="margin:0">The Android app reads bank SMS for you, unlocks with your fingerprint and works offline. Download it from your GitHub page (Releases → ledger.apk).</div></div>`;
   const I = andInfo();
   return `<div class="card"><h2>Phone app <small>v${esc(I.version || '?')}</small></h2>
   <div class="srow"><span class="ic" style="background:var(--soft)">📩</span><span class="mid"><b>Read bank SMS</b><small>${I.sms ? '✓ On · OTPs and offers are ignored on the phone' : 'Off · tap to allow'}</small></span>${I.sms ? '<button class="btn sm sec" data-act="andScan">Scan 30 days</button>' : '<button class="btn sm" data-act="andPerm">Allow</button>'}</div>
-  ${(() => { let L = null; try { L = I.smsLast ? JSON.parse(I.smsLast) : null; } catch (e) { } return `<div class="hint" style="margin:-4px 0 6px 54px">${!I.sms ? 'Tap Allow. <b>If Allow is greyed out</b> or says "restricted setting": phone Settings → Apps → Ledger → ⋮ (top right) → <b>Allow restricted settings</b>, then come back and tap Allow.' : L ? 'Last SMS received ' + esc(dLabel(L.at.slice(0, 10))) + ', ' + esc(tLabel(L.at)) + ' from ' + esc(L.from || '?') + ' · ' + (L.kept ? '<span class="green">kept for sorting</span>' : 'skipped (not a bank payment)') : '<span class="amber">No SMS has reached Ledger since this version was installed.</span> If a bank SMS arrives and this stays empty, set Battery to Unrestricted below.'}</div>`; })()}
+  ${(() => { let L = null; try { L = I.smsLast ? JSON.parse(I.smsLast) : null; } catch (e) { } return `<div class="hint" style="margin:-4px 0 6px 54px">${!I.sms ? 'Tap Allow. <b>If Allow is greyed out</b> or says "restricted setting": phone Settings → Apps → Brokeless → ⋮ (top right) → <b>Allow restricted settings</b>, then come back and tap Allow.' : L ? 'Last SMS received ' + esc(dLabel(L.at.slice(0, 10))) + ', ' + esc(tLabel(L.at)) + ' from ' + esc(L.from || '?') + ' · ' + (L.kept ? '<span class="green">kept for sorting</span>' : 'skipped (not a bank payment)') : '<span class="amber">No SMS has reached Brokeless since this version was installed.</span> If a bank SMS arrives and this stays empty, set Battery to Unrestricted below.'}</div>`; })()}
   <div class="srow"><span class="ic" style="background:var(--soft)">🔔</span><span class="mid"><b>Notifications</b><small>${I.notif ? '✓ On · a ping for each bank message' : 'Off · tap to allow'}</small></span>${I.notif ? '' : '<button class="btn sm" data-act="andPerm">Allow</button>'}</div>
-  <div class="srow"><span class="ic" style="background:var(--soft)">🔋</span><span class="mid"><b>Battery: Unrestricted</b><small>${I.battery ? '✓ Samsung will not stop Ledger' : 'Needed so Samsung does not stop SMS reading'}</small></span>${I.battery ? '' : '<button class="btn sm" data-act="andBattery">Fix</button>'}</div>
+  <div class="srow"><span class="ic" style="background:var(--soft)">🔋</span><span class="mid"><b>Battery: Unrestricted</b><small>${I.battery ? '✓ Samsung will not stop Brokeless' : 'Needed so Samsung does not stop SMS reading'}</small></span>${I.battery ? '' : '<button class="btn sm" data-act="andBattery">Fix</button>'}</div>
   <div class="srow"><span class="ic" style="background:var(--soft)">👆</span><span class="mid"><b>App lock</b><small>${esc(lockSummary())}</small></span><button class="btn sm sec" data-act="spOpen" data-k="security">Change</button></div>
-  <div class="srow"><span class="ic" style="background:var(--soft)">🧩</span><span class="mid"><b>Home-screen widgets</b><small>Long-press your home screen → Widgets → Ledger. Four to pick from; they refresh each time you open Ledger.</small></span></div>
+  <div class="srow"><span class="ic" style="background:var(--soft)">🧩</span><span class="mid"><b>Home-screen widgets</b><small>Long-press your home screen → Widgets → Brokeless. Four to pick from; they refresh each time you open Brokeless.</small></span></div>
   ${AND && AND.setBeta ? `<div class="srow"><span class="ic" style="background:var(--soft)">🧪</span><span class="mid"><b>Get test builds</b><small>${I.beta ? '✓ On · new test versions are offered here before they go live' : 'Off · only live versions'}</small></span><button class="btn sm sec" data-act="andBeta">${I.beta ? 'Turn off' : 'Turn on'}</button></div>` : ''}
   <button class="btn sec sm" data-act="updCheck">⬆️ Check for app update</button>${U.upd ? `<div class="hint green">Version ${esc(updVer(U.upd))} is ready · <a href="#" data-act="updOpen" style="color:var(--acc);font-weight:800">What's new</a></div>` : ''}
   <div class="hint">SMS are read only on this phone. Only completed debits and credits go to your "to sort" list and your own Google Sheet.</div></div>`;
@@ -2873,11 +2873,11 @@ function remView() {
   const monthBills = r2(act.filter(r => r.kind !== 'task').reduce((s2, r) => { let d = r.next, t2 = 0, g = 0; while (d && d <= mEnd && g++ < 40) { if (d >= ym() + '-01') t2 += remAmt(r, d); d = nextAfter(d, r.every, r.unit); } return s2 + t2; }, 0));
   let h = `<div class="hero" style="--hc:#0EA5E9"><div class="hl">Reminders</div><div class="hv">${act.length}</div><div class="hs">${remCounts().due ? '<b class="red">' + remCounts().due + ' need you now</b> · ' : ''}Bills & SIPs left this month <b>${inr(monthBills)}</b></div></div>`;
   h += `<button class="btn" data-act="remNew">+ Add reminder</button>` + recurCard();
-  if (!S.rem.length) h += `<div class="empty"><span class="big">⏰</span>Add bills (rent, phone recharge, subscriptions), SIPs and to-dos like "Review Ledger". Bills can log themselves on the due date.</div>`;
+  if (!S.rem.length) h += `<div class="empty"><span class="big">⏰</span>Add bills (rent, phone recharge, subscriptions), SIPs and to-dos like "Review Brokeless". Bills can log themselves on the due date.</div>`;
   const groups = [['Needs you now', r => remDueDate(r) <= t], ['Next 7 days', r => remDueDate(r) > t && remDueDate(r) <= addDays(t, 7)], ['Later', r => remDueDate(r) > addDays(t, 7)]];
   groups.forEach(([lbl, f]) => { const l = act.filter(f); if (l.length) h += `<div class="section-t">${lbl}</div><div class="group">${l.map(remRow).join('')}</div>`; });
   if (off.length) h += `<div class="section-t">Paused / finished</div><div class="group">${off.map(remRow).join('')}</div>`;
-  h += `<div class="hint">${S.url ? '📅 Reminders with Google Calendar on show up as phone alerts, even when Ledger is closed. They are added within a minute of saving.' : 'Connect your Sheet to get Google Calendar alerts.'}</div>`;
+  h += `<div class="hint">${S.url ? '📅 Reminders with Google Calendar on show up as phone alerts, even when Brokeless is closed. They are added within a minute of saving.' : 'Connect your Sheet to get Google Calendar alerts.'}</div>`;
   return h;
 }
 function remRow(r) {
@@ -2893,8 +2893,8 @@ const REM_PRESETS = () => [
   { l: '☁️ Google subscription ₹210', v: { kind: 'bill', name: 'Google subscription', amount: 210, category: catOr('Personal & Lifestyle', 'Miscellaneous'), every: 1, unit: 'month', next: nextFirst(), auto: true } },
   { l: '📱 Recharge ₹899 · 3 months', v: { kind: 'bill', name: 'Phone recharge', amount: 899, category: catOr('Household'), every: 3, unit: 'month', next: '2026-12-13' < today() ? nextFirst() : '2026-12-13', auto: false } },
   { l: '📈 Monthly SIP', v: { kind: 'sip', name: 'SIP', amount: '', every: 1, unit: 'month', next: nextFirst(), auto: true } },
-  { l: '✅ Review Ledger weekly', v: { kind: 'task', name: 'Review Ledger', every: 1, unit: 'week', next: addDays(monday(today()), 7) } },
-  { l: '⚖️ Match bank balances', v: { kind: 'task', name: 'Match bank balances in Ledger', every: 2, unit: 'week', next: addDays(today(), 1) } }
+  { l: '✅ Review Brokeless weekly', v: { kind: 'task', name: 'Review Brokeless', every: 1, unit: 'week', next: addDays(monday(today()), 7) } },
+  { l: '⚖️ Match bank balances', v: { kind: 'task', name: 'Match bank balances in Brokeless', every: 2, unit: 'week', next: addDays(today(), 1) } }
 ];
 ACT.remPreset = el => { const p = REM_PRESETS()[+el.dataset.i]; remSheet(null, p.v); };
 function remSheet(r, preset) {
@@ -2904,7 +2904,7 @@ function remSheet(r, preset) {
   const money = U.rm.kind !== 'task';
   openSheet(r ? 'Edit reminder' : 'New reminder', `${r || preset ? '' : `<div class="lbl" style="margin-top:4px">Quick start</div><div class="chips wrap">${REM_PRESETS().map((p, i) => `<button class="chip" data-act="remPreset" data-i="${i}">${p.l}</button>`).join('')}</div>`}
   <div class="seg" style="margin-top:12px">${[['bill', '🧾 Bill'], ['sip', '📈 SIP / invest'], ['task', '✅ To-do']].map(([k, l]) => `<button class="${U.rm.kind === k ? 'on' : ''}" data-act="remKind" data-k="${k}">${l}</button>`).join('')}</div>
-  <div class="lbl">Name</div><input id="rmName" value="${esc(v.name)}" placeholder="${U.rm.kind === 'task' ? 'e.g. Review Ledger' : 'e.g. Rent'}">
+  <div class="lbl">Name</div><input id="rmName" value="${esc(v.name)}" placeholder="${U.rm.kind === 'task' ? 'e.g. Review Brokeless' : 'e.g. Rent'}">
   <div id="rmMoney" ${money ? '' : 'hidden'}><div class="lbl">Amount ₹</div><input id="rmAmt" inputmode="decimal" value="${esc(v.amount)}" placeholder="0" data-in="rmStep">
   <label class="check"><input type="checkbox" id="rmStepOn" data-in="rmStep" ${+v.then > 0 ? 'checked' : ''}> Price changes later (intro offer, price rise)</label>
   <div id="rmStepBox" ${+v.then > 0 ? '' : 'hidden'}><div class="grid2"><div><div class="lbl" style="margin-top:0">Payments at this price</div><input id="rmStepN" type="number" min="0" max="60" inputmode="numeric" data-in="rmStep" value="${+v.then > 0 ? remLeft(v) : 3}"></div><div><div class="lbl" style="margin-top:0">Then ₹ every time</div><input id="rmThen" inputmode="decimal" data-in="rmStep" value="${+v.then > 0 ? esc(v.then) : ''}" placeholder="e.g. 650"></div></div><div class="hint" id="rmStepHint"></div></div>
@@ -3386,7 +3386,7 @@ ACT.askSug = () => { U.ask = []; askSheet(); };
 ACT.askGo = el => { shut(); const k = el.dataset.k; if (k === 'loans' || k === 'inv') { U.mseg = k; setTab('money'); } else { U.pseg = k; setTab('goals'); } };
 
 /* =========================================================
-   LOAN & EMI CALCULATOR (projection only, checks it against your real Ledger numbers)
+   LOAN & EMI CALCULATOR (projection only, checks it against your real Brokeless numbers)
    ========================================================= */
 const LOAN_P = [['🏠 Home', 8.5, 240], ['🚗 Car', 9.5, 60], ['🏍️ Bike', 11, 36], ['📱 Phone / gadget', 14, 12], ['💼 Personal', 12.5, 36], ['🎁 No-cost EMI', 0, 6]];
 const emiOf = (P, rate, n) => { if (!(P > 0) || !(n > 0)) return 0; const r = rate / 1200; return r ? P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1) : P / n; };
@@ -3434,7 +3434,7 @@ function calcOut() {
   /* tenure options */
   const opts = [6, 12, 24, 36, 60, 120, 240].filter(x => x !== n && (x <= 60 || P >= 500000)).slice(0, 5).concat(n).sort((a, b) => a - b);
   h += `<div class="card"><h2>Other lengths</h2><table class="stmt" style="width:100%;border-collapse:collapse">${opts.map(x => { const e = emiOf(P, rate, x), it = e * x - P; return `<tr style="${x === n ? 'font-weight:800' : ''}"><td>${x < 24 ? x + ' months' : (x / 12) + ' years'}${x === n ? ' ✓' : ''}<small>interest ${inr(it)}</small></td><td class="r">${inr(Math.ceil(e))}/mo</td></tr>`; }).join('')}</table><div class="hint">Shorter = bigger EMI but far less interest.</div></div>`;
-  h += `<div class="card"><h2>Can you afford it? <small>from your Ledger</small></h2>${afford(E, down)}</div>`;
+  h += `<div class="card"><h2>Can you afford it? <small>from your Brokeless</small></h2>${afford(E, down)}</div>`;
   /* save instead */
   const sv = Math.ceil(E), monthsSave = (() => { let b = down > 0 ? 0 : 0, m = 0; const r = 7 / 1200; while (b < P && m < 600) { b = b * (1 + r) + sv; m++; } return m; })();
   h += `<div class="card"><h2>Or save first?</h2><div class="hint" style="margin:0;color:var(--ink)">Putting the same ${inr(sv)}/month in a SIP (~7% a year) gets you the ${inr(P)} in about <b>${monthsSave} months</b> instead of ${n}, with <b class="green">no interest${intr > 0 ? ', ' + inr(intr + fee) + ' saved' : ''}</b>.</div><div class="btns"><button class="btn sec sm" data-act="clGoal" data-t="${Math.round(P)}" data-m="${monthsSave}">🎯 Make it a goal</button><button class="btn sm" data-act="clEmi" data-e="${Math.ceil(E)}" data-n="${n}">📆 Add as EMI</button></div></div>`;
@@ -3989,7 +3989,7 @@ function wrapData(m) {
 function wrapSlides(m, amt) {
   const D = wrapData(m), L = mLabel(m), Ls = mLabel(m).replace(/ \d{4}$/, ''), P = mLabel(shiftM(m, -1)).replace(/ \d{4}$/, ''), A = v => amt ? fmtINR(v, 1) : '', out = [];
   const WN = ['Sundays', 'Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays'];
-  out.push({ emoji: '🎁', kicker: 'Your month in Ledger', big: Ls, title: D.cur ? 'So far this month' : 'That was ' + L, sub: D.n ? `${D.n} expense${D.n === 1 ? '' : 's'} on ${D.logDays} day${D.logDays === 1 ? '' : 's'} you logged` : 'Nothing logged yet', stats: amt && D.n ? [['Spent', A(D.spent)], ['Income', A(D.inc)]] : [] });
+  out.push({ emoji: '🎁', kicker: 'Your month in Brokeless', big: Ls, title: D.cur ? 'So far this month' : 'That was ' + L, sub: D.n ? `${D.n} expense${D.n === 1 ? '' : 's'} on ${D.logDays} day${D.logDays === 1 ? '' : 's'} you logged` : 'Nothing logged yet', stats: amt && D.n ? [['Spent', A(D.spent)], ['Income', A(D.inc)]] : [] });
   if (!D.n) return out;
   if (D.prev > 0) { const ch = Math.round((D.spent - D.prev) / D.prev * 100); out.push({ emoji: ch <= 0 ? '📉' : '📈', kicker: 'Spending', big: ch === 0 ? 'Same' : Math.abs(ch) + '% ' + (ch < 0 ? 'less' : 'more'), title: ch === 0 ? 'as ' + P : 'than ' + P, sub: ch < -4 ? 'Nicely done. Your wallet noticed.' : ch > 15 ? 'A bigger month. Worth a look at the top category.' : 'Pretty steady month.', stats: amt ? [[Ls, A(D.spent)], [P, A(D.prev)]] : [] }); }
   else out.push({ emoji: '🧾', kicker: 'Spending', big: D.n + '', title: 'expenses logged', sub: 'Your first full month. Next time you get a comparison.', stats: amt ? [['Spent', A(D.spent)]] : [] });
@@ -4047,14 +4047,14 @@ function wrapCanvas(x, m) {
   y += 30;
   if (x.bars) { const room = H - 170 - y, nb = Math.max(1, Math.min(x.bars.length, Math.floor(room / 96))), step = Math.min(110, room / nb); x.bars.slice(0, nb).forEach(b => { g.fillStyle = '#fff'; g.font = `700 38px ${F}`; g.fillText(b.l, X, y + 38); g.textAlign = 'right'; g.fillText(b.p + '%', X + MW, y + 38); g.textAlign = 'left'; g.fillStyle = 'rgba(255,255,255,.22)'; g.beginPath(); g.roundRect(X, y + 58, MW, 18, 9); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.roundRect(X, y + 58, Math.max(18, MW * b.p / 100), 18, 9); g.fill(); y += step; }); }
   if (x.stats && x.stats.length) { const rows = x.stats.slice(0, Math.max(1, Math.min(5, Math.floor((H - 200 - y - 30) / 86)))), bh = rows.length * 86 + 30; g.fillStyle = 'rgba(255,255,255,.14)'; g.beginPath(); g.roundRect(X - 20, y, MW + 40, bh, 36); g.fill(); rows.forEach(([k, v], i) => { const yy = y + 70 + i * 86; g.font = `600 34px ${F}`; g.fillStyle = 'rgba(255,255,255,.8)'; g.fillText(k, X + 16, yy); g.font = `800 38px ${F}`; g.fillStyle = '#fff'; g.textAlign = 'right'; let t = v; while (g.measureText(t).width > MW * .62 && t.length > 2) t = t.slice(0, -2) + '…'; g.fillText(t, X + MW - 16, yy); g.textAlign = 'left'; }); }
-  g.font = `700 30px ${F}`; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText('Made with Ledger · ' + mLabel(m), X, H - 80);
+  g.font = `700 30px ${F}`; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText('Made with Brokeless · ' + mLabel(m), X, H - 80);
   return cv;
 }
 async function wrapPic(save) {
   try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch (e) { }
-  const sl = wrapSlides(WR.m, false), x = sl[Math.min(WR.i, sl.length - 1)], cv = wrapCanvas(x, WR.m), url = cv.toDataURL('image/png'), b64 = url.split(',')[1], name = 'Ledger-' + WR.m + '-' + (WR.i + 1) + '.png';
-  if (AND && typeof AND.shareImage === 'function') { const r = save ? AND.saveImage(name, b64) : AND.shareImage(name, b64, 'My ' + mLabel(WR.m) + ' in Ledger'); toast(r ? (save ? 'Saved to Pictures · ' + name : 'Opening share…') : 'Could not ' + (save ? 'save' : 'share')); return; }
-  if (AND) return toast('Update the Ledger phone app to share pictures');
+  const sl = wrapSlides(WR.m, false), x = sl[Math.min(WR.i, sl.length - 1)], cv = wrapCanvas(x, WR.m), url = cv.toDataURL('image/png'), b64 = url.split(',')[1], name = 'Brokeless-' + WR.m + '-' + (WR.i + 1) + '.png';
+  if (AND && typeof AND.shareImage === 'function') { const r = save ? AND.saveImage(name, b64) : AND.shareImage(name, b64, 'My ' + mLabel(WR.m) + ' in Brokeless'); toast(r ? (save ? 'Saved to Pictures · ' + name : 'Opening share…') : 'Could not ' + (save ? 'save' : 'share')); return; }
+  if (AND) return toast('Update the Brokeless phone app to share pictures');
   try { const blob = await (await fetch(url)).blob(), file = new File([blob], name, { type: 'image/png' }); if (!save && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'My ' + mLabel(WR.m) }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
   const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast('Picture saved · no amounts in it');
 }
@@ -4114,23 +4114,23 @@ function renderSettings() {
   <div class="card"><h2>Files on this phone</h2><button class="btn sec" data-act="exportJson">⬇ Download backup file (JSON)</button><button class="btn sec" data-act="impJson">⬆ Restore from a JSON file</button><input type="file" id="impFile" accept=".json,application/json" hidden><button class="btn sec" data-act="exportCsv">⬇ Download all entries (CSV)</button><button class="btn dng" data-act="clearLocal">Clear this phone's copy</button><div class="hint">The Google Sheet is your master copy. Before any restore a safety copy of the Sheet is made, so a restore can always be undone.</div></div>`);
   if (U.sp === 'backup' && S.url) U.after = bkLoad;
   pg('sms', smartCard());
-  pg('sms', `<div class="card"><h2>Bank SMS</h2><div class="lbl" style="margin-top:0">Card / account last 4 digits</div>${live(a => a.type !== 'cash' && a.type !== 'investment' && mineA(a)).map(a => `<div class="grid2" style="grid-template-columns:1fr 110px;align-items:center;margin-bottom:6px"><span style="font-weight:700">${esc(a.name)}</span><input data-in="acL4" data-n="${esc(a.name)}" inputmode="numeric" maxlength="12" value="${esc(a.l4 || '')}" placeholder="e.g. 1211"></div>`).join('')}<div class="hint">Matches SMS like "from XX1211" to the right account. Several numbers? Separate them with commas. The Ledger phone app fills these in for you the first time it sees each one.</div><button class="btn sec" data-act="smsTry">🧪 Paste an SMS to test</button></div>`);
+  pg('sms', `<div class="card"><h2>Bank SMS</h2><div class="lbl" style="margin-top:0">Card / account last 4 digits</div>${live(a => a.type !== 'cash' && a.type !== 'investment' && mineA(a)).map(a => `<div class="grid2" style="grid-template-columns:1fr 110px;align-items:center;margin-bottom:6px"><span style="font-weight:700">${esc(a.name)}</span><input data-in="acL4" data-n="${esc(a.name)}" inputmode="numeric" maxlength="12" value="${esc(a.l4 || '')}" placeholder="e.g. 1211"></div>`).join('')}<div class="hint">Matches SMS like "from XX1211" to the right account. Several numbers? Separate them with commas. The Brokeless phone app fills these in for you the first time it sees each one.</div><button class="btn sec" data-act="smsTry">🧪 Paste an SMS to test</button></div>`);
   pg('feedback', feedbackCard());
   pg('import', importCard());
-  pg('about', `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Ledger Android app (Settings → Phone app).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v8.9${AND ? ' · app ' + esc(andInfo().version || '') : ''}</div>`);
+  pg('about', `<div class="card"><h2>Privacy</h2><div class="hint" style="margin:0">Your money data stays on your phone and in your own Google Drive. Nobody else can see it.</div><a class="btn sec sm" href="https://saysee09.github.io/ledger/privacy.html" target="_blank" rel="noopener" style="margin-top:10px;display:inline-flex;align-items:center">Read the privacy policy</a></div><div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Brokeless Android app (Settings → Phone app).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Brokeless v9.0${AND ? ' · app ' + esc(andInfo().version || '') : ''}</div>`);
   return settingsView(PG);
 }
 /* settings: a short menu, each item opens its own page (Android back / ‹ returns to the menu) */
 const SP = () => [
   ['Your data', [['sync', '☁️', 'Google Sheet & sync', !S.url ? 'Not connected' : lastErr ? 'Problem · tap to see' : 'Connected' + (S.lastSync ? ' · ' + S.lastSync : '')], ['backup', '🗂️', 'Backups & restore', 'Drive · Ledger App / Backups'], ['import', '📥', 'Import old data', 'Expenses from a CSV · salary month by month'], ['bin', '🗑️', 'Recently deleted', (S.bin.length ? S.bin.length + ' item' + (S.bin.length === 1 ? '' : 's') : 'Empty') + ' · kept ' + binDays() + ' days']]],
   ['Money', [['accounts', '🏦', 'Accounts', S.accounts.length + ' account' + (S.accounts.length === 1 ? '' : 's')], ['cats', '🏷️', 'Categories, budgets & types', S.cfg.categories.length + ' categories'], ['sms', '📩', 'Bank SMS', (pendIgnored().length ? pendIgnored().length + ' ignored · ' : '') + 'suggestions · card digits']]],
-  ['App', [['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off'], ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Ledger v8.9']]],
+  ['App', [['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off'], ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Brokeless v9.0']]],
   ['Help us improve', [['feedback', '💬', 'Send feedback', (S.prefs.fbQ || []).length ? (S.prefs.fbQ.length + ' waiting to send') : 'Ideas, problems, what you like']]]
 ];
 function settingsView(PG) {
   const all = SP().flatMap(g => g[1]), cur = U.sp && all.find(x => x[0] === U.sp);
   if (cur) { $('#title').textContent = cur[2]; $('#title').classList.add('sm'); return `<button class="back" data-act="spBack">‹ Settings</button>` + (PG[cur[0]] || '<div class="empty">Nothing here yet.</div>'); }
-  return SP().map(([g, items]) => `<div class="section-t">${g}</div><div class="group">${items.map(([k, i, t, sub]) => `<button class="item" data-act="spOpen" data-k="${k}"><span class="ic" style="background:var(--soft)">${i}</span><span class="mid"><b>${esc(t)}</b><small>${esc(sub)}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`).join('')}</div>`).join('') + '<div class="hint center" style="margin-top:18px">Ledger v8.9 · screens ' + APP_BUILD + (AND ? ' · phone app ' + esc(andInfo().version || '?') : '') + '</div>';
+  return SP().map(([g, items]) => `<div class="section-t">${g}</div><div class="group">${items.map(([k, i, t, sub]) => `<button class="item" data-act="spOpen" data-k="${k}"><span class="ic" style="background:var(--soft)">${i}</span><span class="mid"><b>${esc(t)}</b><small>${esc(sub)}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`).join('')}</div>`).join('') + '<div class="hint center" style="margin-top:18px">Brokeless v9.0 · screens ' + APP_BUILD + (AND ? ' · phone app ' + esc(andInfo().version || '?') : '') + '</div>';
 }
 ACT.spOpen = el => { U.sp = el.dataset.k; try { history.pushState({ sp: 1 }, ''); } catch (e) { } U.fresh = true; render(); window.scrollTo(0, 0); };
 ACT.spBack = () => { if (history.state && history.state.sp) history.back(); else { U.sp = null; U.fresh = true; render(); window.scrollTo(0, 0); } };
@@ -4223,8 +4223,8 @@ ACT.impJson = () => { U.noLock = Date.now() + 120000; const f = $('#impFile'); f
 function impJsonFile(file) {
   if (!file) return; const rd = new FileReader();
   rd.onload = () => {
-    let o; try { o = JSON.parse(rd.result); } catch (e) { return toast('That file is not a Ledger backup'); }
-    const d = o && o.data; if (!d || !Array.isArray(d.accounts) || !Array.isArray(d.exp)) return toast('That file is not a Ledger backup');
+    let o; try { o = JSON.parse(rd.result); } catch (e) { return toast('That file is not a Brokeless backup'); }
+    const d = o && o.data; if (!d || !Array.isArray(d.accounts) || !Array.isArray(d.exp)) return toast('That file is not a Brokeless backup');
     const n = Object.keys(COLL).reduce((a, k) => a + ((d[COLL[k]] || []).length), 0);
     if (!confirm('Restore ' + n + ' records from ' + (o.exported || 'this file') + '?\n\nEverything in the app and the Sheet is replaced. ' + (S.url ? 'A safety copy of the Sheet is saved first.' : ''))) return;
     (async () => {
@@ -4239,7 +4239,7 @@ function impJsonFile(file) {
   };
   rd.readAsText(file);
 }
-ACT.exportJson = () => { const o = {}; Object.values(COLL).concat(['cfg']).forEach(k => o[k] = S[k]); download('ledger_backup_' + today() + '.json', JSON.stringify({ app: 'Ledger v6', exported: nowTs(), data: o }, null, 1), 'application/json'); };
+ACT.exportJson = () => { const o = {}; Object.values(COLL).concat(['cfg']).forEach(k => o[k] = S[k]); download('ledger_backup_' + today() + '.json', JSON.stringify({ app: 'Brokeless v6', exported: nowTs(), data: o }, null, 1), 'application/json'); };
 ACT.exportCsv = () => {
   const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"', rows = [];
   S.exp.forEach(e => rows.push(['Expense', e.ts, e.amount, e.account, '', e.category, '', e.remarks, e.photo || '']));
@@ -4313,7 +4313,7 @@ function bioAuto() {
   const go = () => setTimeout(() => { if (U.pin && U.pin.mode === 'unlock' && !$('#lock').hidden && document.visibilityState === 'visible') bioAsk(); }, 350);
   if (document.visibilityState === 'visible') go(); else document.addEventListener('visibilitychange', function f() { if (document.visibilityState === 'visible') { document.removeEventListener('visibilitychange', f); go(); } });
 }
-function bioAsk() { if (!AND || !U.pin || $('#lock').hidden) return; U.noLock = Date.now() + 60000; try { AND.unlock('Unlock Ledger'); } catch (e) { } }
+function bioAsk() { if (!AND || !U.pin || $('#lock').hidden) return; U.noLock = Date.now() + 60000; try { AND.unlock('Unlock Brokeless'); } catch (e) { } }
 window.onLedgerUnlock = (ok, msg) => {
   U.noLock = Date.now() + 1500; /* returning from the fingerprint pop-up is not "coming back to the app" */
   const P = U.pin; if (!P) return;
@@ -4324,7 +4324,7 @@ window.onLedgerUnlock = (ok, msg) => {
 function drawLock() {
   const P = U.pin, L = $('#lock'), set = P.mode !== 'unlock' && P.mode !== 'turnOn';
   const word = { pin: 'PIN', pwd: 'password', pat: 'pattern' }[P.kind];
-  let title = P.mode === 'unlock' ? (P.kind === 'device' ? 'Ledger is locked' : 'Enter your ' + word) : P.mode === 'set1' ? 'Choose a ' + (P.kind === 'pin' ? '4-digit PIN' : P.kind === 'pwd' ? 'password (4+ characters)' : 'pattern (join 4+ dots)') : P.mode === 'set2' ? (P.kind === 'pat' ? 'Draw it again' : 'Type it again') : P.mode === 'verify' ? 'Confirm your current ' + word : 'Ledger';
+  let title = P.mode === 'unlock' ? (P.kind === 'device' ? 'Brokeless is locked' : 'Enter your ' + word) : P.mode === 'set1' ? 'Choose a ' + (P.kind === 'pin' ? '4-digit PIN' : P.kind === 'pwd' ? 'password (4+ characters)' : 'pattern (join 4+ dots)') : P.mode === 'set2' ? (P.kind === 'pat' ? 'Draw it again' : 'Type it again') : P.mode === 'verify' ? 'Confirm your current ' + word : 'Brokeless';
   const fp = P.mode === 'unlock' && canBio() ? `<button class="fpb" data-act="bioAsk"><svg viewBox="0 0 24 24"><path d="M12 11c0 3.5-.6 6.3-1.8 8.6M8.5 9.5A3.5 3.5 0 0 1 15.5 11c0 2.4-.3 4.6-.9 6.5M5.3 8.6A7 7 0 0 1 19 11c0 1.2-.1 2.4-.3 3.5M5 13.5c.1-.8.1-1.7 0-2.5M8.6 20.3C9.5 18 10 15 10 11.5"/></svg>Use fingerprint</button>` : '';
   const alt = P.mode === 'unlock' ? `${fp}<button class="forgot" data-act="pinForgot">Forgot?</button>` : '<button class="forgot" data-act="pinCancel">Cancel</button>';
   let mid = '';
@@ -4333,7 +4333,7 @@ function drawLock() {
   else if (P.kind === 'pwd') mid = `<form id="pwF" onsubmit="return false" style="margin:22px 0 10px"><input type="password" id="pwIn" autocomplete="${set ? 'new-password' : 'current-password'}" placeholder="Password" style="text-align:center;font-size:18px"><button class="btn big" data-act="pwGo" style="margin-top:12px">${P.mode === 'unlock' ? 'Unlock' : 'Next'}</button></form>`;
   else mid = `<div class="patw"><svg id="patSvg" viewBox="0 0 300 300"><polyline id="patLine" points="" /></svg>${[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => `<i class="pd" data-i="${i}" style="left:${(i % 3) * 33.333 + 16.667}%;top:${Math.floor(i / 3) * 33.333 + 16.667}%"></i>`).join('')}</div>`;
   if (P.mode === 'set1' && P.backup) title = 'Backup PIN, in case fingerprint fails';
-  L.innerHTML = `<div class="lk"><div class="logo">${LOGO('lk')}</div><h2>${P.mode === 'unlock' ? 'Ledger' : title}</h2>${P.mode === 'unlock' ? `<div class="sub">${P.kind === 'device' ? greet() : title}</div>` : ''}${mid}<div class="lkalt">${alt}</div></div>`;
+  L.innerHTML = `<div class="lk"><div class="logo">${LOGO('lk')}</div><h2>${P.mode === 'unlock' ? 'Brokeless' : title}</h2>${P.mode === 'unlock' ? `<div class="sub">${P.kind === 'device' ? greet() : title}</div>` : ''}${mid}<div class="lkalt">${alt}</div></div>`;
   if (P.kind === 'pwd') setTimeout(() => { const i = $('#pwIn'); if (i) { i.focus(); i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); ACT.pwGo(); } }; } }, 60);
   if (P.kind === 'pat') patBind();
 }
@@ -4382,7 +4382,7 @@ ACT.lockType = el => {
   const k = el.dataset.v; if (k === S.lock.type && k !== 'none' && k !== 'device') return guard(() => showLock('set1', k));
   guard(() => {
     if (k === 'none') { S.lock.type = 'none'; save(); render(); return toast('Lock off'); }
-    if (k === 'device') { if (!AND || !andInfo().bio) return toast('Set up a fingerprint or screen lock on the phone first'); U.pin = { mode: 'turnOn', kind: 'device' }; U.noLock = Date.now() + 60000; try { AND.unlock('Turn on phone lock for Ledger'); } catch (e) { } return; }
+    if (k === 'device') { if (!AND || !andInfo().bio) return toast('Set up a fingerprint or screen lock on the phone first'); U.pin = { mode: 'turnOn', kind: 'device' }; U.noLock = Date.now() + 60000; try { AND.unlock('Turn on phone lock for Brokeless'); } catch (e) { } return; }
     showLock('set1', k);
   });
 };
@@ -4391,8 +4391,8 @@ ACT.lockBackup = () => guard(() => { U.pin = { mode: 'set1', kind: (S.sec && S.s
 function lockCard() {
   const I = AND ? andInfo() : {};
   return `<div class="card"><h2>App lock</h2><div class="lbl" style="margin-top:0">Unlock with</div><div class="chips wrap">${LOCK_T().map(([k, i, l]) => `<button class="chip ${S.lock.type === k ? 'on' : ''}" data-act="lockType" data-v="${k}">${i} ${l}</button>`).join('')}</div>
-  <div class="hint">${S.lock.type === 'device' ? "Opens with your PIN, or tap 👆 Use fingerprint (face works too if your phone allows apps to use it)." : S.lock.type === 'none' ? 'Anyone holding your unlocked phone can open Ledger.' : 'Tap it again to change your ' + ({ pin: 'PIN', pwd: 'password', pat: 'pattern' }[S.lock.type]) + '.'}${AND ? '' : " Phone's lock (fingerprint / face) is available in the Ledger Android app."}</div>
-  ${lockOn() && canBio() ? `<label class="check"><input type="checkbox" data-in="bioFirst" ${S.lock.bioFirst !== false ? 'checked' : ''}> 👆 Show fingerprint as soon as Ledger opens</label>` : ''}
+  <div class="hint">${S.lock.type === 'device' ? "Opens with your PIN, or tap 👆 Use fingerprint (face works too if your phone allows apps to use it)." : S.lock.type === 'none' ? 'Anyone holding your unlocked phone can open Brokeless.' : 'Tap it again to change your ' + ({ pin: 'PIN', pwd: 'password', pat: 'pattern' }[S.lock.type]) + '.'}${AND ? '' : " Phone's lock (fingerprint / face) is available in the Brokeless Android app."}</div>
+  ${lockOn() && canBio() ? `<label class="check"><input type="checkbox" data-in="bioFirst" ${S.lock.bioFirst !== false ? 'checked' : ''}> 👆 Show fingerprint as soon as Brokeless opens</label>` : ''}
   ${S.lock.type === 'device' ? `<button class="btn sec sm" data-act="lockBackup" style="margin-top:6px">${S.sec ? 'Change' : 'Add'} backup PIN</button>` : ''}${AND && ['pin', 'pwd', 'pat'].includes(S.lock.type) && canBio() ? '<div class="hint">👆 The lock screen also has a "Use fingerprint" button.</div>' : ''}
   ${lockOn() ? `<div class="lbl">Lock again after leaving the app</div><div class="chips wrap">${LOCK_D.map(([k, l]) => `<button class="chip ${S.lock.delay === k ? 'on' : ''}" data-act="lockDelay" data-v="${k}">${l}</button>`).join('')}</div>` : ''}
   <div class="hint">Forgot it? Tap "Forgot?" on the lock screen and type your Sheet secret key.</div></div>
@@ -4431,7 +4431,7 @@ function setupIcons() {
     img.onload = () => {
       const c = document.createElement('canvas'); c.width = c.height = 512; c.getContext('2d').drawImage(img, 0, 0, 512, 512);
       const url = c.toDataURL('image/png'); $('#appleIcon').href = url;
-      const m = { name: 'Ledger', short_name: 'Ledger', start_url: location.href.split('#')[0], display: 'standalone', background_color: '#17133A', theme_color: '#3D2FD0', icons: [{ src: url, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }] };
+      const m = { name: 'Brokeless', short_name: 'Brokeless', start_url: location.href.split('#')[0], display: 'standalone', background_color: '#17133A', theme_color: '#3D2FD0', icons: [{ src: url, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }] };
       $('#manifest').href = URL.createObjectURL(new Blob([JSON.stringify(m)], { type: 'application/manifest+json' }));
     };
     img.src = src;
@@ -4447,7 +4447,7 @@ function splash() {
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 520); }, quick ? 250 : 1250);
 }
 
-/* ---------- Settings → Bank SMS & suggestions: you decide what Ledger learns ---------- */
+/* ---------- Settings → Bank SMS & suggestions: you decide what Brokeless learns ---------- */
 function learnedPayees() {
   const m = {}, add = (payee, dir, ts) => { const k = String(payee || '').trim().toLowerCase(); if (!k) return; const x = m[k + '|' + dir] || (m[k + '|' + dir] = { payee: String(payee).trim(), dir, ts }); if (ts > x.ts) x.ts = ts; };
   const since = addDays(today(), -120);
@@ -4470,8 +4470,8 @@ function smartCard() {
   const L = U.lpOpen ? learnedPayees() : null;
   h += `<div class="card"><h2 style="display:block">🔁 Smart suggestions<small style="display:block;margin-top:3px">learned from what you filed</small></h2>
   <label class="check" style="margin-top:0"><input type="checkbox" data-in="smPre" ${SC.prefill !== false ? 'checked' : ''}> Fill in new SMS from what I did before</label>
-  <div class="hint">On: a new SMS from a payee you know comes filled in (never with Ignore). Off: Ledger only shows what you did before, and you tap to use it.</div>
-  <button class="btn sec sm" data-act="lpShow">${U.lpOpen ? 'Hide' : 'See'} what Ledger learned</button>${U.lpOpen ? '<div class="hint">Tap a name to rename it (e.g. Roppen Transpor → Rapido).</div>' : ''}`;
+  <div class="hint">On: a new SMS from a payee you know comes filled in (never with Ignore). Off: Brokeless only shows what you did before, and you tap to use it.</div>
+  <button class="btn sec sm" data-act="lpShow">${U.lpOpen ? 'Hide' : 'See'} what Brokeless learned</button>${U.lpOpen ? '<div class="hint">Tap a name to rename it (e.g. Roppen Transpor → Rapido).</div>' : ''}`;
   if (L) h += L.length ? `<div class="list" style="margin-top:10px">${L.map(x => { const t = x.sg[0]; return `<div class="srow"><span class="ic" style="background:var(--soft)">${x.dir === 'credit' ? '⬇️' : '⬆️'}</span><button class="mid" data-act="nickEdit" data-p="${esc(x.payee)}" style="text-align:left;background:none;border:0;padding:0;font:inherit;color:inherit;min-width:0"><b>${esc(pName(x.payee))} <span style="font-size:.8em">✏️</span></b><small>${nickOf(x.payee) ? 'Bank: ' + esc(x.payee) + ' · ' : ''}${x.sg.slice(0, 2).map(g => sgLabel(g.last, 1) + ' ' + g.n + '×').join(' · ')}</small></button><button class="btn sm sec" data-act="lpForget" data-p="${esc(x.payee)}">Forget</button></div>`; }).join('')}</div>` : `<div class="hint">Nothing learned yet.</div>`;
   if (Object.keys(SC.forget || {}).length) h += `<button class="btn sec sm" data-act="lpReset">Undo all "Forget" (${Object.keys(SC.forget).length})</button>`;
   return h + `</div>`;
@@ -4481,7 +4481,7 @@ ACT.lpShow = () => { U.lpOpen = !U.lpOpen; render(); };
 ACT.igBack = () => { const L = pendIgnored(); if (!L.length || !confirm('Put all ' + L.length + ' ignored messages back in 🔔 To sort?')) return; commit(L.map(p => up('Pending', Object.assign({}, p, { status: 'new', done: '' })))); U.igOpen = false; render(); bellBadge(); toast(L.length + ' back in To sort'); };
 ACT.igDel = el => { const p = S.pend.find(x => x.id === el.dataset.id); if (!p) return; commit([up('Pending', Object.assign({}, p, { status: 'gone' }))]); render(); toast('Deleted', 'Undo', () => { commit([up('Pending', p)]); render(); }); };
 ACT.igDelAll = () => { const L = pendIgnored(); if (!L.length || !confirm('Delete all ' + L.length + ' ignored messages? You can still log the next payment to these payees normally.')) return; commit(L.map(p => up('Pending', Object.assign({}, p, { status: 'gone' })))); U.igOpen = false; render(); toast(L.length + ' deleted', 'Undo', () => { commit(L.map(p => up('Pending', p))); render(); }); };
-ACT.igUnlearn = () => { const L = S.pend.filter(p => p.status === 'ignored' && p.done !== 'bulk'); commit(L.map(p => up('Pending', Object.assign({}, p, { done: 'bulk' })))); render(); toast('Ignored messages no longer teach Ledger'); };
+ACT.igUnlearn = () => { const L = S.pend.filter(p => p.status === 'ignored' && p.done !== 'bulk'); commit(L.map(p => up('Pending', Object.assign({}, p, { done: 'bulk' })))); render(); toast('Ignored messages no longer teach Brokeless'); };
 ACT.lpForget = el => { const SC = smartCfg(), F = Object.assign({}, SC.forget); F[el.dataset.p.toLowerCase()] = nowTs(); commit([cfgOp('smart', Object.assign(SC, { forget: F }))]); render(); toast('Forgot ' + el.dataset.p); };
 ACT.lpReset = () => { const SC = smartCfg(); commit([cfgOp('smart', Object.assign(SC, { forget: {} }))]); render(); toast('Suggestions restored'); };
 IN.smPre = t => { const SC = smartCfg(); commit([cfgOp('smart', Object.assign(SC, { prefill: t.checked }))]); toast(t.checked ? 'New SMS will be filled in' : 'New SMS will not be filled in'); };
@@ -4545,7 +4545,7 @@ function importCard() {
   const banks = live(a => a.type !== 'investment' && mineA(a));
   U.imp = U.imp || { kind: 'exp', text: '', acc: (banks[0] || {}).name || '', cat: (S.cfg.categories.find(c => /misc/i.test(c.name)) || S.cfg.categories[0]).name, src: 'Salary', day: 1 };
   const I = U.imp, L = I.text ? impParse() : [], good = L.filter(x => !x.err && !x.dup), bad = L.filter(x => x.err), dup = L.filter(x => x.dup), newCats = uniq(good.filter(x => x.newCat).map(x => x.cat));
-  let h = `<div class="card"><h2 style="display:block">📥 Import old data<small style="display:block;margin-top:3px">For history from before you started Ledger</small></h2>
+  let h = `<div class="card"><h2 style="display:block">📥 Import old data<small style="display:block;margin-top:3px">For history from before you started Brokeless</small></h2>
   <div class="seg" style="margin-bottom:10px">${[['exp', '🧾 Expenses'], ['inc', '💰 Salary / income by month']].map(([k, l]) => `<button class="${I.kind === k ? 'on' : ''}" data-act="impKind" data-k="${k}">${l}</button>`).join('')}</div>
   <div class="hint" style="margin-top:0">${I.kind === 'exp' ? 'Columns: <b>Date, Amount, Category, Account, Note</b>. Date like 2026-10-05 or 05/10/2026.' : 'Columns: <b>Month, Amount, Source, Account</b>. Month like 2026-04, 04/2026 or Apr 2026. Source and account are optional.'}</div>
   <div class="btns"><button class="btn sec sm" data-act="impTpl">⬇ Template (CSV)</button><button class="btn sec sm" data-act="impFile">📄 Pick a CSV file</button></div><input type="file" id="impCsv" accept=".csv,.tsv,.txt,text/csv,text/plain" hidden>
@@ -4554,7 +4554,7 @@ function importCard() {
   if (I.kind === 'exp') h += `<div class="lbl">If a row has no category, use</div><div class="chips wrap">${visCats().map(c => `<button class="chip ${I.cat === c.name ? 'on' : ''}" data-act="impSet" data-f="cat" data-v="${esc(c.name)}">${c.icon} ${esc(c.name)}</button>`).join('')}</div>`;
   else h += `<div class="lbl">Salary landed on day</div><input type="number" id="impDay" min="1" max="28" value="${I.day}" data-in="impDay" inputmode="numeric" style="max-width:120px">`;
   if (L.length) {
-    h += `<div class="section-t" style="margin-top:14px">Preview</div><div class="kv"><div><span>Ready to import</span><b class="green">${good.length} · ${inr(good.reduce((t, x) => t + x.a, 0))}</b></div>${dup.length ? `<div><span>Already in Ledger (skipped)</span><b>${dup.length}</b></div>` : ''}${bad.length ? `<div><span>Need fixing (skipped)</span><b class="red">${bad.length}</b></div>` : ''}${newCats.length ? `<div><span>New categories</span><b>${newCats.map(esc).join(', ')}</b></div>` : ''}</div>`;
+    h += `<div class="section-t" style="margin-top:14px">Preview</div><div class="kv"><div><span>Ready to import</span><b class="green">${good.length} · ${inr(good.reduce((t, x) => t + x.a, 0))}</b></div>${dup.length ? `<div><span>Already in Brokeless (skipped)</span><b>${dup.length}</b></div>` : ''}${bad.length ? `<div><span>Need fixing (skipped)</span><b class="red">${bad.length}</b></div>` : ''}${newCats.length ? `<div><span>New categories</span><b>${newCats.map(esc).join(', ')}</b></div>` : ''}</div>`;
     h += `<div class="group" style="margin-top:8px">${L.slice(0, 8).map(x => `<div class="item" style="opacity:${x.err || x.dup ? .55 : 1}"><span class="mid"><b>${I.kind === 'exp' ? esc(x.note || x.cat) : esc(x.src)} ${x.err ? '<em class="tag" style="color:var(--red)">' + x.err + '</em>' : x.dup ? '<em class="tag">already in</em>' : ''}</b><small>${I.kind === 'exp' ? (x.d ? dLabel(x.d) : '—') + ' · ' + esc(x.cat) + ' · ' + esc(x.acc) : (x.m ? mLabel(x.m) : '—') + ' · ' + esc(x.acc)}</small></span><span class="amt">${x.a > 0 ? inr(x.a) : '—'}</span></div>`).join('')}${L.length > 8 ? `<div class="item"><span class="mid"><small>…and ${L.length - 8} more</small></span></div>` : ''}</div>`;
     h += `<button class="btn big" data-act="impGo" ${good.length ? '' : 'disabled'}>Import ${good.length} ${I.kind === 'exp' ? 'expense' : 'income entr'}${I.kind === 'exp' ? (good.length === 1 ? '' : 's') : (good.length === 1 ? 'y' : 'ies')}</button>`;
   }
@@ -4590,9 +4590,9 @@ const FB_T = [['idea', '💡 Idea'], ['bug', '🐞 Problem'], ['like', '❤️ I
 function feedbackCard() {
   U.fb = U.fb || { type: 'idea' };
   const q = (S.prefs.fbQ || []).length;
-  return `<div class="card"><h2 style="display:block">💬 Send feedback<small style="display:block;margin-top:3px">Goes straight to the person who makes Ledger. New versions are built around it.</small></h2>
+  return `<div class="card"><h2 style="display:block">💬 Send feedback<small style="display:block;margin-top:3px">Goes straight to the person who makes Brokeless. New versions are built around it.</small></h2>
   <div class="chips wrap">${FB_T.map(([k, l]) => `<button class="chip ${U.fb.type === k ? 'on' : ''}" data-act="fbType" data-v="${k}">${l}</button>`).join('')}</div>
-  <textarea id="fbText" rows="5" maxlength="4000" placeholder="${U.fb.type === 'bug' ? 'What happened, and what did you expect?' : U.fb.type === 'idea' ? 'What would make Ledger better for you?' : 'Tell us…'}" style="width:100%;margin-top:8px;resize:vertical;background:var(--soft);border:1.5px solid transparent;border-radius:14px;padding:12px 14px;font:inherit;font-size:16px;color:var(--ink)">${esc(U.fb.text || '')}</textarea>
+  <textarea id="fbText" rows="5" maxlength="4000" placeholder="${U.fb.type === 'bug' ? 'What happened, and what did you expect?' : U.fb.type === 'idea' ? 'What would make Brokeless better for you?' : 'Tell us…'}" style="width:100%;margin-top:8px;resize:vertical;background:var(--soft);border:1.5px solid transparent;border-radius:14px;padding:12px 14px;font:inherit;font-size:16px;color:var(--ink)">${esc(U.fb.text || '')}</textarea>
   <label class="check"><input type="checkbox" id="fbReplyOn" ${U.fb.reply != null || S.gEmail ? 'checked' : ''}> I'd like a reply</label>
   <input id="fbReply" type="email" value="${esc(U.fb.reply != null ? U.fb.reply : S.gEmail || '')}" placeholder="Your email (only if you want a reply)" autocomplete="email">
   <button class="btn big" data-act="fbSend">Send</button>
@@ -4610,7 +4610,7 @@ ACT.fbSend = async () => {
   const t = ($('#fbText').value || '').trim(); if (t.length < 3) return toast('Write a few words first');
   const rep = $('#fbReplyOn').checked ? ($('#fbReply').value || '').trim() : '';
   if (rep && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(rep)) return toast('That email looks wrong');
-  const m = { type: U.fb.type, text: t, reply: rep, iid: fbIid(), version: 'v8.9 · ' + APP_BUILD + (AND ? ' · app ' + (andInfo().version || '') : ''), device: fbDevice(), screen: (U.tab || '') + (U.sp ? '/' + U.sp : ''), at: nowTs() };
+  const m = { type: U.fb.type, text: t, reply: rep, iid: fbIid(), version: 'v9.0 · ' + APP_BUILD + (AND ? ' · app ' + (andInfo().version || '') : ''), device: fbDevice(), screen: (U.tab || '') + (U.sp ? '/' + U.sp : ''), at: nowTs() };
   U.fb = { type: U.fb.type };
   try { toast('Sending…'); await fbPost(m); toast('✓ Thank you! Your feedback was sent'); }
   catch (e) { if (e.hard) { U.fb.text = t; render(); return toast(e.message); } S.prefs.fbQ = (S.prefs.fbQ || []).concat(m).slice(-20); save(); toast('Saved · it will send when you\'re online'); }
@@ -4692,7 +4692,7 @@ addEventListener('resize', () => { const a = document.activeElement; if (a && /^
 document.addEventListener('focusin', e => { const a = e.target; if (!a || !/^(INPUT|TEXTAREA)$/.test(a.tagName) || a.closest('#sheet') || /^(checkbox|radio|date|time|file)$/.test(a.type)) return; setTimeout(() => { try { a.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { } }, 350); });
 
 /* just updated? say so once (Android closes the app while it installs an update) */
-setTimeout(() => { try { const v = AND && AND.justUpdated && AND.justUpdated(); if (v) { U.upd = null; toast('✅ Updated to Ledger ' + v + ' · all set'); } } catch (e) { } }, 2500);
+setTimeout(() => { try { const v = AND && AND.justUpdated && AND.justUpdated(); if (v) { U.upd = null; toast('✅ Updated to Brokeless ' + v + ' · all set'); } } catch (e) { } }, 2500);
 
 /* ---------- boot ---------- */
 applyTheme(); setupIcons();

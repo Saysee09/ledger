@@ -14,7 +14,7 @@
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
-        android:label="Ledger"
+        android:label="Brokeless"
         android:supportsRtl="true"
         android:theme="@style/Theme.Ledger">
 
@@ -42,19 +42,19 @@
         <receiver android:name=".UpdatedReceiver" android:exported="true">
             <intent-filter><action android:name="android.intent.action.MY_PACKAGE_REPLACED" /></intent-filter>
         </receiver>
-        <receiver android:name=".FreeWidget" android:exported="false" android:label="Ledger · Free to spend">
+        <receiver android:name=".FreeWidget" android:exported="false" android:label="Brokeless · Free to spend">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_free_info" />
         </receiver>
-        <receiver android:name=".MonthWidget" android:exported="false" android:label="Ledger · This month">
+        <receiver android:name=".MonthWidget" android:exported="false" android:label="Brokeless · This month">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_month_info" />
         </receiver>
-        <receiver android:name=".NeedsWidget" android:exported="false" android:label="Ledger · Needs you">
+        <receiver android:name=".NeedsWidget" android:exported="false" android:label="Brokeless · Needs you">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_needs_info" />
         </receiver>
-        <receiver android:name=".PulseWidget" android:exported="false" android:label="Ledger · Money Pulse">
+        <receiver android:name=".PulseWidget" android:exported="false" android:label="Brokeless · Money Pulse">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_pulse_info" />
         </receiver>
