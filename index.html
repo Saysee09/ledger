@@ -412,6 +412,8 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 html.kbd .nav,html.kbd .fab{display:none!important}
 #view input,#view textarea,#sheet input,#sheet textarea{scroll-margin:90px 0 120px}
 .igp>.mid{flex:1;min-width:0;display:flex;flex-direction:column;align-items:stretch}.igp>.mid b,.igp>.mid small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.igp .amt{flex:0 0 auto;padding-left:8px}.igp .amt{margin-left:auto}
+.nickb{font:inherit;color:inherit;background:none;border:0;padding:0;font-weight:700;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}.nickb span{font-size:.8em;text-decoration:none}
+.recc .srow small{white-space:normal}.recc .btn.sm{padding:0 12px;flex:0 0 auto}
 .sh-foot{flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
 .a-bar{display:flex;gap:8px;align-items:flex-end;margin:0}
 .a-bar textarea{flex:1;min-width:0;display:block;min-height:48px;max-height:132px;resize:none;overflow-y:auto;background:var(--soft);border:1.5px solid transparent;border-radius:14px;padding:12px 14px;font:inherit;font-size:16px;line-height:1.35;color:var(--ink);-webkit-appearance:none;appearance:none}
@@ -873,7 +875,7 @@ ACT.updCheck = () => { if (!AND || !AND.updateCheck) return toast('Update the ph
 function heldDues() { return live(a => a.others).filter(a => heldOwed(a.name) > .004).map(a => `<div class="alert"><span class="ic" style="background:var(--soft)">🤝</span><span class="mid"><b>You owe ${esc(a.name)} ${inr(heldOwed(a.name))}</b><small>Used from ${esc(a.name)}'s money for yourself</small></span><button class="btn sm" data-act="heldPay" data-n="${esc(a.name)}">Pay back</button></div>`).join(''); }
 function inboxParts(all) {
   const keep = U.nudgeAll; U.nudgeAll = true;
-  try { return { sort: pendNew(), act: updAlert() + cardDues(all) + remDue() + emiDue() + heldDues(), info: refundAlerts() + budgetAlerts() + goalNudges() + nudges() }; } finally { U.nudgeAll = keep; }
+  try { return { sort: pendNew(), act: updAlert() + cardDues(all) + remDue() + emiDue() + heldDues(), info: refundAlerts() + recurAlert() + budgetAlerts() + goalNudges() + nudges() }; } finally { U.nudgeAll = keep; }
 }
 const nAlerts = h => (h.match(/class="alert/g) || []).length;
 function inboxCount() { if (!S.accounts.length) return { all: 0, sort: 0, act: 0 }; const P = inboxParts(false), A = inboxParts(true); return { sort: P.sort.length, act: nAlerts(P.act), info: nAlerts(P.info), all: P.sort.length + nAlerts(A.act) + nAlerts(P.info), badge: P.sort.length + nAlerts(P.act) + nAlerts(P.info) }; }
@@ -997,7 +999,7 @@ function renderHome() {
   const accs = live(a => a.type !== 'investment' && mineA(a)), oth = live(a => a.others), tot = r2(accs.filter(holderType).reduce((s, a) => s + (C.bal[a.name] || 0), 0));
   h += `<div class="strip"><button class="acard" data-act="tab" data-t="insights" style="border-color:color-mix(in srgb,var(--acc) 30%,var(--line))"><span>💰 Free to spend</span><b>${inrS(freeTotal())}</b><small>${r2(tot - freeTotal()) > 0 ? inr(tot - freeTotal()) + ' in goals · total ' + inr(tot, 1) : 'Banks & cash, nothing reserved'}</small></button>${accs.map(a => { const b = C.bal[a.name] || 0, hd = C.held[a.name] || 0, pk = pockets(a.name).length; return `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>${ACC_T[a.type][0]} ${esc(a.name)}</span><b class="${b - hd < 0 || (a.type === 'card' && b < 0) ? 'red' : ''}">${a.type === 'card' ? (b < -.004 ? inr(-b) : inr(0)) : inr(b - hd)}</b><small>${a.type === 'card' ? (cardLooksLimit(a) ? '<span style="color:var(--amber)">⚠️ Looks like the limit · fix in Insights → Net worth</span>' : (b < -.004 ? 'Due · bill day ' + cardDay(a) : 'No dues ✓') + (cardLimit(a) ? ' · ' + inr(Math.max(0, cardLimit(a) + Math.min(0, b)), 1) + ' free' : '')) : (hd > 0 ? inr(hd) + ' in goals · ' : '') + (pk ? 'With ' + pockets(a.name).map(x => x.name).join(' & ') + ': <b class="acc-tot">' + inr(b + pockets(a.name).reduce((t, x) => t + (C.bal[x.name] || 0), 0), 1) + '</b>' : hd > 0 ? 'total ' + inr(b, 1) : 'Free to spend')}</small></button>`; }).join('')}${oth.length ? oth.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}" style="border-style:dashed;box-shadow:none"><span>👥 ${esc(a.name)}</span><b class="mute">${inr(C.bal[a.name])}</b><small>${heldOwed(a.name) > 0 ? '<span class="red">You owe ' + inr(heldOwed(a.name), 1) + '</span>' : 'Held for others' + (a.keptIn ? ' · in ' + esc(a.keptIn) : '')}</small></button>`).join('') : ''}</div>`;
   h += '<div id="ibxChip">' + inboxChip() + '</div>';
-  h += `<div class="search"><input type="search" placeholder="🔍 Search expenses: note, category, account, amount" value="${esc(U.q)}" data-in="q" enterkeyhint="search"></div>`;
+  h += `<div class="search"><input type="search" placeholder="🔍 Search · uber >200 · food oct · 5 nov" value="${esc(U.q)}" data-in="q" enterkeyhint="search"></div>`;
   h += `<div class="chips">${[{ name: 'all', label: 'All' }].concat(visCats()).map(c => `<button class="chip ${U.cat === c.name ? 'on' : ''}" data-act="catF" data-v="${esc(c.name)}">${c.label || c.icon + ' ' + esc(c.name)}</button>`).join('')}</div>`;
   h += `<div id="list">${homeList()}</div>`;
   return h;
@@ -1008,16 +1010,57 @@ function weekHead(wk, tot, n) {
   const t = today(), w0 = monday(t), lbl = wk === w0 ? 'This week' : wk === addDays(w0, -7) ? 'Last week' : 'Week';
   return `<div class="wk"><span>${lbl} · ${esc(rLabel(wk, addDays(wk, 6)))}</span><span>${inr(tot)} · ${n}</span></div>`;
 }
+/* smart search: "uber >200 oct", "food last month", "100-300", "5 nov", "#evol" */
+const QMON = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+function parseQ(raw) {
+  let q = ' ' + String(raw || '').toLowerCase().replace(/₹|rs\.?(?=\s*\d)/g, '').replace(/,(?=\d{2,3}\b)/g, '') + ' ';
+  const Q = { words: [], min: null, max: null, eq: null, from: null, to: null, tags: [] }, T = today(), take = (re, f) => { q = q.replace(re, (...m) => { f(...m); return ' '; }); };
+  const setR = (a, b, l) => { Q.from = a; Q.to = b; Q.dl = l; };
+  take(/\b(today)\b/, () => setR(T, T, 'Today'));
+  take(/\b(yesterday)\b/, () => { const d = addDays(T, -1); setR(d, d, 'Yesterday'); });
+  take(/\b(this|last) week\b/, (m, w) => { const mo = monday(T), a = w === 'this' ? mo : addDays(mo, -7); setR(a, addDays(a, 6), w === 'this' ? 'This week' : 'Last week'); });
+  take(/\b(this|last) month\b/, (m, w) => { const mm = w === 'this' ? ym() : shiftM(ym(), -1); setR(mm + '-01', mm + '-' + p2(daysIn(mm)), mLabel(mm)); });
+  take(/\b(this|last) year\b/, (m, w) => { const y = +T.slice(0, 4) - (w === 'last' ? 1 : 0); setR(y + '-01-01', y + '-12-31', String(y)); });
+  take(/\blast (\d{1,3}) days?\b/, (m, n) => setR(addDays(T, -(+n - 1)), T, 'Last ' + n + ' days'));
+  /* "5 nov", "nov 5", "oct", "oct 2025", "october" */
+  const MRE = '(' + QMON.join('|') + ')[a-z]*';
+  take(new RegExp('\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+' + MRE + '(?:\\s+(20\\d\\d))?\\b'), (m, d, mo, y) => { const mm = (y || guessY(QMON.indexOf(mo))) + '-' + p2(QMON.indexOf(mo) + 1), dd = mm + '-' + p2(+d); setR(dd, dd, dLabel(dd)); });
+  take(new RegExp('\\b' + MRE + '\\s+(\\d{1,2})(?:st|nd|rd|th)?\\b(?!\\d)'), (m, mo, d) => { if (+d > 31) return; const mm = guessY(QMON.indexOf(mo)) + '-' + p2(QMON.indexOf(mo) + 1), dd = mm + '-' + p2(+d); setR(dd, dd, dLabel(dd)); });
+  take(new RegExp('\\b' + MRE + '(?:\\s+(20\\d\\d))?\\b'), (m, mo, y) => { const mm = (y || guessY(QMON.indexOf(mo))) + '-' + p2(QMON.indexOf(mo) + 1); setR(mm + '-01', mm + '-' + p2(daysIn(mm)), mLabel(mm)); });
+  /* amounts: >200, <100, 100-300, over 500, under 50, above/below */
+  take(/(?:>=?|\bover\b|\babove\b|\bmore than\b)\s*(\d+(?:\.\d+)?)\s*(k)?\b/, (m, n, k) => Q.min = +n * (k ? 1000 : 1));
+  take(/(?:<=?|\bunder\b|\bbelow\b|\bless than\b)\s*(\d+(?:\.\d+)?)\s*(k)?\b/, (m, n, k) => Q.max = +n * (k ? 1000 : 1));
+  take(/\b(\d+(?:\.\d+)?)\s*(k)?\s*(?:-|to)\s*(\d+(?:\.\d+)?)\s*(k)?\b/, (m, a, k1, b, k2) => { Q.min = +a * (k1 ? 1000 : 1); Q.max = +b * (k2 ? 1000 : 1); });
+  take(/\b(\d+(?:\.\d+)?)(k)?\b/, (m, n, k) => Q.eq = +n * (k ? 1000 : 1));
+  take(/#([\w-]+)/g, (m, t) => Q.tags.push(t));
+  Q.words = q.split(/\s+/).filter(w => w && !['in', 'on', 'for', 'spent', 'the', 'and', 'rs', 'at'].includes(w));
+  return Q;
+}
+/* "oct" means the most recent October (this year, or last year if it hasn't come yet) */
+const guessY = mi => { const y = +today().slice(0, 4); return mi + 1 > +today().slice(5, 7) ? y - 1 : y; };
+function qMatch(Q, e, nk) {
+  const a = Math.abs(+e.amount || 0), d = e.ts.slice(0, 10);
+  if (Q.min != null && a < Q.min) return false; if (Q.max != null && a > Q.max) return false;
+  if (Q.from && (d < Q.from || d > Q.to)) return false;
+  const txt = (e.remarks + ' ' + e.category + ' ' + e.account + ' ' + (e.payee || '') + ' ' + nk).toLowerCase();
+  if (Q.eq != null && Math.abs(a - Q.eq) > .5 && !txt.includes(String(Q.eq))) return false;
+  if (Q.tags.some(t => !txt.includes('#' + t))) return false;
+  return Q.words.every(w => txt.includes(w));
+}
+function qLabel(Q) { return [Q.words.length ? '"' + Q.words.join(' ') + '"' : '', Q.tags.map(t => '#' + t).join(' '), Q.min != null && Q.max != null ? fmtINR(Q.min) + '–' + fmtINR(Q.max) : Q.min != null ? 'over ' + fmtINR(Q.min) : Q.max != null ? 'under ' + fmtINR(Q.max) : '', Q.eq != null ? fmtINR(Q.eq) : '', Q.dl || ''].filter(Boolean).join(' · '); }
 function homeList() {
   if (!U.list) listReset();
-  const q = U.q.trim().toLowerCase(), filt = q || U.cat !== 'all', cur = U.month === ym();
-  const base = S.exp.filter(e => myX(e) && (U.cat === 'all' || e.category === U.cat) && (!q || (e.remarks + ' ' + e.category + ' ' + e.account + ' ' + e.amount + ' ' + (e.payee || '')).toLowerCase().includes(q)));
+  const q = U.q.trim(), filt = q || U.cat !== 'all', cur = U.month === ym(), Q = q ? parseQ(q) : null, nkC = {};
+  const nk = p => p ? (nkC[p] != null ? nkC[p] : (nkC[p] = nickOf(p))) : '';
+  const base = S.exp.filter(e => myX(e) && (U.cat === 'all' || e.category === U.cat) && (!Q || qMatch(Q, e, nk(e.payee))));
   let es, more = '', jump = '';
   if (filt) {
-    const all = base.filter(e => cur || inP(e, U.month)).sort((a, b) => b.ts.localeCompare(a.ts));
+    /* a date in the search, or searching from the current month, looks across all months */
+    const wide = cur || (Q && Q.from);
+    const all = base.filter(e => wide || inP(e, U.month)).sort((a, b) => b.ts.localeCompare(a.ts));
     es = all.slice(0, U.list.n);
-    if (!all.length) return `<div class="empty"><span class="big">🔎</span>Nothing matches${cur ? '' : ' in ' + mLabel(U.month)}.</div>`;
-    const head = `<div class="hint center">${all.length} entr${all.length === 1 ? 'y' : 'ies'}${cur ? ' · all time' : ' · ' + mLabel(U.month)} · ${inr(sum(all))}</div>`;
+    if (!all.length) return `<div class="empty"><span class="big">🔎</span>Nothing matches${Q ? ' ' + esc(qLabel(Q)) : ''}${wide ? '' : ' in ' + mLabel(U.month)}.${Q ? '<br><small class="mute">Try: uber &gt;200 · food last month · 100-300 · 5 nov · #evol</small>' : ''}</div>`;
+    const head = `<div class="hint center">${Q ? '🔎 ' + esc(qLabel(Q)) + ' · ' : ''}${all.length} entr${all.length === 1 ? 'y' : 'ies'}${Q && Q.from ? '' : wide ? ' · all time' : ' · ' + mLabel(U.month)} · <b>${inr(sum(all))}</b></div>`;
     if (all.length > es.length) more = `<button class="btn sec" data-act="listMore" id="listMore">Show more (${all.length - es.length} left)</button>`;
     return head + groupWeeks(es, base) + more + '<div id="listEnd"></div>';
   }
@@ -1205,7 +1248,7 @@ function binSheet(id) {
   const m = D.items[0], inf = entryInfo(m.s, m.row), left = binLeft(b);
   const missing = uniq(D.items.flatMap(x => [x.row.account, x.row.from, x.row.to]).filter(n => n && !acc(n)));
   const linked = D.items.slice(1).map(x => { const i2 = entryInfo(x.s, x.row); return `<div><span>🔗 ${esc(TAB_NAME[x.s] || x.s)}</span><b>${esc(i2.title)}${x.row.amount ? ' · ' + inr(Math.abs(x.row.amount)) : ''}</b></div>`; }).join('');
-  const smsH = D.sms.length ? D.sms.map(p => `<div class="lbl">📩 Bank SMS${p.bank ? ' · ' + esc(p.bank) : ''}${p.l4 ? ' ·' + esc(p.l4) : ''}</div><div class="smsraw">${esc(p.raw || '(no text kept)')}</div><div class="hint" style="margin-top:6px">${p.dir === 'credit' ? 'Received' : 'Paid'} ${inr(p.amount)}${p.payee ? ' · ' + esc(p.payee) : ''} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}${p.ref ? ' · ref ' + esc(p.ref) : ''}</div>`).join('') : (b.sms ? `<div class="lbl">📩 Bank SMS</div><div class="smsraw">${esc(b.sms)}</div>` : '');
+  const smsH = D.sms.length ? D.sms.map(p => `<div class="lbl">📩 Bank SMS${p.bank ? ' · ' + esc(p.bank) : ''}${p.l4 ? ' ·' + esc(p.l4) : ''}</div><div class="smsraw">${esc(p.raw || '(no text kept)')}</div><div class="hint" style="margin-top:6px">${p.dir === 'credit' ? 'Received' : 'Paid'} ${inr(p.amount)}${p.payee ? ' · ' + esc(pName(p.payee)) : ''} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}${p.ref ? ' · ref ' + esc(p.ref) : ''}</div>`).join('') : (b.sms ? `<div class="lbl">📩 Bank SMS</div><div class="smsraw">${esc(b.sms)}</div>` : '');
   const isSms = D.sms.length && ['Expenses', 'Income', 'Transfers', 'Investments', 'LoanLog'].includes(m.s);
   openSheet('', `<div class="detail"><div class="ic big" style="background:${inf.color}1f">${inf.icon}</div>${m.row.amount ? `<div class="dv">${inrX(Math.abs(m.row.amount))}</div>` : ''}<div class="dt">${esc(inf.title)}</div></div>
   <div class="kv">${inf.rows.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}${linked}<div><span>Deleted</span><b>${dLabel(b.ts.slice(0, 10))}, ${tLabel(b.ts)}</b></div><div><span>Removed for good</span><b class="${left <= 3 ? 'red' : ''}">${left ? 'in ' + left + ' day' + (left === 1 ? '' : 's') : 'today'}</b></div></div>
@@ -2147,6 +2190,21 @@ function payeeFind(payee) {
   return null;
 }
 function payeeLearn(payee, info) { const P = S.cfg.payees || {}, k = payeeKey(payee), old = P[k] || {}; return cfgOp('payees', Object.assign({}, P, { [k]: Object.assign({}, old, info, { name: payee, n: (old.n || 0) + 1, at: today() }) })); }
+/* nicknames: rename a bank payee once ("Roppen Transpor" → "Rapido"), shown everywhere */
+const nickOf = payee => { const pk = payee && payeeFind(payee); return pk && pk.nick ? pk.nick : ''; };
+const pName = payee => nickOf(payee) || payee || '';
+function nickOp(payee, nick) { const P = S.cfg.payees || {}, k = payeeKey(payee), hit = payeeFind(payee), kk = hit ? Object.keys(P).find(x => P[x] === hit) || k : k, old = P[kk] || { name: payee, n: 0 }; const row = Object.assign({}, old); if (nick) row.nick = nick; else delete row.nick; return cfgOp('payees', Object.assign({}, P, { [kk]: row })); }
+function nickSheet(payee, back) {
+  U.nk = { payee, back };
+  openSheet('Rename payee', `<div class="lbl" style="margin-top:0">Show "${esc(payee)}" as</div><input id="nkIn" value="${esc(nickOf(payee) || payee)}" placeholder="e.g. Rapido" autocomplete="off" autocapitalize="words">
+  <div class="hint">Only the name shown in Ledger changes. Bank SMS are still matched by the bank's name, and past entries keep their notes.</div>
+  <button class="btn big" data-act="nkSave">Save name</button>${nickOf(payee) ? '<button class="btn sec" data-act="nkClear">Use the bank\'s name again</button>' : ''}`);
+  setTimeout(() => { const i = $('#nkIn'); if (i) { i.focus(); i.select(); } }, 300);
+}
+const nkDone = () => { const b = U.nk && U.nk.back; U.nk = null; if (b === 'pend' && U.pd) pendForm(); else { shut(); render(); } };
+ACT.nkSave = () => { const v = $('#nkIn').value.trim(), N = U.nk; if (!N) return; commit([nickOp(N.payee, v && v !== N.payee ? v : '')]); if (U.pd && N.back === 'pend' && (!U.pd.note || U.pd.note === N.payee)) U.pd.note = v || N.payee; toast(v && v !== N.payee ? 'Shown as ' + v : 'Using the bank\'s name'); nkDone(); };
+ACT.nkClear = () => { const N = U.nk; if (!N) return; commit([nickOp(N.payee, '')]); toast('Using the bank\'s name'); nkDone(); };
+ACT.nickEdit = el => { const p = el.dataset.p || (U.pd && (S.pend.find(x => x.id === U.pd.id) || {}).payee); if (!p) return; if (U.pd && $('#pdRemk')) U.pd.note = $('#pdRemk').value; nickSheet(p, el.dataset.p ? '' : 'pend'); };
 const payeeNotes = (payee, pk) => uniq([pk && pk.note].concat(S.exp.filter(e => e.payee && payeeKey(e.payee) === payeeKey(payee)).slice(-30).reverse().map(e => e.remarks))).slice(0, 5);
 function accForSms(x) {
   if (x.l4) { const a = S.accounts.find(a => (a.l4 || '').split(',').some(v => v && (v === x.l4 || v.slice(-4) === x.l4.slice(-4)))); if (a) return a.name; }
@@ -2178,7 +2236,7 @@ function smsLogged(p) {
 const payeeFiledAfter = p => p.payee && S.pend.some(q => q.status === 'done' && q.ts > p.ts && q.dir === p.dir && payeeSame(p.payee, q.payee));
 const pendIgnored = () => { const since = addDays(today(), -60); return S.pend.filter(p => p.status === 'ignored' && String(p.ts || '').slice(0, 10) >= since && !smsLogged(p) && !payeeFiledAfter(p)).sort((a, b) => b.ts.localeCompare(a.ts)); };
 function pendListHtml(L, ig) {
-  return `<div class="group">${L.map(p => { const pk = payeeFind(p.payee); return `<button class="item" data-act="pendPick" data-id="${p.id}"><span class="ic" style="background:${p.dir === 'credit' ? '#12A15022' : 'var(--soft)'}">${p.dir === 'credit' ? '⬇️' : p.card ? '💳' : p.atm ? '🏧' : '⬆️'}</span><span class="mid"><b>${esc((pk && pk.note) || p.payee || (p.dir === 'credit' ? 'Money received' : 'Payment'))}${pk && pk.note ? ' <small class="mute" style="font-weight:600">· ' + esc(pk.category || pk.label || '') + '</small>' : ''}</b><small>${pk && pk.note && p.payee ? esc(p.payee) + ' · ' : ''}${esc(p.account || p.bank + (p.l4 ? ' ·' + p.l4 : '') || 'Unknown account')} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}</small></span><span class="amt ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</span></button>`; }).join('')}</div>${ig ? '' : `<button class="btn sec" data-act="pendIgnoreAll">Ignore all ${L.length}</button>`}`;
+  return `<div class="group">${L.map(p => { const pk = payeeFind(p.payee); return `<button class="item" data-act="pendPick" data-id="${p.id}"><span class="ic" style="background:${p.dir === 'credit' ? '#12A15022' : 'var(--soft)'}">${p.dir === 'credit' ? '⬇️' : p.card ? '💳' : p.atm ? '🏧' : '⬆️'}</span><span class="mid"><b>${esc(nickOf(p.payee) || (pk && pk.note) || p.payee || (p.dir === 'credit' ? 'Money received' : 'Payment'))}${pk && pk.note ? ' <small class="mute" style="font-weight:600">· ' + esc(pk.category || pk.label || '') + '</small>' : ''}</b><small>${p.payee && (nickOf(p.payee) || (pk && pk.note)) ? esc(p.payee) + ' · ' : ''}${esc(p.account || p.bank + (p.l4 ? ' ·' + p.l4 : '') || 'Unknown account')} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}</small></span><span class="amt ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</span></button>`; }).join('')}</div>${ig ? '' : `<button class="btn sec" data-act="pendIgnoreAll">Ignore all ${L.length}</button>`}`;
 }
 ACT.pendIgnoreAll = () => { if (!confirm('Ignore all ' + pendNew().length + ' messages? They will not be added anywhere. You can still file them later from Settings → Bank SMS.')) return; commit(pendNew().map(p => up('Pending', Object.assign({}, p, { status: 'ignored', done: 'bulk' })))); render(); if (inboxCount().all) inboxSheet(); else shut(); };
 /* ---------- smart payee suggestions: same person / shop even when the bank writes the name differently ---------- */
@@ -2262,7 +2320,7 @@ ACT.pendPick = el => {
   const pk = payeeFind(p.payee) || {};
   const sg = payeeSuggest(p.payee, p.amount, p.dir, p.id);
   const fi = smartCfg().prefill === false ? -1 : sg.findIndex(x => x.last.act !== 'ignore');
-  U.pd = { sg, sgi: fi, id: p.id, note: pk.note || p.payee || '', act: pk.act && PEND_ACT[p.dir].some(a => a[0] === pk.act) ? pk.act : p.dir === 'credit' ? 'inc' : p.atm ? 'trf' : 'exp', account: p.account || (pk.acc && acc(pk.acc) ? pk.acc : ''), cat: pk.category || guessCat(p.payee) || '', loan: pk.loan || '', to: p.atm ? (live(a => a.type === 'cash')[0] || {}).name || '' : (pk.to && acc(pk.to) ? pk.to : '') };
+  U.pd = { sg, sgi: fi, id: p.id, note: (pk.note && pk.note !== p.payee ? pk.note : '') || pk.nick || pk.note || p.payee || '', act: pk.act && PEND_ACT[p.dir].some(a => a[0] === pk.act) ? pk.act : p.dir === 'credit' ? 'inc' : p.atm ? 'trf' : 'exp', account: p.account || (pk.acc && acc(pk.acc) ? pk.acc : ''), cat: pk.category || guessCat(p.payee) || '', loan: pk.loan || '', to: p.atm ? (live(a => a.type === 'cash')[0] || {}).name || '' : (pk.to && acc(pk.to) ? pk.to : '') };
   if (fi >= 0) pdApply(U.pd, p, sg[fi].last);
   /* a credit that matches a waiting refund, or says refund / cashback */
   const rm = rfMatch(p), rw = rfWord(p);
@@ -2274,15 +2332,15 @@ ACT.pendPick = el => {
 function pdSugBox(P, p) {
   const sg = P.sg || []; if (!sg.length) return '';
   const top = sg[0], n = sg.reduce((t, x) => t + x.n, 0), L = sg.map(x => x.last).sort((a, b) => String(b.ts || '').localeCompare(String(a.ts || '')))[0];
-  if (sg.length === 1 && top.last.act === 'ignore') return `<div class="sugbox"><div class="sg-h">🔁 You've had ${n} payment${n === 1 ? '' : 's'} with ${esc(p.payee)}</div><div class="sg-l">Last time ${dLabel(String(L.ts || '').slice(0, 10))} · ${inr(L.amount)} → 🚫 Ignored</div><div class="sg-l mute">Not filled in from that. Pick what this one is below.</div></div>`;
-  return `<div class="sugbox"><div class="sg-h">🔁 You've had ${n} payment${n === 1 ? '' : 's'} with ${esc(p.payee)}</div><div class="sg-l">Last time ${dLabel(String(L.ts || '').slice(0, 10))} · ${inr(L.amount)} → ${sgLabel(L)}</div>${sg.length > 1 || P.sgi !== 0 ? `${P.sgi < 0 ? '<div class="sg-l mute">Tap one to fill it in, or pick below.</div>' : ''}<div class="chips wrap" style="margin-top:8px">${sg.map((x, i) => `<button class="chip ${P.sgi === i ? 'on' : ''}" data-act="pdUse" data-i="${i}">${sgLabel(x.last, 1)} <small>${x.n}× · ${sgAmt(x)}</small></button>`).join('')}</div>` : `<div class="sg-l mute">${top.n}× · usually ${sgAmt(top)} · filled in for you</div>`}</div>`;
+  if (sg.length === 1 && top.last.act === 'ignore') return `<div class="sugbox"><div class="sg-h">🔁 You've had ${n} payment${n === 1 ? '' : 's'} with ${esc(pName(p.payee))}</div><div class="sg-l">Last time ${dLabel(String(L.ts || '').slice(0, 10))} · ${inr(L.amount)} → 🚫 Ignored</div><div class="sg-l mute">Not filled in from that. Pick what this one is below.</div></div>`;
+  return `<div class="sugbox"><div class="sg-h">🔁 You've had ${n} payment${n === 1 ? '' : 's'} with ${esc(pName(p.payee))}</div><div class="sg-l">Last time ${dLabel(String(L.ts || '').slice(0, 10))} · ${inr(L.amount)} → ${sgLabel(L)}</div>${sg.length > 1 || P.sgi !== 0 ? `${P.sgi < 0 ? '<div class="sg-l mute">Tap one to fill it in, or pick below.</div>' : ''}<div class="chips wrap" style="margin-top:8px">${sg.map((x, i) => `<button class="chip ${P.sgi === i ? 'on' : ''}" data-act="pdUse" data-i="${i}">${sgLabel(x.last, 1)} <small>${x.n}× · ${sgAmt(x)}</small></button>`).join('')}</div>` : `<div class="sg-l mute">${top.n}× · usually ${sgAmt(top)} · filled in for you</div>`}</div>`;
 }
 ACT.pdUse = el => { const P = U.pd, p = S.pend.find(x => x.id === P.id), x = (P.sg || [])[+el.dataset.i]; if (!P || !p || !x) return; P.sgi = +el.dataset.i; pdApply(P, p, x.last); const y = $('#shBody') ? $('#shBody').scrollTop : 0; pendForm(); if ($('#shBody')) $('#shBody').scrollTop = y; buzz(6); };
 function pendForm() {
   const P = U.pd, p = S.pend.find(x => x.id === P.id), A = PEND_ACT[p.dir];
   const chip = (f, v, l) => `<button class="chip ${P[f] === v ? 'on' : ''}" data-act="pdSet" data-f="${f}" data-v="${esc(v)}">${l}</button>`;
   const accs = live(a => a.type !== 'investment'), acChips = f => accs.map(a => chip(f, a.name, (a.others ? '👥' : ACC_T[a.type][0]) + ' ' + esc(a.name))).join('');
-  let h = `<div class="detail" style="padding-bottom:6px"><div class="dv ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</div><div class="dt">${esc(p.payee || '—')} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}${p.ref ? ' · ref ' + esc(p.ref) : ''}</div></div>
+  let h = `<div class="detail" style="padding-bottom:6px"><div class="dv ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</div><div class="dt">${p.payee ? `<button class="nickb" data-act="nickEdit">${esc(pName(p.payee))} <span>✏️</span></button>` : '—'} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}${p.ref ? ' · ref ' + esc(p.ref) : ''}</div>${nickOf(p.payee) ? `<div class="hint center" style="margin-top:2px">Bank calls it ${esc(p.payee)}</div>` : ''}</div>
   ${pdSugBox(P, p)}<div class="chips wrap">${A.map(([k, l]) => chip('act', k, l)).join('')}</div>`;
   if (P.act !== 'ignore') {
     h += `<div class="lbl">${p.dir === 'credit' ? 'Into' : 'Paid from'} ${p.l4 ? '<small class="mute">(SMS: ' + esc(p.bank) + ' ·' + esc(p.l4) + ')</small>' : ''}</div><div class="chips wrap">${acChips('account')}</div>`;
@@ -2688,12 +2746,59 @@ function remDue() {
   const t = today(), list = S.rem.filter(r => r.active !== false && remDueDate(r) && remDueDate(r) <= t && !(r.auto && r.kind !== 'task' && remOk(r))).sort((a, b) => remDueDate(a).localeCompare(remDueDate(b))).slice(0, 4);
   return list.map(r => `<div class="alert ${remDueDate(r) < t ? 'over' : ''}"><span class="ic" style="background:var(--soft)">${remIcon(r)}</span><span class="mid"><b>${esc(r.name)}${+r.amount ? ' · ' + inr(remAmt(r)) : ''}</b><small>${remDueLabel(r)}${r.auto && !remOk(r) ? ' · <span class="red">auto-log stopped: pick an account</span>' : ''}</small></span>${r.kind === 'task' ? `<button class="btn sm" data-act="remDone" data-id="${r.id}">Done</button><button class="ax" data-act="remSnooze" data-id="${r.id}" aria-label="Tomorrow">⏰</button>` : `<button class="btn sm" data-act="remPay" data-id="${r.id}">Pay</button>`}</div>`).join('');
 }
+/* ---------- spot recurring payments: same payee, similar amount, a steady gap ---------- */
+function findRecurring() {
+  if (U.recC && U.recC.at === S.exp.length + ':' + S.rem.length + ':' + JSON.stringify((S.cfg.smart || {}).recurOff || [])) return U.recC.list;
+  const since = shiftD(today(), -8), G = {}, off = (S.cfg.smart || {}).recurOff || [];
+  S.exp.forEach(e => {
+    if (!myX(e) || !(e.amount > 0) || e.ts.slice(0, 10) < since) return;
+    const base = e.payee ? pName(e.payee) : String(e.remarks || '').replace(/#\w+/g, '').replace(/\s*·.*$/, '').trim(); if (!base || base.length < 3) return;
+    const k = payeeKey(base); if (!k) return; (G[k] = G[k] || { name: base, L: [] }).L.push(e);
+  });
+  const out = [];
+  Object.entries(G).forEach(([k, g]) => {
+    if (off.includes(k)) return;
+    /* one payment per day at most (several Uber rides in a day are not a subscription) */
+    const byDay = {}; g.L.forEach(e => { const d = e.ts.slice(0, 10); if (!byDay[d] || e.amount > byDay[d].amount) byDay[d] = e; });
+    const L = Object.values(byDay).sort((a, b) => a.ts.localeCompare(b.ts)); if (L.length < 2) return;
+    const gaps = L.slice(1).map((e, i) => dayDiff(L[i].ts.slice(0, 10), e.ts.slice(0, 10))), med = arr => arr.slice().sort((a, b) => a - b)[Math.floor(arr.length / 2)];
+    const gm = med(gaps), am = med(L.map(e => +e.amount));
+    const P = gm >= 6 && gm <= 8 ? ['week', 1, 4] : gm >= 26 && gm <= 35 ? ['month', 1, 2] : gm >= 55 && gm <= 66 ? ['month', 2, 2] : gm >= 84 && gm <= 96 ? ['month', 3, 2] : gm >= 350 && gm <= 380 ? ['year', 1, 2] : null;
+    if (!P || L.length < P[2]) return;
+    const steady = gaps.filter(x => Math.abs(x - gm) <= Math.max(3, gm * .15)).length >= Math.ceil(gaps.length * .7);
+    const same = L.filter(e => Math.abs(e.amount - am) <= am * .2).length >= Math.ceil(L.length * .7);
+    if (!steady || !same) return;
+    /* too frequent overall for this rhythm (e.g. a cafe you visit weekly AND randomly) */
+    if (P[0] === 'week' && g.L.length > L.length * 1.5) return;
+    const last = L[L.length - 1], next = nextAfter(last.ts.slice(0, 10), P[1], P[0]);
+    if (dayDiff(next, today()) > gm * 1.6) return; /* stopped: missed more than one cycle */
+    /* already a reminder for it? */
+    if (S.rem.some(r => r.active !== false && r.kind !== 'task' && (payeeKey(r.name).includes(k.slice(0, 6)) || k.includes(payeeKey(r.name).slice(0, 6)) || (Math.abs(remAmt(r) - am) <= am * .1 && (r.category || '') === last.category)))) return;
+    out.push({ k, name: g.name, amount: r2(+last.amount), every: P[1], unit: P[0], next, last: last.ts.slice(0, 10), n: L.length, category: last.category, account: last.account, var: L.some(e => Math.abs(e.amount - am) > 1) });
+  });
+  out.sort((a, b) => b.amount - a.amount);
+  U.recC = { at: S.exp.length + ':' + S.rem.length + ':' + JSON.stringify(off), list: out };
+  return out;
+}
+const recEvery = x => 'every ' + (x.every > 1 ? x.every + ' ' : '') + x.unit + (x.every > 1 ? 's' : '');
+function recurCard() {
+  const L = findRecurring(); if (!L.length) return '';
+  return `<div class="card recc" style="margin-top:14px"><h2 style="display:block">🔁 Looks like repeat payments<small style="display:block;margin-top:3px">Found in your last 8 months · add a reminder so you never miss one</small></h2>${L.map(x => `<div class="srow"><span class="ic" style="background:var(--soft)">${cat(x.category).icon}</span><span class="mid"><b>${esc(x.name)}</b><small>${x.var ? '~' : ''}${inr(x.amount)} ${recEvery(x)} · ${x.n} times · next ~${dLabel(x.next)}</small></span><button class="btn sm" data-act="recAdd" data-k="${esc(x.k)}">+ Remind</button><button class="ax" data-act="recOff" data-k="${esc(x.k)}" aria-label="Not a repeat payment">✕</button></div>`).join('')}</div>`;
+}
+ACT.recAdd = el => { const x = findRecurring().find(r => r.k === el.dataset.k); if (!x) return; let nx = x.next; while (nx < today()) nx = nextAfter(nx, x.every, x.unit); remSheet(null, { kind: 'bill', name: x.name, amount: x.amount, account: x.account, category: x.category, every: x.every, unit: x.unit, next: nx, auto: false }); };
+ACT.recOff = el => { const SC = smartCfg(), L = (SC.recurOff || []).concat(el.dataset.k); commit([cfgOp('smart', Object.assign(SC, { recurOff: L }))]); render(); bellBadge(); toast('Hidden · it won\'t be suggested again'); };
+function recurAlert() {
+  const L = findRecurring(); if (!L.length || snoozed('recur|' + L.map(x => x.k).join(','))) return '';
+  return `<div class="alert info" style="border-left-color:#0EA5E9"><span class="ic" style="background:#0EA5E91f">🔁</span><span class="mid"><b>${L.length} repeat payment${L.length === 1 ? '' : 's'} spotted</b><small>${L.slice(0, 3).map(x => esc(x.name) + ' ' + inr(x.amount, 1)).join(' · ')}${L.length > 3 ? '…' : ''}</small></span><button class="ago" data-act="recGo">View</button><button class="ax" data-act="snooze" data-k="recur|${esc(L.map(x => x.k).join(','))}" data-d="30" aria-label="Later">✕</button></div>`;
+}
+ACT.recGo = () => { shut(); U.pseg = 'rem'; setTab('goals'); };
+
 function remView() {
   const t = today(), act = S.rem.filter(r => r.active !== false).sort((a, b) => remDueDate(a).localeCompare(remDueDate(b))), off = S.rem.filter(r => r.active === false);
   const mEnd = ym() + '-' + p2(daysIn(ym()));
   const monthBills = r2(act.filter(r => r.kind !== 'task').reduce((s2, r) => { let d = r.next, t2 = 0, g = 0; while (d && d <= mEnd && g++ < 40) { if (d >= ym() + '-01') t2 += remAmt(r, d); d = nextAfter(d, r.every, r.unit); } return s2 + t2; }, 0));
   let h = `<div class="hero" style="--hc:#0EA5E9"><div class="hl">Reminders</div><div class="hv">${act.length}</div><div class="hs">${remCounts().due ? '<b class="red">' + remCounts().due + ' need you now</b> · ' : ''}Bills & SIPs left this month <b>${inr(monthBills)}</b></div></div>`;
-  h += `<button class="btn" data-act="remNew">+ Add reminder</button>`;
+  h += `<button class="btn" data-act="remNew">+ Add reminder</button>` + recurCard();
   if (!S.rem.length) h += `<div class="empty"><span class="big">⏰</span>Add bills (rent, phone recharge, subscriptions), SIPs and to-dos like "Review Ledger". Bills can log themselves on the due date.</div>`;
   const groups = [['Needs you now', r => remDueDate(r) <= t], ['Next 7 days', r => remDueDate(r) > t && remDueDate(r) <= addDays(t, 7)], ['Later', r => remDueDate(r) > addDays(t, 7)]];
   groups.forEach(([lbl, f]) => { const l = act.filter(f); if (l.length) h += `<div class="section-t">${lbl}</div><div class="group">${l.map(remRow).join('')}</div>`; });
@@ -4277,7 +4382,7 @@ function smartCard() {
   else {
     h += `<div class="hint" style="margin-top:0">Tap one to file it. 🗑 removes it for good. Ignored SMS never change suggestions.</div>`;
     h += `<div class="grid2" style="margin-top:8px"><button class="btn sec sm" data-act="igShow">${U.igOpen ? 'Hide list' : 'Show ' + ig.length}</button><button class="btn sec sm" data-act="igBack">↩️ Re-sort all</button></div><button class="btn sec sm" data-act="igDelAll" style="margin-top:8px;width:100%;color:var(--red)">🗑 Delete all ${ig.length}</button>`;
-    if (U.igOpen) h += `<div class="group" style="margin-top:10px">${ig.map(p => `<div class="item" style="padding-right:6px"><button class="igp" data-act="pendPick" data-id="${p.id}" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-align:left;background:none;border:0;padding:0;font:inherit;color:inherit;flex:1;min-width:0"><span class="ic" style="background:${p.dir === 'credit' ? '#12A15022' : 'var(--soft)'}">${p.dir === 'credit' ? '⬇️' : '⬆️'}</span><span class="mid" style="min-width:0"><b>${esc(p.payee || (p.dir === 'credit' ? 'Money received' : 'Payment'))}</b><small>${esc(p.account || p.bank || '')} · ${dLabel(p.ts.slice(0, 10))}</small></span><span class="amt ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</span></button><button class="x" data-act="igDel" data-id="${p.id}" aria-label="Delete" style="margin-left:6px">🗑</button></div>`).join('')}</div>`;
+    if (U.igOpen) h += `<div class="group" style="margin-top:10px">${ig.map(p => `<div class="item" style="padding-right:6px"><button class="igp" data-act="pendPick" data-id="${p.id}" style="display:flex;flex-direction:row;align-items:center;gap:10px;text-align:left;background:none;border:0;padding:0;font:inherit;color:inherit;flex:1;min-width:0"><span class="ic" style="background:${p.dir === 'credit' ? '#12A15022' : 'var(--soft)'}">${p.dir === 'credit' ? '⬇️' : '⬆️'}</span><span class="mid" style="min-width:0"><b>${esc(pName(p.payee) || (p.dir === 'credit' ? 'Money received' : 'Payment'))}</b><small>${esc(p.account || p.bank || '')} · ${dLabel(p.ts.slice(0, 10))}</small></span><span class="amt ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</span></button><button class="x" data-act="igDel" data-id="${p.id}" aria-label="Delete" style="margin-left:6px">🗑</button></div>`).join('')}</div>`;
   }
   if (settled > 0) h += `<div class="hint">${settled} other ignored SMS ${settled === 1 ? 'is' : 'are'} already logged or filed, so ${settled === 1 ? 'it is' : 'they are'} hidden.</div>`;
   h += `</div>`;
@@ -4285,8 +4390,8 @@ function smartCard() {
   h += `<div class="card"><h2 style="display:block">🔁 Smart suggestions<small style="display:block;margin-top:3px">learned from what you filed</small></h2>
   <label class="check" style="margin-top:0"><input type="checkbox" data-in="smPre" ${SC.prefill !== false ? 'checked' : ''}> Fill in new SMS from what I did before</label>
   <div class="hint">On: a new SMS from a payee you know comes filled in (never with Ignore). Off: Ledger only shows what you did before, and you tap to use it.</div>
-  <button class="btn sec sm" data-act="lpShow">${U.lpOpen ? 'Hide' : 'See'} what Ledger learned</button>`;
-  if (L) h += L.length ? `<div class="list" style="margin-top:10px">${L.map(x => { const t = x.sg[0]; return `<div class="srow"><span class="ic" style="background:var(--soft)">${x.dir === 'credit' ? '⬇️' : '⬆️'}</span><span class="mid"><b>${esc(x.payee)}</b><small>${x.sg.slice(0, 2).map(g => sgLabel(g.last, 1) + ' ' + g.n + '×').join(' · ')}</small></span><button class="btn sm sec" data-act="lpForget" data-p="${esc(x.payee)}">Forget</button></div>`; }).join('')}</div>` : `<div class="hint">Nothing learned yet.</div>`;
+  <button class="btn sec sm" data-act="lpShow">${U.lpOpen ? 'Hide' : 'See'} what Ledger learned</button>${U.lpOpen ? '<div class="hint">Tap a name to rename it (e.g. Roppen Transpor → Rapido).</div>' : ''}`;
+  if (L) h += L.length ? `<div class="list" style="margin-top:10px">${L.map(x => { const t = x.sg[0]; return `<div class="srow"><span class="ic" style="background:var(--soft)">${x.dir === 'credit' ? '⬇️' : '⬆️'}</span><button class="mid" data-act="nickEdit" data-p="${esc(x.payee)}" style="text-align:left;background:none;border:0;padding:0;font:inherit;color:inherit;min-width:0"><b>${esc(pName(x.payee))} <span style="font-size:.8em">✏️</span></b><small>${nickOf(x.payee) ? 'Bank: ' + esc(x.payee) + ' · ' : ''}${x.sg.slice(0, 2).map(g => sgLabel(g.last, 1) + ' ' + g.n + '×').join(' · ')}</small></button><button class="btn sm sec" data-act="lpForget" data-p="${esc(x.payee)}">Forget</button></div>`; }).join('')}</div>` : `<div class="hint">Nothing learned yet.</div>`;
   if (Object.keys(SC.forget || {}).length) h += `<button class="btn sec sm" data-act="lpReset">Undo all "Forget" (${Object.keys(SC.forget).length})</button>`;
   return h + `</div>`;
 }
