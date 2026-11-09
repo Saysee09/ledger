@@ -206,7 +206,7 @@ input[type=date],input[type=month],input[type=time]{min-width:0;max-width:100%}
 .btns .btn{flex:1;margin:0}
 .seg{display:flex;background:var(--soft);padding:4px;border-radius:15px;gap:2px;margin-bottom:14px}
 #view{padding-top:8px}
-#view .seg.page{background:color-mix(in srgb,var(--line) 75%,var(--bg))}
+#view .seg.page{background:color-mix(in srgb,var(--line) 75%,var(--bg));overflow-x:auto;scrollbar-width:none}.seg.page::-webkit-scrollbar{display:none}.seg.page button{flex:1 0 auto;padding:0 10px}
 .seg button{flex:1;min-width:0;height:38px;border-radius:11px;font-size:min(.8rem,3.4vw);font-weight:800;color:var(--mute);white-space:nowrap;padding:0 4px}
 .seg button.on{background:var(--card);color:var(--ink);box-shadow:var(--sh)}
 .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
@@ -415,6 +415,8 @@ html.kbd .nav,html.kbd .fab{display:none!important}
 .nickb{font:inherit;color:inherit;background:none;border:0;padding:0;font-weight:700;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}.nickb span{font-size:.8em;text-decoration:none}
 .recc .srow small{white-space:normal}.recc .btn.sm{padding:0 12px;flex:0 0 auto}
 .stackbar{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--soft);gap:2px}.stackbar i{display:block;height:100%}
+.accgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.accgrid .acard{flex:none;width:auto}
+.freeline{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 12px;font:inherit;color:var(--ink);text-align:left}.freeline small{color:var(--acc);font-weight:700;white-space:nowrap}
 .sh-foot{flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
 .a-bar{display:flex;gap:8px;align-items:flex-end;margin:0}
 .a-bar textarea{flex:1;min-width:0;display:block;min-height:48px;max-height:132px;resize:none;overflow-y:auto;background:var(--soft);border:1.5px solid transparent;border-radius:14px;padding:12px 14px;font:inherit;font-size:16px;line-height:1.35;color:var(--ink);-webkit-appearance:none;appearance:none}
@@ -558,7 +560,7 @@ if (!S.prefs || typeof S.prefs !== 'object') S.prefs = {};
 ['loans', 'loan', 'rem', 'pend', 'bin'].forEach(k => { if (!Array.isArray(S[k])) S[k] = []; });
 S.outbox = S.outbox.filter(o => o.op !== 'addCategory');
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('Phone storage is full. Export a backup.'); } };
-const U = { tab: 'home', month: ym(), q: '', cat: 'all', mseg: 'inc', c: null, charts: [], after: null, extra: false, fresh: true, f: { range: 'month', from: '', to: '', accs: [], cats: [], min: '', q: '' } };
+const U = { tab: 'home', month: ym(), q: '', cat: 'all', mseg: 'acc', c: null, charts: [], after: null, extra: false, fresh: true, f: { range: 'month', from: '', to: '', accs: [], cats: [], min: '', q: '' } };
 let C = { bal: {}, saved: {}, held: {}, lout: {}, gIn: {} };
 
 /* ---------- local apply / commit ---------- */
@@ -997,8 +999,8 @@ function renderHome() {
   } else h += `<div class="hs">Avg <b>${inr(spent / Math.max(1, dn))}</b>/day · ${es.length} entr${es.length === 1 ? 'y' : 'ies'}</div>`;
   if (emiAmt) h += `<div class="hs">+ EMIs paid <b>${inr(emiAmt)}</b></div>`;
   h += `</div>` + wrapCard();
-  const accs = live(a => a.type !== 'investment' && mineA(a)), oth = live(a => a.others), tot = r2(accs.filter(holderType).reduce((s, a) => s + (C.bal[a.name] || 0), 0));
-  h += `<div class="strip"><button class="acard" data-act="tab" data-t="insights" style="border-color:color-mix(in srgb,var(--acc) 30%,var(--line))"><span>💰 Free to spend</span><b>${inrS(freeTotal())}</b><small>${r2(tot - freeTotal()) > 0 ? inr(tot - freeTotal()) + ' in goals · total ' + inr(tot, 1) : 'Banks & cash, nothing reserved'}</small></button>${accs.map(a => { const b = C.bal[a.name] || 0, hd = C.held[a.name] || 0, pk = pockets(a.name).length; return `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>${ACC_T[a.type][0]} ${esc(a.name)}</span><b class="${b - hd < 0 || (a.type === 'card' && b < 0) ? 'red' : ''}">${a.type === 'card' ? (b < -.004 ? inr(-b) : inr(0)) : inr(b - hd)}</b><small>${a.type === 'card' ? (cardLooksLimit(a) ? '<span style="color:var(--amber)">⚠️ Looks like the limit · fix in Insights → Net worth</span>' : (b < -.004 ? 'Due · bill day ' + cardDay(a) : 'No dues ✓') + (cardLimit(a) ? ' · ' + inr(Math.max(0, cardLimit(a) + Math.min(0, b)), 1) + ' free' : '')) : (hd > 0 ? inr(hd) + ' in goals · ' : '') + (pk ? 'With ' + pockets(a.name).map(x => x.name).join(' & ') + ': <b class="acc-tot">' + inr(b + pockets(a.name).reduce((t, x) => t + (C.bal[x.name] || 0), 0), 1) + '</b>' : hd > 0 ? 'total ' + inr(b, 1) : 'Free to spend')}</small></button>`; }).join('')}${oth.length ? oth.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}" style="border-style:dashed;box-shadow:none"><span>👥 ${esc(a.name)}</span><b class="mute">${inr(C.bal[a.name])}</b><small>${heldOwed(a.name) > 0 ? '<span class="red">You owe ' + inr(heldOwed(a.name), 1) + '</span>' : 'Held for others' + (a.keptIn ? ' · in ' + esc(a.keptIn) : '')}</small></button>`).join('') : ''}</div>`;
+  /* accounts moved to Money → Accounts; one quiet line here */
+  { const tot = r2(live(a => a.type !== 'investment' && mineA(a) && holderType(a)).reduce((s2, a) => s2 + (C.bal[a.name] || 0), 0)); h += `<button class="freeline" data-act="goAcc"><span>💰 Free to spend <b>${inrS(freeTotal())}</b></span><small>${r2(tot - freeTotal()) > 0 ? inr(tot - freeTotal(), 1) + ' in goals · ' : ''}Accounts ›</small></button>`; }
   h += '<div id="ibxChip">' + inboxChip() + '</div>';
   h += `<div class="search"><input type="search" placeholder="🔍 Search · uber >200 · food oct · 5 nov" value="${esc(U.q)}" data-in="q" enterkeyhint="search"></div>`;
   h += `<div class="chips">${[{ name: 'all', label: 'All' }].concat(visCats()).map(c => `<button class="chip ${U.cat === c.name ? 'on' : ''}" data-act="catF" data-v="${esc(c.name)}">${c.label || c.icon + ' ' + esc(c.name)}</button>`).join('')}</div>`;
@@ -1757,9 +1759,29 @@ ACT.obSave = () => {
 /* =========================================================
    MONEY — income / transfers / invest / EMIs / loans
    ========================================================= */
+function accTiles() {
+  let h = '';
+  const accs = live(a => a.type !== 'investment' && mineA(a)), oth = live(a => a.others), tot = r2(accs.filter(holderType).reduce((s, a) => s + (C.bal[a.name] || 0), 0));
+  h += `<div class="strip"><button class="acard" data-act="tab" data-t="insights" style="border-color:color-mix(in srgb,var(--acc) 30%,var(--line))"><span>💰 Free to spend</span><b>${inrS(freeTotal())}</b><small>${r2(tot - freeTotal()) > 0 ? inr(tot - freeTotal()) + ' in goals · total ' + inr(tot, 1) : 'Banks & cash, nothing reserved'}</small></button>${accs.map(a => { const b = C.bal[a.name] || 0, hd = C.held[a.name] || 0, pk = pockets(a.name).length; return `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>${ACC_T[a.type][0]} ${esc(a.name)}</span><b class="${b - hd < 0 || (a.type === 'card' && b < 0) ? 'red' : ''}">${a.type === 'card' ? (b < -.004 ? inr(-b) : inr(0)) : inr(b - hd)}</b><small>${a.type === 'card' ? (cardLooksLimit(a) ? '<span style="color:var(--amber)">⚠️ Looks like the limit · fix in Insights → Net worth</span>' : (b < -.004 ? 'Due · bill day ' + cardDay(a) : 'No dues ✓') + (cardLimit(a) ? ' · ' + inr(Math.max(0, cardLimit(a) + Math.min(0, b)), 1) + ' free' : '')) : (hd > 0 ? inr(hd) + ' in goals · ' : '') + (pk ? 'With ' + pockets(a.name).map(x => x.name).join(' & ') + ': <b class="acc-tot">' + inr(b + pockets(a.name).reduce((t, x) => t + (C.bal[x.name] || 0), 0), 1) + '</b>' : hd > 0 ? 'total ' + inr(b, 1) : 'Free to spend')}</small></button>`; }).join('')}${oth.length ? oth.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}" style="border-style:dashed;box-shadow:none"><span>👥 ${esc(a.name)}</span><b class="mute">${inr(C.bal[a.name])}</b><small>${heldOwed(a.name) > 0 ? '<span class="red">You owe ' + inr(heldOwed(a.name), 1) + '</span>' : 'Held for others' + (a.keptIn ? ' · in ' + esc(a.keptIn) : '')}</small></button>`).join('') : ''}</div>`;
+  return h;
+}
+ACT.goAcc = () => { U.mseg = 'acc'; setTab('money'); };
+function accView() {
+  let h = accTiles().replace('<div class="strip">', '<div class="accgrid">');
+  const lo = loanTotal('owe'), ld = loanTotal('owed'), gs = S.goals.filter(g => !g.archived), gSaved = r2(gs.reduce((a, g) => a + (C.saved[g.id] || 0), 0));
+  h += `<div class="group">`;
+  h += `<button class="item" data-act="nwOpen"><span class="ic" style="background:var(--acc2)">📊</span><span class="mid"><b>Net worth ${inrS(nwAt(null).nw)}</b><small>Choose what counts · credit cards & limits</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`;
+  h += `<button class="item" data-act="mseg" data-k="loans"><span class="ic" style="background:#F59E0B1f">🤝</span><span class="mid"><b>Loans & IOUs</b><small>${lo || ld ? (lo ? 'You owe ' + inr(lo, 1) : '') + (lo && ld ? ' · ' : '') + (ld ? 'Owed to you ' + inr(ld, 1) : '') : 'Nothing pending'}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`;
+  h += `<button class="item" data-act="goGoals"><span class="ic" style="background:#12A1501f">🎯</span><span class="mid"><b>Goals</b><small>${gs.length ? inr(gSaved, 1) + ' saved across ' + gs.length + ' goal' + (gs.length === 1 ? '' : 's') : 'No goals yet'}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`;
+  h += `<button class="item" data-act="mseg" data-k="inv"><span class="ic" style="background:#2F7BF51f">📈</span><span class="mid"><b>Investments</b><small>Portfolio, returns, SIPs</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`;
+  h += `</div><button class="btn sec" data-act="acctNew">+ Add account or card</button>`;
+  return h;
+}
+ACT.goGoals = () => { U.pseg = 'goals'; setTab('goals'); };
 function renderMoney() {
-  const segs = [['inc', 'Income'], ['trf', 'Transfers'], ['inv', 'Invest'], ['emi', 'EMIs'], ['loans', 'Loans']];
+  const segs = [['acc', 'Accounts'], ['inc', 'Income'], ['trf', 'Transfers'], ['inv', 'Invest'], ['emi', 'EMIs'], ['loans', 'Loans']];
   let h = `<div class="seg page">${segs.map(([k, l]) => `<button class="${U.mseg === k ? 'on' : ''}" data-act="mseg" data-k="${k}">${l}</button>`).join('')}</div>`;
+  if (U.mseg === 'acc') return h + accView();
   if (U.mseg === 'emi') return h + emiView();
   if (U.mseg === 'inv') return h + invView();
   if (U.mseg === 'loans') return h + loansView();
@@ -1778,7 +1800,7 @@ function renderMoney() {
     : `<div class="empty"><span class="big">${k === 'inc' ? '💰' : '🔁'}</span>Nothing in ${mLabel(U.month)}.</div>`;
   return h;
 }
-ACT.mseg = el => { U.mseg = el.dataset.k; render(); };
+ACT.mseg = el => { U.mseg = el.dataset.k; render(); window.scrollTo(0, 0); };
 ACT.new = el => compose(el.dataset.k);
 /* ---------- investments: portfolio, returns, gold by grams, SIPs ---------- */
 const INV_IC = t => /gold|silver/i.test(t) ? '🪙' : /mutual|mf|sip/i.test(t) ? '📊' : /fd|rd|ppf|deposit|nps|epf/i.test(t) ? '🏦' : /etf|index/i.test(t) ? '🧺' : /crypto/i.test(t) ? '🪙' : '📈';
@@ -2738,6 +2760,7 @@ function renderPlan() {
   return h + (U.pseg === 'rem' ? remView() : U.pseg === 'budget' ? budgetView() : U.pseg === 'calc' ? calcView() : renderGoals());
 }
 ACT.pseg = el => { U.pseg = el.dataset.k; render(); };
+ACT.itab = el => { U.itab = el.dataset.k; U.fresh = true; render(); };
 
 /* ---------- reminders & recurring bills ---------- */
 const REM_UNITS = [['once', 'Once'], ['day', 'Day(s)'], ['week', 'Week(s)'], ['month', 'Month(s)'], ['year', 'Year(s)']];
@@ -3747,8 +3770,10 @@ function renderInsights() {
   if (f.range === 'month' || f.range === 'year' || f.range === 'fy') h += monthNav(f.range === 'fy' ? 'fy' : f.range === 'year');
   if (f.range === 'custom') h += `<div class="grid2" style="margin-bottom:12px"><input type="date" data-in="fFrom" value="${r.from}" max="${today()}"><input type="date" data-in="fTo" value="${r.to}" max="${today()}"></div>`;
   h += `<div class="chips"><button class="chip ${fc ? 'on' : ''}" data-act="fOpen">⚙ Filters${fc ? ' · ' + fc : ''}</button>${f.accs.map(a => `<button class="chip x" data-act="fDrop" data-k="accs" data-v="${esc(a)}">${esc(a)} ✕</button>`).join('')}${f.cats.map(a => `<button class="chip x" data-act="fDrop" data-k="cats" data-v="${esc(a)}">${cat(a).icon} ${esc(a)} ✕</button>`).join('')}${parseAmt(f.min) > 0 ? `<button class="chip x" data-act="fDrop" data-k="min">≥ ${fmtINR(parseAmt(f.min))} ✕</button>` : ''}${f.q.trim() ? `<button class="chip x" data-act="fDrop" data-k="q">"${esc(f.q.trim())}" ✕</button>` : ''}</div>`;
-  if (rfOpen().length) h += refundsCard();
-  h += `<button class="hero" data-act="nwOpen" style="width:100%;text-align:left;display:block"><div class="hl">${nwPast ? 'Net worth on ' + esc(dLabel(r.to).replace(/^\w+, /, '')) : 'Net worth today'} <span style="float:right;text-transform:none;letter-spacing:0;font-weight:700">What counts ›</span></div><div class="hv">${inrS(nw)}</div>${nwStart || nwMove ? `<div class="hs"><b class="${nwMove >= 0 ? 'green' : 'red'}">${nwMove >= 0 ? '▲ +' : '▼ −'}${inr(Math.abs(nwMove), 1)}</b> ${r.from === r.to ? 'that day' : nwPast ? 'during this period' : 'since ' + esc(dLabel(r.from).replace(/^\w+, /, ''))}</div>` : ''}<div class="hs">Banks & cash <b>${inr(NW.liq, 1)}</b>${nwCfg().investment !== false && live(a => mineA(a) && a.type === 'investment').length ? ' · Investments <b>' + inr(NW.inv, 1) + '</b>' : ''}${NW.card ? ' · Card dues <b>' + inr(NW.card, 1) + '</b>' : ''}${NW.loans ? ' · Loans <b>' + inr(NW.loans, 1) + '</b>' : ''}</div>${!nwPast && live(cardLooksLimit).length ? '<div class="hs" style="color:var(--amber)">⚠️ A card balance looks like its limit · tap to fix</div>' : ''}</button>`;
+  const itab = U.itab || 'ov';
+  h = `<div class="seg page">${[['ov', 'Overview'], ['spend', 'Spending'], ['trend', 'Trends'], ['wealth', 'Net worth']].map(([k, l]) => `<button class="${itab === k ? 'on' : ''}" data-act="itab" data-k="${k}">${l}</button>`).join('')}</div>` + h;
+  if (itab === 'ov') if (rfOpen().length) h += refundsCard();
+  if (itab === 'wealth') h += `<button class="hero" data-act="nwOpen" style="width:100%;text-align:left;display:block"><div class="hl">${nwPast ? 'Net worth on ' + esc(dLabel(r.to).replace(/^\w+, /, '')) : 'Net worth today'} <span style="float:right;text-transform:none;letter-spacing:0;font-weight:700">What counts ›</span></div><div class="hv">${inrS(nw)}</div>${nwStart || nwMove ? `<div class="hs"><b class="${nwMove >= 0 ? 'green' : 'red'}">${nwMove >= 0 ? '▲ +' : '▼ −'}${inr(Math.abs(nwMove), 1)}</b> ${r.from === r.to ? 'that day' : nwPast ? 'during this period' : 'since ' + esc(dLabel(r.from).replace(/^\w+, /, ''))}</div>` : ''}<div class="hs">Banks & cash <b>${inr(NW.liq, 1)}</b>${nwCfg().investment !== false && live(a => mineA(a) && a.type === 'investment').length ? ' · Investments <b>' + inr(NW.inv, 1) + '</b>' : ''}${NW.card ? ' · Card dues <b>' + inr(NW.card, 1) + '</b>' : ''}${NW.loans ? ' · Loans <b>' + inr(NW.loans, 1) + '</b>' : ''}</div>${!nwPast && live(cardLooksLimit).length ? '<div class="hs" style="color:var(--amber)">⚠️ A card balance looks like its limit · tap to fix</div>' : ''}</button>`;
   /* one comparison, picked by the person (default: previous period = MoM for a month) */
   const W = cmpWin(r), Q = pstats(r.from, W.end), P = W.win ? pstats(W.win.from, W.win.to) : null;
   const D = (k, good, pts) => W.win ? dline(Q[k], P && W.ok ? P[k] : null, good, pts, W.short) : '';
@@ -3756,16 +3781,17 @@ function renderInsights() {
   const nwD = W.win ? dline(nw, nwPrev, 1, false, W.short) : '';
   const topCat = Object.entries(ex.reduce((o, e) => (o[e.category] = (o[e.category] || 0) + e.amount, o), {})).sort((x, y) => y[1] - x[1])[0];
   const billsDue = r2(S.rem.filter(x => x.active !== false && x.kind !== 'task' && remDueDate(x) <= cm + '-' + p2(daysIn(cm))).reduce((s2, x) => s2 + remAmt(x), 0));
-  h += cmpBar(W);
-  h += `<div class="section-t">Spending · ${esc(r.label)}</div><div class="kpis">${kpi('Spent', inr(spent, 1), 'red', refunded ? inr(refunded, 1) + ' refunded' : '', D('spent', -1))}${kpi('Entries', n, '', n ? 'logged' : '', D('n', 0))}${kpi('Avg / day', inr(spent / Math.max(1, days), 1), '', days + ' day' + (days === 1 ? '' : 's'), D('avgDay', -1))}${kpi('Avg / entry', inr(n ? sum(exP) / n : 0, 1), '', '', D('avgEntry', 0))}${kpi('Biggest', big ? inr(big.amount, 1) : '—', '', big ? (big.remarks || big.category) : '', D('big', 0))}${kpi('EMIs paid', inr(emis, 1), '', '', D('emis', 0))}</div>`;
-  h += `<div class="section-t">Savings</div><div class="kpis">${kpi('Income', inr(inc, 1), 'green', '', D('inc', 1))}${kpi('Saved', savedT.v, savedT.cls, savedT.sub, savedT.d ? D('rate', 1, true) : '')}${kpi('Invested', inr(inv, 1), 'blue', '', D('inv', 1))}${budget > 0 ? kpi('Budget left', inr(budget - spentM, 1), budget - spentM < 0 ? 'red' : '', 'this month') + kpi('Safe / day', inr(Math.max(0, budget - spentM) / Math.max(1, dLeft), 1), '', dLeft + ' days left') : kpi('Free money', inr(freeAll, 1), '', 'not in goals') + kpi('Safe / day', inr(Math.max(0, freeAll) / Math.max(1, dLeft), 1), '', 'till month end')}${kpi('Net worth', inr(nw, 1), '', 'today', nwD)}</div>`;
-  h += `<div class="section-t">Habits</div><div class="kpis">${kpi('No-spend', noSpend, 'green', 'of ' + days + ' day' + (days === 1 ? '' : 's'), D('noSpend', 1))}${kpi('Busiest day', spent ? WN[bw].slice(0, 3) : '—', '', spent ? inr(wd[bw], 1) + ' total' : '')}${kpi('Busiest hour', n ? hrRange(bh) : '—', '', n ? hr[bh] + ' entr' + (hr[bh] === 1 ? 'y' : 'ies') : '')}${kpi('Cash', cashPct + '%', '', inr(cashAmt, 1), D('cashPct', 0, true))}${kpi('UPI / bank', (spent ? 100 - cashPct : 0) + '%', '', inr(spent - cashAmt, 1))}${kpi('Top category', topCat ? cat(topCat[0]).icon + ' ' + inr(topCat[1], 1) : '—', '', topCat ? topCat[0] : '')}</div>`;
-  if (topRem.length) h += `<div class="toprem">${topRem.map(x => `<button class="chip" data-act="fRem" data-v="${esc(x.t)}">${esc(x.t)} <small>×${x.n} · ${inr(x.v, 1)}</small></button>`).join('')}</div>`;
-  h += `<div class="section-t">Commitments</div><div class="kpis">${kpi('EMIs due', inr(emiDueAmt, 1), emiDueAmt ? 'amber' : '', 'this month')}${kpi('Bills due', inr(billsDue, 1), billsDue ? 'amber' : '', 'reminders, this month')}${kpi('You owe', inr(loanOwe, 1), loanOwe ? 'red' : '')}${kpi('Owed to you', inr(loanOwed, 1), loanOwed ? 'green' : '')}${kpi('Goals', gT ? Math.round(gSaved / gT * 100) + '%' : '—', 'acc', inr(gSaved, 1) + ' saved')}${kpi('Card dues', inr(-owedCard, 1), owedCard < 0 ? 'red' : '')}</div>`;
+  if (itab === 'ov') h += cmpBar(W);
+  if (itab === 'ov') h += `<div class="section-t">Spending · ${esc(r.label)}</div><div class="kpis">${kpi('Spent', inr(spent, 1), 'red', refunded ? inr(refunded, 1) + ' refunded' : '', D('spent', -1))}${kpi('Entries', n, '', n ? 'logged' : '', D('n', 0))}${kpi('Avg / day', inr(spent / Math.max(1, days), 1), '', days + ' day' + (days === 1 ? '' : 's'), D('avgDay', -1))}${kpi('Avg / entry', inr(n ? sum(exP) / n : 0, 1), '', '', D('avgEntry', 0))}${kpi('Biggest', big ? inr(big.amount, 1) : '—', '', big ? (big.remarks || big.category) : '', D('big', 0))}${kpi('EMIs paid', inr(emis, 1), '', '', D('emis', 0))}</div>`;
+  if (itab === 'ov') h += `<div class="section-t">Savings</div><div class="kpis">${kpi('Income', inr(inc, 1), 'green', '', D('inc', 1))}${kpi('Saved', savedT.v, savedT.cls, savedT.sub, savedT.d ? D('rate', 1, true) : '')}${kpi('Invested', inr(inv, 1), 'blue', '', D('inv', 1))}${budget > 0 ? kpi('Budget left', inr(budget - spentM, 1), budget - spentM < 0 ? 'red' : '', 'this month') + kpi('Safe / day', inr(Math.max(0, budget - spentM) / Math.max(1, dLeft), 1), '', dLeft + ' days left') : kpi('Free money', inr(freeAll, 1), '', 'not in goals') + kpi('Safe / day', inr(Math.max(0, freeAll) / Math.max(1, dLeft), 1), '', 'till month end')}${kpi('Net worth', inr(nw, 1), '', 'today', nwD)}</div>`;
+  if (itab === 'ov') h += `<div class="section-t">Habits</div><div class="kpis">${kpi('No-spend', noSpend, 'green', 'of ' + days + ' day' + (days === 1 ? '' : 's'), D('noSpend', 1))}${kpi('Busiest day', spent ? WN[bw].slice(0, 3) : '—', '', spent ? inr(wd[bw], 1) + ' total' : '')}${kpi('Busiest hour', n ? hrRange(bh) : '—', '', n ? hr[bh] + ' entr' + (hr[bh] === 1 ? 'y' : 'ies') : '')}${kpi('Cash', cashPct + '%', '', inr(cashAmt, 1), D('cashPct', 0, true))}${kpi('UPI / bank', (spent ? 100 - cashPct : 0) + '%', '', inr(spent - cashAmt, 1))}${kpi('Top category', topCat ? cat(topCat[0]).icon + ' ' + inr(topCat[1], 1) : '—', '', topCat ? topCat[0] : '')}</div>`;
+  if (itab === 'ov') if (topRem.length) h += `<div class="toprem">${topRem.map(x => `<button class="chip" data-act="fRem" data-v="${esc(x.t)}">${esc(x.t)} <small>×${x.n} · ${inr(x.v, 1)}</small></button>`).join('')}</div>`;
+  if (itab === 'ov') h += `<div class="section-t">Commitments</div><div class="kpis">${kpi('EMIs due', inr(emiDueAmt, 1), emiDueAmt ? 'amber' : '', 'this month')}${kpi('Bills due', inr(billsDue, 1), billsDue ? 'amber' : '', 'reminders, this month')}${kpi('You owe', inr(loanOwe, 1), loanOwe ? 'red' : '')}${kpi('Owed to you', inr(loanOwed, 1), loanOwed ? 'green' : '')}${kpi('Goals', gT ? Math.round(gSaved / gT * 100) + '%' : '—', 'acc', inr(gSaved, 1) + ' saved')}${kpi('Card dues', inr(-owedCard, 1), owedCard < 0 ? 'red' : '')}</div>`;
 
   const by = {}; ex.forEach(e => by[e.category] = (by[e.category] || 0) + e.amount);
   const factor = f.range === 'month' ? 1 : f.range === 'year' ? 12 : (dayDiff(r.from, r.to) + 1) / 30;
   const rows = uniq(Object.keys(by).concat(f.cats.length ? [] : visCats().filter(c => c.budget > 0).map(c => c.name))).map(nm => ({ n: nm, t: r2(by[nm] || 0), b: r2((+cat(nm).budget || 0) * factor) })).sort((a, b) => b.t - a.t);
+  if (itab === 'spend') {
   h += `<div class="card"><h2>Where it went <small>${esc(r.label)}</small></h2>`;
   if (!spent && !rows.length) h += `<div class="empty">No spending in this period.</div>`;
   else {
@@ -3774,23 +3800,24 @@ function renderInsights() {
       return `<button class="brow" data-act="catJump" data-v="${esc(x.n)}"><div class="h"><span><i class="dot" style="background:${c.color}"></i>${c.icon} ${esc(x.n)}</span><span><b class="${x.b > 0 && x.t > x.b ? 'red' : ''}">${inr(x.t)}</b> <small class="mute">${x.b > 0 ? '/ ' + inr(x.b, 1) : (spent ? Math.round(x.t / spent * 100) : 0) + '%'}</small></span></div><div class="bar"><i style="width:${pct}%;background:${col}"></i></div></button>`; }).join('');
   }
   h += `</div>`;
+  }
   const tg = {}; ex.forEach(e => tagsOf(e.remarks).forEach(t => { tg[t] = tg[t] || { n: 0, v: 0 }; tg[t].n++; tg[t].v += e.amount; }));
   const tgl = Object.entries(tg).sort((a, b) => b[1].v - a[1].v);
-  h += `<div class="card"><h2>Tags <small>${esc(r.label)}</small></h2>${tgl.length ? `<div class="chips wrap">${tgl.map(([t, x]) => `<button class="chip" data-act="tagOpen" data-v="${esc(t)}">${esc(t)} <small>${inr(x.v, 1)} · ×${x.n}</small></button>`).join('')}</div>` : '<div class="hint" style="margin:0">Add <b>#tags</b> in a note (e.g. <b>#goa-trip</b>, <b>#diwali</b>) to total a trip or event across categories.</div>'}</div>`;
-  h += `<div class="card"><h2>Category trend <small>last 6 months</small></h2><div class="chart"><canvas id="cCatTrend"></canvas></div></div>`;
-  h += `<div class="card"><h2>Spend vs income <small>12 months</small></h2><div class="chart"><canvas id="cTrend"></canvas></div></div>`;
+  if (itab === 'spend') h += `<div class="card"><h2>Tags <small>${esc(r.label)}</small></h2>${tgl.length ? `<div class="chips wrap">${tgl.map(([t, x]) => `<button class="chip" data-act="tagOpen" data-v="${esc(t)}">${esc(t)} <small>${inr(x.v, 1)} · ×${x.n}</small></button>`).join('')}</div>` : '<div class="hint" style="margin:0">Add <b>#tags</b> in a note (e.g. <b>#goa-trip</b>, <b>#diwali</b>) to total a trip or event across categories.</div>'}</div>`;
+  if (itab === 'trend') h += `<div class="card"><h2>Category trend <small>last 6 months</small></h2><div class="chart"><canvas id="cCatTrend"></canvas></div></div>`;
+  if (itab === 'trend') h += `<div class="card"><h2>Spend vs income <small>12 months</small></h2><div class="chart"><canvas id="cTrend"></canvas></div></div>`;
   const calM = r.to > today() ? ym() : r.to.slice(0, 7);
-  h += `<div class="card"><h2>Daily spend <small>${mLabel(calM)}</small></h2>${calHtml(calM)}</div>`;
-  if (f.range === 'month') h += `<div class="card"><h2>Through the month <small>cumulative vs budget</small></h2><div class="chart"><canvas id="cDaily"></canvas></div></div>`;
-  h += `<div class="card"><h2>Money flow <small>${esc(r.label)}</small></h2>${flowSvg(r, ex)}<div class="hint">Left: where money came from · Middle: your accounts · Right: where it went. Transfers between your own accounts are left out.</div></div>`;
+  if (itab === 'spend') h += `<div class="card"><h2>Daily spend <small>${mLabel(calM)}</small></h2>${calHtml(calM)}</div>`;
+  if (itab === 'spend') if (f.range === 'month') h += `<div class="card"><h2>Through the month <small>cumulative vs budget</small></h2><div class="chart"><canvas id="cDaily"></canvas></div></div>`;
+  if (itab === 'trend') h += `<div class="card"><h2>Money flow <small>${esc(r.label)}</small></h2>${flowSvg(r, ex)}<div class="hint">Left: where money came from · Middle: your accounts · Right: where it went. Transfers between your own accounts are left out.</div></div>`;
   const span = U.nwSpan == null ? 12 : U.nwSpan;
-  h += `<div class="card"><h2>Net worth over time <small>month end</small></h2><div class="chips" style="padding-top:0">${[[6, '6M'], [12, '1Y'], [24, '2Y'], [0, 'All']].map(([k, l]) => `<button class="chip ${span === k ? 'on' : ''}" data-act="nwSpan" data-v="${k}">${l}</button>`).join('')}</div><div class="chart" style="height:230px"><canvas id="cNw"></canvas></div><div class="hint" id="nwHint"></div></div>`;
-  h += `<div class="card"><h2>Balances over time <small>month end</small></h2><div class="chart" style="height:240px"><canvas id="cBal"></canvas></div></div>`;
+  if (itab === 'wealth') h += `<div class="card"><h2>Net worth over time <small>month end</small></h2><div class="chips" style="padding-top:0">${[[6, '6M'], [12, '1Y'], [24, '2Y'], [0, 'All']].map(([k, l]) => `<button class="chip ${span === k ? 'on' : ''}" data-act="nwSpan" data-v="${k}">${l}</button>`).join('')}</div><div class="chart" style="height:230px"><canvas id="cNw"></canvas></div><div class="hint" id="nwHint"></div></div>`;
+  if (itab === 'wealth') h += `<div class="card"><h2>Balances over time <small>month end</small></h2><div class="chart" style="height:240px"><canvas id="cBal"></canvas></div></div>`;
   const pm = {}; ex.forEach(e => pm[e.account] = (pm[e.account] || 0) + e.amount);
   const pml = Object.entries(pm).sort((a, b) => b[1] - a[1]);
-  if (pml.length) h += `<div class="card"><h2>Paid from</h2>${pml.map(([nm, v], i) => `<div class="brow"><div class="h"><span>${(ACC_T[(acc(nm) || {}).type] || ['•'])[0]} ${esc(nm)}</span><span><b>${inr(v)}</b> <small class="mute">${Math.round(v / spent * 100)}%</small></span></div><div class="bar"><i style="width:${v / spent * 100}%;background:${SWATCH[i % SWATCH.length]}"></i></div></div>`).join('')}</div>`;
+  if (itab === 'spend') if (pml.length) h += `<div class="card"><h2>Paid from</h2>${pml.map(([nm, v], i) => `<div class="brow"><div class="h"><span>${(ACC_T[(acc(nm) || {}).type] || ['•'])[0]} ${esc(nm)}</span><span><b>${inr(v)}</b> <small class="mute">${Math.round(v / spent * 100)}%</small></span></div><div class="bar"><i style="width:${v / spent * 100}%;background:${SWATCH[i % SWATCH.length]}"></i></div></div>`).join('')}</div>`;
   const top = ex.slice().sort((a, b) => b.amount - a.amount).slice(0, 5);
-  if (top.length) h += `<div class="card"><h2>Biggest expenses</h2><div class="group" style="box-shadow:none;margin:0 -4px">${top.map(expRow).join('')}</div></div>`;
+  if (itab === 'spend') if (top.length) h += `<div class="card"><h2>Biggest expenses</h2><div class="group" style="box-shadow:none;margin:0 -4px">${top.map(expRow).join('')}</div></div>`;
   U.after = () => drawInsights(rows, r);
   return h;
 }
