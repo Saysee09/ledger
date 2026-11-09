@@ -1,6 +1,5 @@
-## Ledger v8.7 · What's new
+## Ledger v8.8 · What's new
 
-## Newest
 - **Cleaner pages**:
   - **Expenses**: total, one "Free to spend" line, the bell line, search and your list. That's it
   - **Money → Accounts** (new first tab): every bank, cash, card and held-for-others tile, plus Net worth, Loans, Goals and Investments in one place
@@ -8,6 +7,7 @@
 - **📈 Investments, rebuilt** (Money → Invest): portfolio worth now vs invested, gain and **yearly return (XIRR)** overall and per holding, "Where it is" split by type, **🪙 gold by grams × today's rate**, and your **SIPs** with + Add SIP
 - **✏️ Payee nicknames**: tap the payee name on any bank SMS (or in Settings → Bank SMS → what Ledger learned) and rename it, e.g. Roppen Transpor → Rapido. Shown everywhere, and search finds it
 - **🔎 Smart search** on Expenses: `uber >200` · `food last month` · `100-300` · `5 nov` · `oct` · `#evol` · `under 50`
+- **🧩 Free-to-spend widget** now also shows what you spent today
 - **🔁 Repeat payments spotted** (Plan → Bills, and a heads-up in the bell): rent, subscriptions, recharges found from your history. **+ Remind** turns one into a reminder; ✕ hides it for good
 
 ## Also new in this build
