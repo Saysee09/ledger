@@ -1,6 +1,8 @@
 ## Ledger v8.7 · What's new
 
 ## Also new in this build
+- **Net worth follows the month you pick** on Insights: "Net worth on 30 Sept" for past months, plus how much it went up or down in that period
+- **Big ₹ boxes** (Match balance, add expense, pay card…) show Indian commas as you type, e.g. 1,06,559.51, and the text shrinks so the whole number always fits
 - 👆 **Fingerprint pops up by itself** when Ledger is locked (PIN / pattern stays underneath if you cancel). Switch: Settings → Lock & privacy
 - **Ignore = "already logged"**: Ledger never learns from ignored SMS. Ignored SMS you already logged by hand, or whose payee you filed later, leave the list on their own
 - **🗑 Delete** ignored SMS one by one or all at once (with Undo)

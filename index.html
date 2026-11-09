@@ -217,7 +217,7 @@ input[type=date],input[type=month],input[type=time]{min-width:0;max-width:100%}
 .tile.on small{color:var(--ink)}
 .amtbox{display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 0 0}
 .amtbox span{font-size:2rem;font-weight:700;color:var(--faint)}
-.amtbox input{background:none!important;border:none!important;height:auto;font-size:3rem;font-weight:800;letter-spacing:-.045em;text-align:center;width:70%;padding:0;color:var(--ink)}
+.amtbox input{background:none!important;border:none!important;height:auto;font-size:3rem;font-weight:800;letter-spacing:-.045em;text-align:center;width:calc(100% - 44px);min-width:0;padding:0;color:var(--ink)}
 .amthint{text-align:center;font-size:.8rem;color:var(--mute);min-height:1.2em;font-weight:600}
 .when{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
 .when input{flex:1;min-width:118px;height:38px;border-radius:999px;font-size:14px;font-weight:600}
@@ -710,7 +710,7 @@ function openSheet(title, html, cls, foot) {
   s.className = 'sheet ' + (cls || '') + (wasOpen ? ' open' : '');
   s.innerHTML = `<div class="sh-top" id="shTop"><div class="grab"></div><div class="sh-head"><h3>${title || '&nbsp;'}</h3><button class="x" data-act="closeSheet" aria-label="Close">✕</button></div></div><div class="sh-body" id="shBody">${html}</div>${foot ? `<div class="sh-foot" id="shFoot">${foot}</div>` : ''}`;
   s.style.transform = '';
-  fitTiles(s);
+  fitTiles(s); amtFmtAll(s);
   if (!wasOpen) {
     if (!U.extra) { try { history.pushState({ sh: 1 }, ''); } catch (e) { } }
     U.extra = false;
@@ -3576,7 +3576,9 @@ function renderInsights() {
   const cm = ym(), budget = r2(visCats().reduce((s, c) => s + (+c.budget || 0), 0)), spentM = sum(S.exp.filter(e => inP(e, cm) && myX(e))), dLeft = daysIn(cm) - new Date().getDate() + 1;
   const accsAll = S.accounts.filter(a => mineA(a) && (!a.archived || (C.bal[a.name] || 0) !== 0));
   const liq = r2(accsAll.filter(holderType).reduce((s, a) => s + (C.bal[a.name] || 0), 0)), invv = r2(accsAll.filter(a => a.type === 'investment').reduce((s, a) => s + (C.bal[a.name] || 0), 0)), owedCard = r2(accsAll.filter(a => a.type === 'card').reduce((s, a) => s + (C.bal[a.name] || 0), 0));
-  const loanOwe = loanTotal('owe'), loanOwed = loanTotal('owed'), NW = nwAt(null), nw = NW.nw;
+  /* net worth at the END of the period on screen (today for the current one), and how it moved during it */
+  const nwPast = r.to < today(), NW = nwAt(nwPast ? addDays(r.to, 1) + ' 00:00:00' : null), nw = NW.nw, nwStart = nwAt(r.from + ' 00:00:00').nw, nwMove = r2(nw - nwStart);
+  const loanOwe = loanTotal('owe'), loanOwed = loanTotal('owed');
   const freeAll = r2(liq - accsAll.filter(holderType).reduce((s, a) => s + (C.held[a.name] || 0), 0));
   const dayTot = {}; exP.forEach(e => { const d = e.ts.slice(0, 10); dayTot[d] = (dayTot[d] || 0) + e.amount; });
   const noSpend = days > 0 ? Math.max(0, days - Object.keys(dayTot).filter(d => d <= endD).length) : 0;
@@ -3594,7 +3596,7 @@ function renderInsights() {
   if (f.range === 'custom') h += `<div class="grid2" style="margin-bottom:12px"><input type="date" data-in="fFrom" value="${r.from}" max="${today()}"><input type="date" data-in="fTo" value="${r.to}" max="${today()}"></div>`;
   h += `<div class="chips"><button class="chip ${fc ? 'on' : ''}" data-act="fOpen">⚙ Filters${fc ? ' · ' + fc : ''}</button>${f.accs.map(a => `<button class="chip x" data-act="fDrop" data-k="accs" data-v="${esc(a)}">${esc(a)} ✕</button>`).join('')}${f.cats.map(a => `<button class="chip x" data-act="fDrop" data-k="cats" data-v="${esc(a)}">${cat(a).icon} ${esc(a)} ✕</button>`).join('')}${parseAmt(f.min) > 0 ? `<button class="chip x" data-act="fDrop" data-k="min">≥ ${fmtINR(parseAmt(f.min))} ✕</button>` : ''}${f.q.trim() ? `<button class="chip x" data-act="fDrop" data-k="q">"${esc(f.q.trim())}" ✕</button>` : ''}</div>`;
   if (rfOpen().length) h += refundsCard();
-  h += `<button class="hero" data-act="nwOpen" style="width:100%;text-align:left;display:block"><div class="hl">Net worth today <span style="float:right;text-transform:none;letter-spacing:0;font-weight:700">What counts ›</span></div><div class="hv">${inrS(nw)}</div><div class="hs">Banks & cash <b>${inr(NW.liq, 1)}</b>${nwCfg().investment !== false ? ' · Investments <b>' + inr(NW.inv, 1) + '</b>' : ''}${NW.card ? ' · Card dues <b>' + inr(NW.card, 1) + '</b>' : ''}${NW.loans ? ' · Loans <b>' + inr(NW.loans, 1) + '</b>' : ''}</div>${live(cardLooksLimit).length ? '<div class="hs" style="color:var(--amber)">⚠️ A card balance looks like its limit · tap to fix</div>' : ''}</button>`;
+  h += `<button class="hero" data-act="nwOpen" style="width:100%;text-align:left;display:block"><div class="hl">${nwPast ? 'Net worth on ' + esc(dLabel(r.to).replace(/^\w+, /, '')) : 'Net worth today'} <span style="float:right;text-transform:none;letter-spacing:0;font-weight:700">What counts ›</span></div><div class="hv">${inrS(nw)}</div>${nwStart || nwMove ? `<div class="hs"><b class="${nwMove >= 0 ? 'green' : 'red'}">${nwMove >= 0 ? '▲ +' : '▼ −'}${inr(Math.abs(nwMove), 1)}</b> ${r.from === r.to ? 'that day' : nwPast ? 'during this period' : 'since ' + esc(dLabel(r.from).replace(/^\w+, /, ''))}</div>` : ''}<div class="hs">Banks & cash <b>${inr(NW.liq, 1)}</b>${nwCfg().investment !== false && live(a => mineA(a) && a.type === 'investment').length ? ' · Investments <b>' + inr(NW.inv, 1) + '</b>' : ''}${NW.card ? ' · Card dues <b>' + inr(NW.card, 1) + '</b>' : ''}${NW.loans ? ' · Loans <b>' + inr(NW.loans, 1) + '</b>' : ''}</div>${!nwPast && live(cardLooksLimit).length ? '<div class="hs" style="color:var(--amber)">⚠️ A card balance looks like its limit · tap to fix</div>' : ''}</button>`;
   /* one comparison, picked by the person (default: previous period = MoM for a month) */
   const W = cmpWin(r), Q = pstats(r.from, W.end), P = W.win ? pstats(W.win.from, W.win.to) : null;
   const D = (k, good, pts) => W.win ? dline(Q[k], P && W.ok ? P[k] : null, good, pts, W.short) : '';
@@ -4331,6 +4333,22 @@ ACT.nwOpen = () => nwSheet();
 ACT.nwTog = el => { const N = nwCfg(), k = el.dataset.k; N[k] = (k === 'cardDues' || k === 'loans') ? !N[k] : N[k] === false; commit([cfgOp('nw', N)]); const y = $('#shBody').scrollTop; nwSheet(); $('#shBody').scrollTop = y; render(); };
 ACT.nwAcc = el => { const N = nwCfg(), n = el.dataset.n, sk = (N.skip || []).slice(), i = sk.indexOf(n); if (i >= 0) sk.splice(i, 1); else sk.push(n); N.skip = sk; commit([cfgOp('nw', N)]); const y = $('#shBody').scrollTop; nwSheet(); $('#shBody').scrollTop = y; render(); };
 ACT.cardNew = () => acctSheet(null, 'card');
+
+/* ---------- big ₹ boxes: 1,06,559.51 as you type, and the number always fits ---------- */
+function amtFmt(i) {
+  const v = i.value, plain = /^[\d,]*(\.\d{0,2})?$/.test(v);
+  if (plain && v) {
+    const pos = i.selectionStart == null ? v.length : i.selectionStart, before = v.slice(0, pos).replace(/,/g, '').length;
+    const [a, b] = v.replace(/,/g, '').split('.'), ip = a.replace(/^0+(?=\d)/, '');
+    const out = (ip ? Number(ip).toLocaleString('en-IN') : (b != null ? '0' : '')) + (b != null ? '.' + b : '');
+    if (out !== v) { i.value = out; let n = 0, k = 0; while (k < out.length && n < before) { if (out[k] !== ',') n++; k++; } try { i.setSelectionRange(k, k); } catch (e) { } }
+  }
+  /* shrink the font until the whole number shows */
+  i.style.fontSize = ''; let f = parseFloat(getComputedStyle(i).fontSize);
+  while (f > 18 && i.scrollWidth > i.clientWidth + 1) { f -= 2; i.style.fontSize = f + 'px'; }
+}
+document.addEventListener('input', e => { if (e.target.matches && e.target.matches('.amtbox input')) amtFmt(e.target); }, true);
+const amtFmtAll = root => requestAnimationFrame(() => (root || document).querySelectorAll('.amtbox input').forEach(i => { if (i.value) amtFmt(i); }));
 
 /* ---------- keyboard: keep pop-ups and the box you type in above the keyboard ---------- */
 (() => {
