@@ -533,6 +533,9 @@ const COLL = { Expenses: 'exp', Income: 'inc', Transfers: 'trf', Investments: 'i
 const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings', 'signin', 'backup', 'career', 'plans', 'bin', 'refunds', 'salary', 'nw', 'cards', 'smart'];
 /* Your Sheet and Google sign-in client (safe to be public: neither opens data without your Google account or secret key) */
 const CLOUD = { url: '__SHEET_URL__', clientId: '__WEB_CLIENT_ID__' };
+/* feedback inbox: a small script on the owner's Google account; users never see where it goes */
+const FEEDBACK = { url: '__FEEDBACK_URL__' };
+const fbOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(FEEDBACK.url);
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
 const APP_BUILD = '2026-11-10 b19';
@@ -4112,14 +4115,17 @@ function renderSettings() {
   if (U.sp === 'backup' && S.url) U.after = bkLoad;
   pg('sms', smartCard());
   pg('sms', `<div class="card"><h2>Bank SMS</h2><div class="lbl" style="margin-top:0">Card / account last 4 digits</div>${live(a => a.type !== 'cash' && a.type !== 'investment' && mineA(a)).map(a => `<div class="grid2" style="grid-template-columns:1fr 110px;align-items:center;margin-bottom:6px"><span style="font-weight:700">${esc(a.name)}</span><input data-in="acL4" data-n="${esc(a.name)}" inputmode="numeric" maxlength="12" value="${esc(a.l4 || '')}" placeholder="e.g. 1211"></div>`).join('')}<div class="hint">Matches SMS like "from XX1211" to the right account. Several numbers? Separate them with commas. The Ledger phone app fills these in for you the first time it sees each one.</div><button class="btn sec" data-act="smsTry">🧪 Paste an SMS to test</button></div>`);
+  pg('feedback', feedbackCard());
+  pg('import', importCard());
   pg('about', `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Ledger Android app (Settings → Phone app).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v8.9${AND ? ' · app ' + esc(andInfo().version || '') : ''}</div>`);
   return settingsView(PG);
 }
 /* settings: a short menu, each item opens its own page (Android back / ‹ returns to the menu) */
 const SP = () => [
-  ['Your data', [['sync', '☁️', 'Google Sheet & sync', !S.url ? 'Not connected' : lastErr ? 'Problem · tap to see' : 'Connected' + (S.lastSync ? ' · ' + S.lastSync : '')], ['backup', '🗂️', 'Backups & restore', 'Drive · Ledger App / Backups'], ['bin', '🗑️', 'Recently deleted', (S.bin.length ? S.bin.length + ' item' + (S.bin.length === 1 ? '' : 's') : 'Empty') + ' · kept ' + binDays() + ' days']]],
+  ['Your data', [['sync', '☁️', 'Google Sheet & sync', !S.url ? 'Not connected' : lastErr ? 'Problem · tap to see' : 'Connected' + (S.lastSync ? ' · ' + S.lastSync : '')], ['backup', '🗂️', 'Backups & restore', 'Drive · Ledger App / Backups'], ['import', '📥', 'Import old data', 'Expenses from a CSV · salary month by month'], ['bin', '🗑️', 'Recently deleted', (S.bin.length ? S.bin.length + ' item' + (S.bin.length === 1 ? '' : 's') : 'Empty') + ' · kept ' + binDays() + ' days']]],
   ['Money', [['accounts', '🏦', 'Accounts', S.accounts.length + ' account' + (S.accounts.length === 1 ? '' : 's')], ['cats', '🏷️', 'Categories, budgets & types', S.cfg.categories.length + ' categories'], ['sms', '📩', 'Bank SMS', (pendIgnored().length ? pendIgnored().length + ' ignored · ' : '') + 'suggestions · card digits']]],
-  ['App', [['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off'], ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Ledger v8.6']]]
+  ['App', [['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off'], ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Ledger v8.9']]],
+  ['Help us improve', [['feedback', '💬', 'Send feedback', (S.prefs.fbQ || []).length ? (S.prefs.fbQ.length + ' waiting to send') : 'Ideas, problems, what you like']]]
 ];
 function settingsView(PG) {
   const all = SP().flatMap(g => g[1]), cur = U.sp && all.find(x => x[0] === U.sp);
@@ -4479,6 +4485,140 @@ ACT.igUnlearn = () => { const L = S.pend.filter(p => p.status === 'ignored' && p
 ACT.lpForget = el => { const SC = smartCfg(), F = Object.assign({}, SC.forget); F[el.dataset.p.toLowerCase()] = nowTs(); commit([cfgOp('smart', Object.assign(SC, { forget: F }))]); render(); toast('Forgot ' + el.dataset.p); };
 ACT.lpReset = () => { const SC = smartCfg(); commit([cfgOp('smart', Object.assign(SC, { forget: {} }))]); render(); toast('Suggestions restored'); };
 IN.smPre = t => { const SC = smartCfg(); commit([cfgOp('smart', Object.assign(SC, { prefill: t.checked }))]); toast(t.checked ? 'New SMS will be filled in' : 'New SMS will not be filled in'); };
+
+/* ---------- bulk import: expenses from a CSV / pasted rows, income month by month ---------- */
+/* reads CSV or tab-separated text (copied from Excel / Google Sheets) */
+function csvRows(t) {
+  t = String(t || '').replace(/^﻿/, ''); const tab = t.split('\n')[0].includes('\t'), out = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i];
+    if (q) { if (ch === '"' && t[i + 1] === '"') { cur += '"'; i++; } else if (ch === '"') q = false; else cur += ch; continue; }
+    if (ch === '"') q = true; else if (ch === (tab ? '\t' : ',')) { row.push(cur); cur = ''; } else if (ch === '\n') { row.push(cur); out.push(row); row = []; cur = ''; } else if (ch !== '\r') cur += ch;
+  }
+  if (cur || row.length) { row.push(cur); out.push(row); }
+  return out.map(r => r.map(x => x.trim())).filter(r => r.some(Boolean) && !/^#/.test(r[0]));
+}
+/* 2026-10-05 · 05/10/2026 · 5/10/26 · 5 Oct 2026 · Oct 5, 2026 → 2026-10-05 */
+function impDate(v) {
+  v = String(v || '').trim(); let m;
+  if ((m = v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return m[1] + '-' + p2(+m[2]) + '-' + p2(+m[3]);
+  if ((m = v.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/))) { const y = m[3].length === 2 ? '20' + m[3] : m[3]; return y + '-' + p2(+m[2]) + '-' + p2(+m[1]); }
+  const M = v.toLowerCase().match(/(\d{1,2})?\s*([a-z]{3})[a-z]*\.?\s*(\d{1,2})?,?\s*(\d{4})/);
+  if (M && QMON.includes(M[2])) { const d = +(M[1] || M[3] || 1); return M[4] + '-' + p2(QMON.indexOf(M[2]) + 1) + '-' + p2(d); }
+  return '';
+}
+/* 2026-10 · 10/2026 · Oct 2026 · October-26 → 2026-10 */
+function impMonth(v) {
+  v = String(v || '').trim().toLowerCase(); let m;
+  if ((m = v.match(/^(\d{4})-(\d{1,2})$/))) return m[1] + '-' + p2(+m[2]);
+  if ((m = v.match(/^(\d{1,2})[\/.-](\d{4})$/))) return m[2] + '-' + p2(+m[1]);
+  if ((m = v.match(/^([a-z]{3})[a-z]*[\s'-]*(\d{2,4})$/)) && QMON.includes(m[1])) return (m[2].length === 2 ? '20' + m[2] : m[2]) + '-' + p2(QMON.indexOf(m[1]) + 1);
+  const d = impDate(v); return d ? d.slice(0, 7) : '';
+}
+const impFind = (L, v, key) => { const x = String(v || '').trim().toLowerCase(); if (!x) return null; return L.find(o => key(o).toLowerCase() === x) || L.find(o => key(o).toLowerCase().startsWith(x) || x.startsWith(key(o).toLowerCase().split(/\s+/)[0])) || null; };
+function impParse() {
+  const I = U.imp, rows = csvRows(I.text), banks = live(a => a.type !== 'investment'), out = [];
+  if (!rows.length) return [];
+  const head = rows[0].map(x => x.toLowerCase()), hasHead = head.some(x => /date|month|amount|category|account|note|source/.test(x));
+  const col = (names, def) => { if (!hasHead) return def; const i = head.findIndex(h => names.some(n => h.includes(n))); return i; };
+  /* "55,000" typed in a comma CSV splits into "55" + "000": join them back when the row has too many cells */
+  const want = hasHead ? rows[0].length : (I.kind === 'exp' ? 5 : 4);
+  const body = (hasHead ? rows.slice(1) : rows).map(r => { r = r.slice(); for (let i = 0; i < r.length - 1; i++) { if (/^\d{1,3}(,\d{2})*$/.test(r[i]) && (/^\d{3}(\.\d+)?$/.test(r[i + 1]) || (r.length > want && /^\d{2}$/.test(r[i + 1])))) { r.splice(i, 2, r[i] + ',' + r[i + 1]); i--; } } return r; });
+  if (I.kind === 'exp') {
+    const cD = col(['date', 'day', 'time'], 0), cA = col(['amount', 'amt', '₹', 'rs'], 1), cC = col(['category', 'cat'], 2), cP = col(['account', 'paid', 'method', 'bank'], 3), cN = col(['note', 'remark', 'desc', 'detail'], 4);
+    body.forEach((r, i) => {
+      const d = impDate(r[cD]), a = parseAmt(r[cA]), cn = cC >= 0 ? r[cC] : '', c = impFind(S.cfg.categories, cn, c2 => c2.name), ac = impFind(banks, cP >= 0 ? r[cP] : '', a2 => a2.name);
+      const err = !d ? 'date?' : !(a > 0) ? 'amount?' : d > today() ? 'future date' : '';
+      out.push({ n: i + 1, d, a, cat: c ? c.name : (cn || I.cat), newCat: !c && !!cn, acc: ac ? ac.name : I.acc, note: cN >= 0 ? r[cN] || '' : '', err, dup: !err && S.exp.some(e => e.ts.slice(0, 10) === d && Math.abs(e.amount - a) < .01 && (e.remarks || '') === (cN >= 0 ? r[cN] || '' : '')) });
+    });
+  } else {
+    const cM = col(['month', 'date', 'period'], 0), cA = col(['amount', 'amt', 'salary', '₹'], 1), cS = col(['source', 'type'], 2), cP = col(['account', 'bank'], 3);
+    body.forEach((r, i) => {
+      const m = impMonth(r[cM]), a = parseAmt(r[cA]), src = cS >= 0 && r[cS] ? r[cS] : I.src, ac = impFind(banks, cP >= 0 ? r[cP] : '', a2 => a2.name);
+      const err = !m ? 'month?' : !(a > 0) ? 'amount?' : m > ym() ? 'future month' : '';
+      out.push({ n: i + 1, m, a, src, acc: ac ? ac.name : I.acc, err, dup: !err && S.inc.some(e => e.ts.slice(0, 7) === m && Math.abs(e.amount - a) < .01 && e.source === src) });
+    });
+  }
+  return out;
+}
+function importCard() {
+  const banks = live(a => a.type !== 'investment' && mineA(a));
+  U.imp = U.imp || { kind: 'exp', text: '', acc: (banks[0] || {}).name || '', cat: (S.cfg.categories.find(c => /misc/i.test(c.name)) || S.cfg.categories[0]).name, src: 'Salary', day: 1 };
+  const I = U.imp, L = I.text ? impParse() : [], good = L.filter(x => !x.err && !x.dup), bad = L.filter(x => x.err), dup = L.filter(x => x.dup), newCats = uniq(good.filter(x => x.newCat).map(x => x.cat));
+  let h = `<div class="card"><h2 style="display:block">📥 Import old data<small style="display:block;margin-top:3px">For history from before you started Ledger</small></h2>
+  <div class="seg" style="margin-bottom:10px">${[['exp', '🧾 Expenses'], ['inc', '💰 Salary / income by month']].map(([k, l]) => `<button class="${I.kind === k ? 'on' : ''}" data-act="impKind" data-k="${k}">${l}</button>`).join('')}</div>
+  <div class="hint" style="margin-top:0">${I.kind === 'exp' ? 'Columns: <b>Date, Amount, Category, Account, Note</b>. Date like 2026-10-05 or 05/10/2026.' : 'Columns: <b>Month, Amount, Source, Account</b>. Month like 2026-04, 04/2026 or Apr 2026. Source and account are optional.'}</div>
+  <div class="btns"><button class="btn sec sm" data-act="impTpl">⬇ Template (CSV)</button><button class="btn sec sm" data-act="impFile">📄 Pick a CSV file</button></div><input type="file" id="impCsv" accept=".csv,.tsv,.txt,text/csv,text/plain" hidden>
+  <div class="lbl">…or paste rows here (copy straight from Excel / Google Sheets)</div><textarea id="impText" rows="5" data-in="impText" placeholder="${I.kind === 'exp' ? '2026-10-05, 250, Food, ICICI Bank, Lunch' : '2026-04, 55000, Salary, ICICI Bank'}" style="width:100%;resize:vertical;background:var(--soft);border:1.5px solid transparent;border-radius:14px;padding:12px 14px;font:13px/1.4 ui-monospace,monospace;color:var(--ink)">${esc(I.text)}</textarea>
+  <div class="lbl">If a row has no account, use</div><div class="chips wrap">${banks.map(a => `<button class="chip ${I.acc === a.name ? 'on' : ''}" data-act="impSet" data-f="acc" data-v="${esc(a.name)}">${ACC_T[a.type][0]} ${esc(a.name)}</button>`).join('')}</div>`;
+  if (I.kind === 'exp') h += `<div class="lbl">If a row has no category, use</div><div class="chips wrap">${visCats().map(c => `<button class="chip ${I.cat === c.name ? 'on' : ''}" data-act="impSet" data-f="cat" data-v="${esc(c.name)}">${c.icon} ${esc(c.name)}</button>`).join('')}</div>`;
+  else h += `<div class="lbl">Salary landed on day</div><input type="number" id="impDay" min="1" max="28" value="${I.day}" data-in="impDay" inputmode="numeric" style="max-width:120px">`;
+  if (L.length) {
+    h += `<div class="section-t" style="margin-top:14px">Preview</div><div class="kv"><div><span>Ready to import</span><b class="green">${good.length} · ${inr(good.reduce((t, x) => t + x.a, 0))}</b></div>${dup.length ? `<div><span>Already in Ledger (skipped)</span><b>${dup.length}</b></div>` : ''}${bad.length ? `<div><span>Need fixing (skipped)</span><b class="red">${bad.length}</b></div>` : ''}${newCats.length ? `<div><span>New categories</span><b>${newCats.map(esc).join(', ')}</b></div>` : ''}</div>`;
+    h += `<div class="group" style="margin-top:8px">${L.slice(0, 8).map(x => `<div class="item" style="opacity:${x.err || x.dup ? .55 : 1}"><span class="mid"><b>${I.kind === 'exp' ? esc(x.note || x.cat) : esc(x.src)} ${x.err ? '<em class="tag" style="color:var(--red)">' + x.err + '</em>' : x.dup ? '<em class="tag">already in</em>' : ''}</b><small>${I.kind === 'exp' ? (x.d ? dLabel(x.d) : '—') + ' · ' + esc(x.cat) + ' · ' + esc(x.acc) : (x.m ? mLabel(x.m) : '—') + ' · ' + esc(x.acc)}</small></span><span class="amt">${x.a > 0 ? inr(x.a) : '—'}</span></div>`).join('')}${L.length > 8 ? `<div class="item"><span class="mid"><small>…and ${L.length - 8} more</small></span></div>` : ''}</div>`;
+    h += `<button class="btn big" data-act="impGo" ${good.length ? '' : 'disabled'}>Import ${good.length} ${I.kind === 'exp' ? 'expense' : 'income entr'}${I.kind === 'exp' ? (good.length === 1 ? '' : 's') : (good.length === 1 ? 'y' : 'ies')}</button>`;
+  }
+  h += `<div class="hint">Imported entries are dated in the past, so they show in history, Insights and comparisons, but they <b>don't change today's balances</b> (those start from each account's "balance as of" date). Each imported entry can be edited or deleted like any other.</div></div>`;
+  return h;
+}
+ACT.impKind = el => { U.imp.kind = el.dataset.k; U.imp.text = ''; render(); };
+ACT.impSet = el => { U.imp[el.dataset.f] = el.dataset.v; render(); };
+IN.impText = t => { U.imp.text = t.value; clearTimeout(U.impT); U.impT = setTimeout(() => { const y = scrollY, f = document.activeElement === t; render(); scrollTo(0, y); if (f && $('#impText')) { const n = $('#impText'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 700); };
+IN.impDay = t => { U.imp.day = Math.min(28, Math.max(1, parseInt(t.value) || 1)); };
+ACT.impFile = () => { U.noLock = Date.now() + 120000; const f = $('#impCsv'); f.value = ''; f.onchange = () => { const r = new FileReader(); r.onload = () => { U.imp.text = String(r.result || ''); render(); }; if (f.files[0]) r.readAsText(f.files[0]); }; f.click(); };
+ACT.impTpl = () => {
+  const I = U.imp, acc0 = I.acc || 'ICICI Bank';
+  const t = I.kind === 'exp'
+    ? 'Date,Amount,Category,Account,Note\n2026-09-03,250,' + (S.cfg.categories[0] || {}).name + ',' + acc0 + ',Lunch\n05/09/2026,1200,' + ((S.cfg.categories[1] || S.cfg.categories[0]) || {}).name + ',' + acc0 + ',Groceries\n# Categories you can use: ' + visCats().map(c => c.name).join(' | ') + '\n# Accounts you can use: ' + live(a => a.type !== 'investment').map(a => a.name).join(' | ') + '\n'
+    : 'Month,Amount,Source,Account\n2026-04,55000,Salary,' + acc0 + '\n2026-05,55000,Salary,' + acc0 + '\nJun 2026,58000,Salary,' + acc0 + '\n# Sources: ' + S.cfg.sources.join(' | ') + '\n';
+  download(I.kind === 'exp' ? 'ledger-expenses-template.csv' : 'ledger-income-template.csv', t, 'text/csv');
+};
+ACT.impGo = () => {
+  const I = U.imp, L = impParse().filter(x => !x.err && !x.dup); if (!L.length) return;
+  if (!confirm('Import ' + L.length + ' entries totalling ' + fmtINR(L.reduce((t, x) => t + x.a, 0)) + '?')) return;
+  const ops = [];
+  if (I.kind === 'exp') {
+    const nc = uniq(L.filter(x => x.newCat).map(x => x.cat)).filter(n => !S.cfg.categories.some(c => c.name.toLowerCase() === n.toLowerCase()));
+    if (nc.length) ops.push(cfgOp('categories', S.cfg.categories.concat(nc.map((name, i) => ({ name, icon: '🏷️', color: SWATCH[(S.cfg.categories.length + i) % SWATCH.length], budget: 0, hidden: false })))));
+    L.forEach((x, i) => ops.push(up('Expenses', { id: uid('E'), ts: x.d + ' 12:' + p2(Math.floor(i / 60) % 60) + ':' + p2(i % 60), account: x.acc, amount: r2(x.a), category: x.cat, remarks: x.note, photo: '', payee: '', mine: false })));
+  } else L.forEach(x => ops.push(up('Income', { id: uid('I'), ts: x.m + '-' + p2(I.day || 1) + ' 10:00:00', account: x.acc, amount: r2(x.a), source: x.src, remarks: 'Imported', payee: '' })));
+  commit(ops); U.imp.text = ''; render(); toast('✓ Imported ' + L.length + ' entries');
+};
+
+/* ---------- feedback: goes to the app maker's inbox ---------- */
+const FB_T = [['idea', '💡 Idea'], ['bug', '🐞 Problem'], ['like', '❤️ I like'], ['other', '💬 Other']];
+function feedbackCard() {
+  U.fb = U.fb || { type: 'idea' };
+  const q = (S.prefs.fbQ || []).length;
+  return `<div class="card"><h2 style="display:block">💬 Send feedback<small style="display:block;margin-top:3px">Goes straight to the person who makes Ledger. New versions are built around it.</small></h2>
+  <div class="chips wrap">${FB_T.map(([k, l]) => `<button class="chip ${U.fb.type === k ? 'on' : ''}" data-act="fbType" data-v="${k}">${l}</button>`).join('')}</div>
+  <textarea id="fbText" rows="5" maxlength="4000" placeholder="${U.fb.type === 'bug' ? 'What happened, and what did you expect?' : U.fb.type === 'idea' ? 'What would make Ledger better for you?' : 'Tell us…'}" style="width:100%;margin-top:8px;resize:vertical;background:var(--soft);border:1.5px solid transparent;border-radius:14px;padding:12px 14px;font:inherit;font-size:16px;color:var(--ink)">${esc(U.fb.text || '')}</textarea>
+  <label class="check"><input type="checkbox" id="fbReplyOn" ${U.fb.reply != null || S.gEmail ? 'checked' : ''}> I'd like a reply</label>
+  <input id="fbReply" type="email" value="${esc(U.fb.reply != null ? U.fb.reply : S.gEmail || '')}" placeholder="Your email (only if you want a reply)" autocomplete="email">
+  <button class="btn big" data-act="fbSend">Send</button>
+  <div class="hint">Sent with it: app version and phone model, so problems can be fixed. Never your money data.${q ? ' <b>' + q + ' message' + (q === 1 ? '' : 's') + ' waiting</b> to send when you\'re online.' : ''}</div></div>`;
+}
+ACT.fbType = el => { U.fb = Object.assign(U.fb || {}, { type: el.dataset.v, text: ($('#fbText') || {}).value || '' }); render(); };
+const fbIid = () => { if (!S.prefs.iid) { S.prefs.iid = 'L' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); save(); } return S.prefs.iid; };
+const fbDevice = () => { const ua = navigator.userAgent || '', m = ua.match(/Android [\d.]+; ([^;)]+)/); return (AND ? 'App · ' : 'Web · ') + (m ? 'Android · ' + m[1].replace(/ Build.*$/, '').trim() : /iPhone|iPad/.test(ua) ? 'iPhone' : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : 'Other'); };
+async function fbPost(m) {
+  if (!fbOk()) throw new Error('not ready');
+  const r = await fetch(FEEDBACK.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ action: 'feedback' }, m)) }).then(x => x.json());
+  if (!r.ok) throw Object.assign(new Error(r.error || 'Could not send'), { hard: true });
+}
+ACT.fbSend = async () => {
+  const t = ($('#fbText').value || '').trim(); if (t.length < 3) return toast('Write a few words first');
+  const rep = $('#fbReplyOn').checked ? ($('#fbReply').value || '').trim() : '';
+  if (rep && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(rep)) return toast('That email looks wrong');
+  const m = { type: U.fb.type, text: t, reply: rep, iid: fbIid(), version: 'v8.9 · ' + APP_BUILD + (AND ? ' · app ' + (andInfo().version || '') : ''), device: fbDevice(), screen: (U.tab || '') + (U.sp ? '/' + U.sp : ''), at: nowTs() };
+  U.fb = { type: U.fb.type };
+  try { toast('Sending…'); await fbPost(m); toast('✓ Thank you! Your feedback was sent'); }
+  catch (e) { if (e.hard) { U.fb.text = t; render(); return toast(e.message); } S.prefs.fbQ = (S.prefs.fbQ || []).concat(m).slice(-20); save(); toast('Saved · it will send when you\'re online'); }
+  render();
+};
+/* messages written offline go out later */
+async function fbFlush() { const Q = (S.prefs.fbQ || []).slice(); if (!Q.length || !fbOk() || !navigator.onLine) return; const left = []; for (const m of Q) { try { await fbPost(m); } catch (e) { if (!e.hard) left.push(m); } } S.prefs.fbQ = left; save(); }
+setTimeout(fbFlush, 8000); addEventListener('online', () => fbFlush());
 
 /* ---------- side panel: ✨ Ask · 💗 Pulse · 🎁 Wrap, one place, out of the way ---------- */
 const SIDE = [['ask', '✨ Ask'], ['pulse', '💗 Pulse'], ['wrap', '🎁 Wrap']];
