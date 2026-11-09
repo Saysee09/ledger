@@ -404,6 +404,12 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .a-sub{font-size:.78rem;color:var(--mute);margin-top:4px;line-height:1.45;font-weight:600}
 .a-a .kv{background:var(--card);margin-top:10px}.a-a .group{background:var(--card);margin-top:10px}.a-a .a-bars{margin-top:8px}
 .ibx-ig>summary{list-style:none;cursor:pointer}.ibx-ig>summary::-webkit-details-marker{display:none}.ibx-ig>summary span:first-child::after{content:' ▾'}.ibx-ig[open]>summary span:first-child::after{content:' ▴'}
+.sheet.side{left:auto;right:0;top:0;bottom:var(--kb,0px)!important;width:min(94vw,520px);max-width:none;margin:0;height:auto!important;max-height:none!important;border-radius:26px 0 0 26px;transform:translateX(105%);padding-top:env(safe-area-inset-top);box-shadow:-12px 0 40px rgba(0,0,0,.22)}
+.sheet.side.open{transform:none}.sheet.side .grab{display:none}.sheet.side .sh-head{padding-top:14px}
+.sheet.side .sh-head h3{flex:1;min-width:0}.sidetabs{display:flex;gap:5px;flex-wrap:nowrap}.sidetabs button{font:inherit;font-size:.8rem;font-weight:800;padding:7px 11px;white-space:nowrap;border-radius:999px;border:1px solid var(--line);background:var(--soft);color:var(--mute);cursor:pointer}.sidetabs button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.sparkb{font-size:1.05rem;line-height:1}
+html.kbd .nav,html.kbd .fab{display:none!important}
+#view input,#view textarea,#sheet input,#sheet textarea{scroll-margin:90px 0 120px}
 .sh-foot{flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
 .a-bar{display:flex;gap:8px;align-items:flex-end;margin:0}
 .a-bar textarea{flex:1;min-width:0;display:block;min-height:48px;max-height:132px;resize:none;overflow-y:auto;background:var(--soft);border:1.5px solid transparent;border-radius:14px;padding:12px 14px;font:inherit;font-size:16px;line-height:1.35;color:var(--ink);-webkit-appearance:none;appearance:none}
@@ -418,6 +424,7 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
     <div><div class="hello" id="hello"></div><h1 id="title">Expenses</h1></div>
     <div class="hact">
       <button class="sync" id="syncBtn" data-act="syncNow"><i></i><span id="syncTxt">Offline</span></button>
+      <button class="iconbtn sparkb" id="sideBtn" data-act="side" aria-label="Ask Ledger, Money Pulse and Wrap">✨</button>
       <button class="iconbtn" id="bellBtn" data-act="inbox" aria-label="Notifications"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><i class="badge" id="bellBadge" hidden></i></button>
       <button class="iconbtn" id="eyeBtn" data-act="hide" aria-label="Hide amounts"></button>
       <button class="iconbtn" data-act="openSettings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
@@ -513,15 +520,15 @@ function download(name, text, type) {
 
 /* ---------- defaults ---------- */
 const CAT_DEF = [['Food', '🍽️', '#F97316'], ['Household', '🏠', '#EAB308'], ['Transportation', '🚕', '#14B8A6'], ['Personal & Lifestyle', '🛍️', '#A855F7'], ['Education', '📚', '#3B82F6'], ['Medical', '💊', '#EC4899'], ['Financial', '💳', '#64748B'], ['Miscellaneous', '✨', '#84CC16']];
-const defCfg = () => ({ bin: { days: 30 }, categories: CAT_DEF.map(([name, icon, color]) => ({ name, icon, color, budget: 0, hidden: false })), sources: ['Salary', 'Bonus', 'Interest', 'Refund', 'Gift', 'Other'], invTypes: ['Stocks', 'Mutual Fund', 'ETF', 'Gold', 'FD / RD / PPF'], report: { on: true, day: 1, hour: 9, email: '', weekly: false, wHour: 9, cmp: 'prev' }, matched: {}, nudges: { weekly: true, anomaly: true, pace: true, recon: 14, goals: true }, profile: { born: '', earning: '', city: '', role: '' }, payees: {}, holdings: {}, signin: { clientIds: [], emails: [] }, backup: { keep: 15 }, career: { jobs: [] }, plans: { list: [] }, refunds: { list: [] }, salary: { shift: 25, from: '2026-10' } });
+const defCfg = () => ({ bin: { days: 30 }, categories: CAT_DEF.map(([name, icon, color]) => ({ name, icon, color, budget: 0, hidden: false })), sources: ['Salary', 'Bonus', 'Interest', 'Refund', 'Gift', 'Other'], invTypes: ['Stocks', 'Mutual Fund', 'ETF', 'Gold', 'FD / RD / PPF'], report: { on: true, day: 1, hour: 9, email: '', weekly: false, wHour: 9, cmp: 'prev' }, matched: {}, nudges: { weekly: true, anomaly: true, pace: true, recon: 14, goals: true }, profile: { born: '', earning: '', city: '', role: '' }, payees: {}, holdings: {}, signin: { clientIds: [], emails: [] }, backup: { keep: 15 }, career: { jobs: [] }, plans: { list: [] }, refunds: { list: [] }, salary: { shift: 25, from: '2026-10' }, nw: { bank: true, cash: true, wallet: true, investment: true, cardDues: false, loans: false, skip: [] }, cards: { limits: {} }, smart: { prefill: true, forget: {} } });
 const ACC_T = { bank: ['🏦', 'Bank'], cash: ['💵', 'Cash'], wallet: ['👛', 'Wallet / UPI'], card: ['💳', 'Credit card'], investment: ['📈', 'Investment'] };
 const COLL = { Expenses: 'exp', Income: 'inc', Transfers: 'trf', Investments: 'inv', EMILog: 'emi', GoalLog: 'goal', LoanLog: 'loan', Adjustments: 'adj', Accounts: 'accounts', Goals: 'goals', EMIs: 'emis', Loans: 'loans', Reminders: 'rem', Pending: 'pend', Deleted: 'bin' };
-const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings', 'signin', 'backup', 'career', 'plans', 'bin', 'refunds', 'salary'];
+const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings', 'signin', 'backup', 'career', 'plans', 'bin', 'refunds', 'salary', 'nw', 'cards', 'smart'];
 /* Your Sheet and Google sign-in client (safe to be public: neither opens data without your Google account or secret key) */
 const CLOUD = { url: '__SHEET_URL__', clientId: '__WEB_CLIENT_ID__' };
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-09 b16';
+const APP_BUILD = '2026-11-10 b17';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -726,9 +733,10 @@ window.addEventListener('popstate', () => { if (wrapOpen()) { wrapHide(); return
 /* swipe the sheet down (from its top bar) to close */
 (() => {
   let y0 = null, dy = 0; const s = $('#sheet');
-  s.addEventListener('touchstart', e => { if (e.target.closest('#shTop') && !e.target.closest('.x')) { y0 = e.touches[0].clientY; dy = 0; s.classList.add('drag'); } }, { passive: true });
-  s.addEventListener('touchmove', e => { if (y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); s.style.transform = `translateY(${dy}px)`; }, { passive: true });
-  s.addEventListener('touchend', () => { if (y0 === null) return; s.classList.remove('drag'); s.style.transform = ''; if (dy > 90) shut(); y0 = null; });
+  let x0 = null;
+  s.addEventListener('touchstart', e => { if (s.classList.contains('side')) { if (!e.target.closest('textarea,input,.sidetabs,.seg,.chips')) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dy = 0; } return; } if (e.target.closest('#shTop') && !e.target.closest('.x')) { y0 = e.touches[0].clientY; dy = 0; s.classList.add('drag'); } }, { passive: true });
+  s.addEventListener('touchmove', e => { if (y0 === null) return; if (x0 !== null) { const dx = e.touches[0].clientX - x0; if (Math.abs(e.touches[0].clientY - y0) > Math.abs(dx) && dy < 10) { x0 = y0 = null; return; } dy = Math.max(0, dx); if (dy > 8) { s.classList.add('drag'); s.style.transform = `translateX(${dy}px)`; } return; } dy = Math.max(0, e.touches[0].clientY - y0); s.style.transform = `translateY(${dy}px)`; }, { passive: true });
+  s.addEventListener('touchend', () => { if (y0 === null) return; s.classList.remove('drag'); s.style.transform = ''; if (dy > 90) shut(); y0 = null; x0 = null; });
 })();
 
 /* ---------- tabs & render ---------- */
@@ -884,11 +892,9 @@ function inboxSheet() {
   const P = inboxParts(true), n = P.sort.length;
   let h = '';
   if (n) h += `<div class="ibx-h"><span>📩 To sort · ${n}</span><span style="text-transform:none;letter-spacing:0">bank SMS</span></div>` + pendListHtml(P.sort);
-  const ig = pendIgnored();
-  if (ig.length) h += `<details class="ibx-ig"${U.igOpen ? ' open' : ''} ontoggle="U.igOpen=this.open"><summary class="ibx-h"><span>🚫 Ignored · ${ig.length}</span><span style="text-transform:none;letter-spacing:0">last 60 days · tap one to file it</span></summary>${pendListHtml(ig, true)}</details>`;
   if (P.act) h += `<div class="ibx-h"><span>💳 Needs you</span></div>` + P.act;
   if (P.info) h += `<div class="ibx-h"><span>💡 Heads-up</span></div>` + P.info;
-  if (!h || (!n && !P.act && !P.info)) h = `<div class="empty"><span class="big">✨</span>All caught up.<br>Bank SMS, card dues, bills and tips land here.</div>` + h;
+  if (!h) h = `<div class="empty"><span class="big">✨</span>All caught up.<br>Bank SMS, card dues, bills and tips land here.</div>`;
   openSheet('🔔 Notifications', h, 'tall');
 }
 ACT.snooze = el => { S.prefs.snooze = S.prefs.snooze || {}; const t = today(); Object.keys(S.prefs.snooze).forEach(k => { if (S.prefs.snooze[k] < t) delete S.prefs.snooze[k]; }); S.prefs.snooze[el.dataset.k] = addDays(t, +el.dataset.d || 3); save(); const a = el.closest('.alert'); if (a) a.remove(); buzz(6); bellBadge(); if (!sheetOpen() && U.tab === 'home') render(); };
@@ -950,6 +956,10 @@ ACT.anomOk = el => { S.prefs.anomOk = (S.prefs.anomOk || []).concat(el.dataset.i
    From the card's bill day (default 28th) a nudge with Pay / ✕ shows until it is paid. */
 const cardDay = a => Math.min(28, Math.max(1, +a.billDay || 28));
 const cardDue = a => Math.max(0, r2(-(C.bal[a.name] || 0)));
+const nwCfg = () => Object.assign({ bank: true, cash: true, wallet: true, investment: true, cardDues: false, loans: false, skip: [] }, S.cfg.nw || {});
+const cardLimit = a => +(((S.cfg.cards || {}).limits || {})[a.name]) || 0;
+/* a card whose balance is a big plus number: the limit was typed in as the balance */
+const cardLooksLimit = a => a.type === 'card' && mineA(a) && !a.archived && (C.bal[a.name] || 0) > 1000 && +a.opening > 1000;
 function cardDues(all) {
   const t = today(), dn = +t.slice(8, 10);
   return live(a => a.type === 'card' && mineA(a) && cardDue(a) > .004).filter(a => all || (dn >= cardDay(a) && !snoozed('card|' + a.name + '|' + ym()))).map(a => `<div class="alert ${dn >= cardDay(a) ? 'over' : ''}"><span class="ic" style="background:var(--soft)">💳</span><span class="mid"><b>${esc(a.name)} · ${inr(cardDue(a))} due</b><small>${dn >= cardDay(a) ? 'Bill day passed (' + cardDay(a) + 'th). Pay from ICICI / Kotak.' : 'Bill day ' + cardDay(a) + ' ' + mLabel(ym(), 1) + '. Already counted in your spending.'}</small></span><button class="btn sm" data-act="payCard" data-n="${esc(a.name)}">Pay</button>${dn >= cardDay(a) ? `<button class="ax" data-act="snooze" data-k="card|${esc(a.name)}|${ym()}" data-d="1" aria-label="Tomorrow">✕</button>` : ''}</div>`).join('');
@@ -983,10 +993,9 @@ function renderHome() {
   if (emiAmt) h += `<div class="hs">+ EMIs paid <b>${inr(emiAmt)}</b></div>`;
   h += `</div>` + wrapCard();
   const accs = live(a => a.type !== 'investment' && mineA(a)), oth = live(a => a.others), tot = r2(accs.filter(holderType).reduce((s, a) => s + (C.bal[a.name] || 0), 0));
-  const pl = pulseNow();
-  h += `<div class="strip"><button class="acard" data-act="tab" data-t="insights" style="border-color:color-mix(in srgb,var(--acc) 30%,var(--line))"><span>💰 Free to spend</span><b>${inrS(freeTotal())}</b><small>${r2(tot - freeTotal()) > 0 ? inr(tot - freeTotal()) + ' in goals · total ' + inr(tot, 1) : 'Banks & cash, nothing reserved'}</small></button>${pl ? `<button class="acard" data-act="pulseOpen"><span>💗 Money Pulse</span><b style="color:${pl.col}">${pl.score}<small style="font-size:.7rem;color:var(--mute)"> /100</small></b><small>${pl.label} · this month</small></button>` : ''}${accs.map(a => { const b = C.bal[a.name] || 0, hd = C.held[a.name] || 0, pk = pockets(a.name).length; return `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>${ACC_T[a.type][0]} ${esc(a.name)}</span><b class="${b - hd < 0 || (a.type === 'card' && b < 0) ? 'red' : ''}">${a.type === 'card' ? (b < -.004 ? inr(-b) : inr(0)) : inr(b - hd)}</b><small>${a.type === 'card' ? (b < -.004 ? 'Due · bill day ' + cardDay(a) : 'No dues ✓') : (hd > 0 ? inr(hd) + ' in goals · ' : '') + (pk ? 'With ' + pockets(a.name).map(x => x.name).join(' & ') + ': <b class="acc-tot">' + inr(b + pockets(a.name).reduce((t, x) => t + (C.bal[x.name] || 0), 0), 1) + '</b>' : hd > 0 ? 'total ' + inr(b, 1) : 'Free to spend')}</small></button>`; }).join('')}${oth.length ? oth.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}" style="border-style:dashed;box-shadow:none"><span>👥 ${esc(a.name)}</span><b class="mute">${inr(C.bal[a.name])}</b><small>${heldOwed(a.name) > 0 ? '<span class="red">You owe ' + inr(heldOwed(a.name), 1) + '</span>' : 'Held for others' + (a.keptIn ? ' · in ' + esc(a.keptIn) : '')}</small></button>`).join('') : ''}</div>`;
+  h += `<div class="strip"><button class="acard" data-act="tab" data-t="insights" style="border-color:color-mix(in srgb,var(--acc) 30%,var(--line))"><span>💰 Free to spend</span><b>${inrS(freeTotal())}</b><small>${r2(tot - freeTotal()) > 0 ? inr(tot - freeTotal()) + ' in goals · total ' + inr(tot, 1) : 'Banks & cash, nothing reserved'}</small></button>${accs.map(a => { const b = C.bal[a.name] || 0, hd = C.held[a.name] || 0, pk = pockets(a.name).length; return `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>${ACC_T[a.type][0]} ${esc(a.name)}</span><b class="${b - hd < 0 || (a.type === 'card' && b < 0) ? 'red' : ''}">${a.type === 'card' ? (b < -.004 ? inr(-b) : inr(0)) : inr(b - hd)}</b><small>${a.type === 'card' ? (cardLooksLimit(a) ? '<span style="color:var(--amber)">⚠️ Looks like the limit · fix in Insights → Net worth</span>' : (b < -.004 ? 'Due · bill day ' + cardDay(a) : 'No dues ✓') + (cardLimit(a) ? ' · ' + inr(Math.max(0, cardLimit(a) + Math.min(0, b)), 1) + ' free' : '')) : (hd > 0 ? inr(hd) + ' in goals · ' : '') + (pk ? 'With ' + pockets(a.name).map(x => x.name).join(' & ') + ': <b class="acc-tot">' + inr(b + pockets(a.name).reduce((t, x) => t + (C.bal[x.name] || 0), 0), 1) + '</b>' : hd > 0 ? 'total ' + inr(b, 1) : 'Free to spend')}</small></button>`; }).join('')}${oth.length ? oth.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}" style="border-style:dashed;box-shadow:none"><span>👥 ${esc(a.name)}</span><b class="mute">${inr(C.bal[a.name])}</b><small>${heldOwed(a.name) > 0 ? '<span class="red">You owe ' + inr(heldOwed(a.name), 1) + '</span>' : 'Held for others' + (a.keptIn ? ' · in ' + esc(a.keptIn) : '')}</small></button>`).join('') : ''}</div>`;
   h += '<div id="ibxChip">' + inboxChip() + '</div>';
-  h += `<div class="search srch2"><input type="search" placeholder="Search notes, category or account" value="${esc(U.q)}" data-in="q"><button class="askb" data-act="ask" aria-label="Ask Ledger">✨ Ask</button></div>`;
+  h += `<div class="search"><input type="search" placeholder="🔍 Search expenses: note, category, account, amount" value="${esc(U.q)}" data-in="q" enterkeyhint="search"></div>`;
   h += `<div class="chips">${[{ name: 'all', label: 'All' }].concat(visCats()).map(c => `<button class="chip ${U.cat === c.name ? 'on' : ''}" data-act="catF" data-v="${esc(c.name)}">${c.label || c.icon + ' ' + esc(c.name)}</button>`).join('')}</div>`;
   h += `<div id="list">${homeList()}</div>`;
   return h;
@@ -1000,7 +1009,7 @@ function weekHead(wk, tot, n) {
 function homeList() {
   if (!U.list) listReset();
   const q = U.q.trim().toLowerCase(), filt = q || U.cat !== 'all', cur = U.month === ym();
-  const base = S.exp.filter(e => myX(e) && (U.cat === 'all' || e.category === U.cat) && (!q || (e.remarks + ' ' + e.category + ' ' + e.account + ' ' + e.amount).toLowerCase().includes(q)));
+  const base = S.exp.filter(e => myX(e) && (U.cat === 'all' || e.category === U.cat) && (!q || (e.remarks + ' ' + e.category + ' ' + e.account + ' ' + e.amount + ' ' + (e.payee || '')).toLowerCase().includes(q)));
   let es, more = '', jump = '';
   if (filt) {
     const all = base.filter(e => cur || inP(e, U.month)).sort((a, b) => b.ts.localeCompare(a.ts));
@@ -1289,6 +1298,7 @@ ACT.pick = el => {
   const o = U[el.dataset.o || 'c']; if (!o) return; o[el.dataset.f] = el.dataset.v; if (!el.dataset.o && ['cat', 'acc', 'src', 'from', 'to'].includes(el.dataset.f)) o.touched = true; syncChips(); buzz(6);
   if (!el.dataset.o) updCompose();
   if (el.dataset.o === 'rm') rmStepCalc();
+  if (el.dataset.o === 'a' && el.dataset.f === 'type') { const c = el.dataset.v === 'card'; if ($('#aCardBox')) $('#aCardBox').hidden = !c; if ($('#aBalBox')) $('#aBalBox').hidden = c; }
   if (el.dataset.o === 'g' && (el.dataset.f === 'mode' || el.dataset.f === 'wTo')) { $('#gBox').innerHTML = gBox(); if (el.dataset.f === 'mode') $$('#sheet .seg [data-f=mode]').forEach(b => b.classList.toggle('on', b === el)); }
 };
 ACT.cDay = el => { $('#cDate').value = addDays(today(), +el.dataset.d); $$('[data-act=cDay]').forEach(b => b.classList.toggle('on', b === el)); };
@@ -1567,15 +1577,19 @@ ACT.rSave = () => {
 };
 ACT.acctNew = () => acctSheet(null);
 ACT.acctEdit = el => acctSheet(acc(el.dataset.n));
-function acctSheet(a) {
-  const v = a || { name: '', type: 'bank', opening: '', openingDate: nowTs() };
+function acctSheet(a, type0) {
+  const v = a || { name: '', type: type0 || 'bank', opening: '', openingDate: nowTs() }, isC = v.type === 'card', lim0 = a ? cardLimit(a) : 0, fixLim = a && cardLooksLimit(a) && !lim0;
   const parents = live(x => mineA(x) && x.type !== 'investment' && (!a || x.id !== a.id));
   U.a = { type: v.type, id: a ? a.id : null, others: v.others ? 'y' : 'n', keptIn: v.keptIn || '' };
   openSheet(a ? 'Edit account' : 'Add account', `<div class="lbl">Name</div><input id="aName" value="${esc(v.name)}" placeholder="e.g. ICICI Bank, Groww" autocomplete="off">
   <div class="lbl">Type</div><div class="chips wrap">${Object.entries(ACC_T).map(([k, [i, l]]) => `<button class="chip ${k === v.type ? 'on' : ''}" data-act="pick" data-o="a" data-f="type" data-v="${k}">${i} ${l}</button>`).join('')}</div>
-  <div class="lbl">Balance at that moment ₹</div><input id="aOpen" inputmode="decimal" value="${a ? v.opening : ''}" placeholder="What the bank / app shows">
-  <div class="hint">Credit card: enter what you owe as a minus number (e.g. -4500), or 0 if fully paid.</div>
-  <div class="lbl">Credit card bill day <small class="mute">(cards only)</small></div><input id="aBill" type="number" min="1" max="28" inputmode="numeric" value="${v.billDay || 28}"><div class="hint">From this day each month Ledger nudges you to pay the card until it is paid.</div>
+  <div id="aBalBox" ${isC ? 'hidden' : ''}><div class="lbl">Balance at that moment ₹</div><input id="aOpen" inputmode="decimal" value="${a && !isC ? v.opening : ''}" placeholder="What the bank / app shows"></div>
+  <div id="aCardBox" ${isC ? '' : 'hidden'}>
+  ${fixLim ? `<div class="hint amber" style="margin-top:10px">⚠️ ${inr(+v.opening)} was saved as this card's balance, which made it count as your money. It's been moved to <b>Credit limit</b> below. Check "You owed" and save.</div>` : ''}
+  <div class="lbl">Credit limit ₹</div><input id="aLimit" inputmode="decimal" value="${fixLim ? +v.opening : lim0 || ''}" placeholder="e.g. 150000">
+  <div class="hint">How much the bank lets you spend. It is <b>not</b> your money and never counts in net worth.</div>
+  <div class="lbl">You owed at that moment ₹</div><input id="aOwe" inputmode="decimal" value="${isC && a ? (fixLim ? 0 : Math.max(0, -(+v.opening || 0))) : ''}" placeholder="0 if fully paid">
+  <div class="lbl">Bill day</div><input id="aBill" type="number" min="1" max="28" inputmode="numeric" value="${v.billDay || 28}"><div class="hint">From this day each month Ledger nudges you to pay the card until it is paid.</div></div>
   <div class="lbl">Balance as of</div><div class="grid2"><input type="date" id="aDate" value="${(v.openingDate || nowTs()).slice(0, 10)}"><input type="time" id="aTime" value="${(v.openingDate || '').slice(11, 16) || '00:00'}"></div>
   <div class="hint">Only entries <b>after</b> this moment change the balance. Older entries, and any old data you paste into the Sheet later, stay in history and charts but never disturb the balance.</div>
   <div class="lbl">Whose money is this?</div><div class="seg" style="margin-bottom:0"><button class="${U.a.others === 'n' ? 'on' : ''}" data-act="pick" data-o="a" data-f="others" data-v="n">💰 Mine</button><button class="${U.a.others === 'y' ? 'on' : ''}" data-act="pick" data-o="a" data-f="others" data-v="y">👥 Held for others</button></div>
@@ -1588,13 +1602,17 @@ function acctSheet(a) {
 ACT.aSave = () => {
   const A = U.a, n = $('#aName').value.trim(); if (!n) return toast('Name required');
   if (S.accounts.some(x => x.name.toLowerCase() === n.toLowerCase() && x.id !== A.id)) return toast('You already have an account with that name');
-  const op = parseAmt($('#aOpen').value), ts = ($('#aDate').value || today()) + ' ' + ($('#aTime').value || '00:00') + ':00';
+  const isC = A.type === 'card', owe = parseAmt(($('#aOwe') || {}).value), lim = parseAmt(($('#aLimit') || {}).value);
+  const op = isC ? -(isNaN(owe) ? 0 : Math.abs(owe)) : parseAmt($('#aOpen').value), ts = ($('#aDate').value || today()) + ' ' + ($('#aTime').value || '00:00') + ':00';
   const old = A.id ? S.accounts.find(x => x.id === A.id) : null;
   const others = A.others === 'y';
   const rowA = { id: A.id || uid('A'), name: n, type: A.type, opening: isNaN(op) ? 0 : op, openingDate: ts, archived: !!($('#aArch') && $('#aArch').checked), order: old ? (old.order || 0) : S.accounts.length, others, keptIn: others ? A.keptIn : '', billDay: A.type === 'card' ? Math.min(28, Math.max(1, parseInt(($('#aBill') || {}).value) || 28)) : (old ? old.billDay || '' : '') };
   if (old) ['phone', 'l4'].forEach(k => { if (old[k]) rowA[k] = old[k]; });
   const ops = []; if (old && old.name !== n) ops.push({ op: 'renameAccount', from: old.name, to: n });
-  ops.push(up('Accounts', rowA)); commit(ops); shut(); render(); toast('Account saved');
+  ops.push(up('Accounts', rowA));
+  { const CD = Object.assign({ limits: {} }, S.cfg.cards || {}), L = Object.assign({}, CD.limits); if (old && old.name !== n && L[old.name] != null) { L[n] = L[old.name]; delete L[old.name]; } if (isC) { if (lim > 0) L[n] = lim; else delete L[n]; } if (JSON.stringify(L) !== JSON.stringify(CD.limits || {})) ops.push(cfgOp('cards', Object.assign(CD, { limits: L }))); }
+  { const N = nwCfg(); if (old && old.name !== n && (N.skip || []).includes(old.name)) { N.skip = N.skip.map(x => x === old.name ? n : x); ops.push(cfgOp('nw', N)); } }
+  commit(ops); shut(); render(); toast('Account saved');
 };
 ACT.aDel = () => {
   const a = S.accounts.find(x => x.id === U.a.id); if (!a) return;
@@ -2154,7 +2172,7 @@ const pendIgnored = () => { const since = addDays(today(), -60); return S.pend.f
 function pendListHtml(L, ig) {
   return `<div class="group">${L.map(p => { const pk = payeeFind(p.payee); return `<button class="item" data-act="pendPick" data-id="${p.id}"><span class="ic" style="background:${p.dir === 'credit' ? '#12A15022' : 'var(--soft)'}">${p.dir === 'credit' ? '⬇️' : p.card ? '💳' : p.atm ? '🏧' : '⬆️'}</span><span class="mid"><b>${esc((pk && pk.note) || p.payee || (p.dir === 'credit' ? 'Money received' : 'Payment'))}${pk && pk.note ? ' <small class="mute" style="font-weight:600">· ' + esc(pk.category || pk.label || '') + '</small>' : ''}</b><small>${pk && pk.note && p.payee ? esc(p.payee) + ' · ' : ''}${esc(p.account || p.bank + (p.l4 ? ' ·' + p.l4 : '') || 'Unknown account')} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}</small></span><span class="amt ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</span></button>`; }).join('')}</div>${ig ? '' : `<button class="btn sec" data-act="pendIgnoreAll">Ignore all ${L.length}</button>`}`;
 }
-ACT.pendIgnoreAll = () => { if (!confirm('Ignore all ' + pendNew().length + ' messages? They will not be added anywhere. You can still file them later from 🚫 Ignored in the bell.')) return; commit(pendNew().map(p => up('Pending', Object.assign({}, p, { status: 'ignored', done: 'bulk' })))); render(); if (inboxCount().all) inboxSheet(); else shut(); };
+ACT.pendIgnoreAll = () => { if (!confirm('Ignore all ' + pendNew().length + ' messages? They will not be added anywhere. You can still file them later from Settings → Bank SMS.')) return; commit(pendNew().map(p => up('Pending', Object.assign({}, p, { status: 'ignored', done: 'bulk' })))); render(); if (inboxCount().all) inboxSheet(); else shut(); };
 /* ---------- smart payee suggestions: same person / shop even when the bank writes the name differently ---------- */
 const NAME_STOP = new Set(['mr', 'mrs', 'ms', 'miss', 'dr', 'shri', 'smt', 'sri', 'kumari', 'the', 'and', 'pvt', 'ltd', 'private', 'limited', 'india', 'upi', 'to', 'from', 'by', 'payment', 'paid']);
 const nameToks = p => uniq(String(p || '').toLowerCase().replace(/@[a-z0-9.]+/g, ' ').replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(t => t.length >= 2 && !NAME_STOP.has(t) && !/^\d+$/.test(t)));
@@ -2183,8 +2201,11 @@ function pastFiling(p) {
   if ((e = S.loan.find(x => x.id === id))) return { id, act: { Lend: 'lend', Borrow: 'borrow', Repay: 'repay', Receive: 'back' }[e.action], loan: e.loanId, note: e.remarks, acc: e.account, amount: e.amount, ts: e.ts };
   return null;
 }
+const smartCfg = () => Object.assign({ prefill: true, forget: {} }, S.cfg.smart || {});
 function payeeHistory(payee, dir, skip) {
-  const H = [], seen = new Set(), add = (sim, h) => { if (!h || !h.act || seen.has(h.id)) return; seen.add(h.id); H.push(Object.assign({ sim }, h)); };
+  /* "Forget" in Settings: anything before that moment no longer teaches Ledger about this payee */
+  const fg = Object.entries(smartCfg().forget || {}).filter(([k]) => payeeSame(payee, k)).map(([, t]) => t).sort().pop() || '';
+  const H = [], seen = new Set(), add = (sim, h) => { if (!h || !h.act || seen.has(h.id) || (fg && String(h.ts || '') <= fg)) return; seen.add(h.id); H.push(Object.assign({ sim }, h)); };
   S.pend.forEach(p => { if (p.id === skip || p.status === 'new' || !p.payee || (dir && p.dir !== dir)) return; const sim = payeeSame(payee, p.payee); if (sim) add(sim, pastFiling(p)); });
   if (dir !== 'credit') S.exp.forEach(e => { if (!e.payee || e.amount < 0) return; const sim = payeeSame(payee, e.payee); if (sim) add(sim, { id: e.id, act: 'exp', category: e.category, note: e.remarks, acc: e.account, amount: e.amount, ts: e.ts }); });
   if (dir !== 'debit') S.inc.forEach(e => { if (!e.payee) return; const sim = payeeSame(payee, e.payee); if (sim) add(sim, pastFiling({ done: e.id, dir: 'credit' })); });
@@ -2232,7 +2253,7 @@ ACT.pendPick = el => {
   const p = S.pend.find(x => x.id === el.dataset.id); if (!p) return;
   const pk = payeeFind(p.payee) || {};
   const sg = payeeSuggest(p.payee, p.amount, p.dir, p.id);
-  const fi = sg.findIndex(x => x.last.act !== 'ignore');
+  const fi = smartCfg().prefill === false ? -1 : sg.findIndex(x => x.last.act !== 'ignore');
   U.pd = { sg, sgi: fi, id: p.id, note: pk.note || p.payee || '', act: pk.act && PEND_ACT[p.dir].some(a => a[0] === pk.act) ? pk.act : p.dir === 'credit' ? 'inc' : p.atm ? 'trf' : 'exp', account: p.account || (pk.acc && acc(pk.acc) ? pk.acc : ''), cat: pk.category || guessCat(p.payee) || '', loan: pk.loan || '', to: p.atm ? (live(a => a.type === 'cash')[0] || {}).name || '' : (pk.to && acc(pk.to) ? pk.to : '') };
   if (fi >= 0) pdApply(U.pd, p, sg[fi].last);
   /* a credit that matches a waiting refund, or says refund / cashback */
@@ -2246,7 +2267,7 @@ function pdSugBox(P, p) {
   const sg = P.sg || []; if (!sg.length) return '';
   const top = sg[0], n = sg.reduce((t, x) => t + x.n, 0), L = sg.map(x => x.last).sort((a, b) => String(b.ts || '').localeCompare(String(a.ts || '')))[0];
   if (sg.length === 1 && top.last.act === 'ignore') return `<div class="sugbox"><div class="sg-h">🔁 You've had ${n} payment${n === 1 ? '' : 's'} with ${esc(p.payee)}</div><div class="sg-l">Last time ${dLabel(String(L.ts || '').slice(0, 10))} · ${inr(L.amount)} → 🚫 Ignored</div><div class="sg-l mute">Not filled in from that. Pick what this one is below.</div></div>`;
-  return `<div class="sugbox"><div class="sg-h">🔁 You've had ${n} payment${n === 1 ? '' : 's'} with ${esc(p.payee)}</div><div class="sg-l">Last time ${dLabel(String(L.ts || '').slice(0, 10))} · ${inr(L.amount)} → ${sgLabel(L)}</div>${sg.length > 1 || P.sgi !== 0 ? `<div class="chips wrap" style="margin-top:8px">${sg.map((x, i) => `<button class="chip ${P.sgi === i ? 'on' : ''}" data-act="pdUse" data-i="${i}">${sgLabel(x.last, 1)} <small>${x.n}× · ${sgAmt(x)}</small></button>`).join('')}</div>` : `<div class="sg-l mute">${top.n}× · usually ${sgAmt(top)} · filled in for you</div>`}</div>`;
+  return `<div class="sugbox"><div class="sg-h">🔁 You've had ${n} payment${n === 1 ? '' : 's'} with ${esc(p.payee)}</div><div class="sg-l">Last time ${dLabel(String(L.ts || '').slice(0, 10))} · ${inr(L.amount)} → ${sgLabel(L)}</div>${sg.length > 1 || P.sgi !== 0 ? `${P.sgi < 0 ? '<div class="sg-l mute">Tap one to fill it in, or pick below.</div>' : ''}<div class="chips wrap" style="margin-top:8px">${sg.map((x, i) => `<button class="chip ${P.sgi === i ? 'on' : ''}" data-act="pdUse" data-i="${i}">${sgLabel(x.last, 1)} <small>${x.n}× · ${sgAmt(x)}</small></button>`).join('')}</div>` : `<div class="sg-l mute">${top.n}× · usually ${sgAmt(top)} · filled in for you</div>`}</div>`;
 }
 ACT.pdUse = el => { const P = U.pd, p = S.pend.find(x => x.id === P.id), x = (P.sg || [])[+el.dataset.i]; if (!P || !p || !x) return; P.sgi = +el.dataset.i; pdApply(P, p, x.last); const y = $('#shBody') ? $('#shBody').scrollTop : 0; pendForm(); if ($('#shBody')) $('#shBody').scrollTop = y; buzz(6); };
 function pendForm() {
@@ -3161,7 +3182,7 @@ function askSheet(q) {
   let h = '';
   if (!U.ask.length) h = `<div class="a-hero"><div class="a-ic">✨</div><b>Ask anything about your money</b><small>Answers come from your own entries, worked out on this phone. Nothing is sent anywhere.</small></div>` + sugHtml();
   else h = U.ask.map(({ q, a }) => `<div class="a-q">${esc(q)}</div><div class="a-a">${a.h}${a.act ? `<button class="btn sec sm" style="margin-top:10px" data-act="${a.act[1]}" data-n="${esc(a.act[2])}" data-k="${esc(a.act[2])}">${esc(a.act[0])} ›</button>` : ''}${a.f ? `<div class="chips wrap" style="margin-top:8px">${a.f.map(x => `<button class="chip" data-act="askQ" data-q="${esc(x)}">${esc(x)}</button>`).join('')}</div>` : ''}</div>${a.sug ? sugHtml() : ''}`).join('') + `<button class="more" data-act="askSug">💡 Show example questions</button>`;
-  openSheet('✨ Ask Ledger', `<div id="askLog">${h}</div>`, 'tall', `<form class="a-bar" id="askF" onsubmit="ACT.askSend();return false"><textarea id="askIn" rows="1" placeholder="e.g. Food last month" autocomplete="off" autocapitalize="sentences" enterkeyhint="send" data-enter="1"></textarea><button class="btn sm" type="submit" aria-label="Ask">Ask</button></form>`);
+  openSheet(sideTitle('ask'), `<div id="askLog">${h}</div>`, 'tall side', `<form class="a-bar" id="askF" onsubmit="ACT.askSend();return false"><textarea id="askIn" rows="1" placeholder="e.g. Food last month" autocomplete="off" autocapitalize="sentences" enterkeyhint="send" data-enter="1"></textarea><button class="btn sm" type="submit" aria-label="Ask">Ask</button></form>`);
   const body = $('#shBody'); if (body && U.ask.length) { const qs = $$('#askLog .a-q'); const last = qs[qs.length - 1]; if (last) body.scrollTop = last.offsetTop - 8; }
   const i = $('#askIn'); if (i) {
     /* the box grows with what you type (up to 4 lines) so the whole question stays visible */
@@ -3170,7 +3191,7 @@ function askSheet(q) {
     i.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ACT.askSend(); } };
   }
 }
-ACT.ask = () => { const q = U.tab === 'home' && $('#view input[data-in=q]') ? $('#view input[data-in=q]').value.trim() : ''; if (q) { U.q = ''; $('#view input[data-in=q]').value = ''; if ($('#list')) $('#list').innerHTML = homeList(); askSheet(q); } else askSheet(); };
+ACT.ask = () => askSheet();
 ACT.askQ = el => { const q = el.dataset.q, m = q.match(/^Loan calculator for (.+)$/); if (m) { shut(); S.prefs.calc = Object.assign({}, S.prefs.calc, { price: String(askAmt(m[1].toLowerCase()) || '') }); save(); U.pseg = 'calc'; setTab('goals'); return; } askSheet(q); };
 ACT.askSend = () => { const v = ($('#askIn') || {}).value || ''; if (v.trim()) askSheet(v.trim()); else toast('Type a question, or tap one of the examples'); };
 ACT.askSug = () => { U.ask = []; askSheet(); };
@@ -3379,8 +3400,8 @@ function pulseSheet() {
   U.pt = U.pt || 'score';
   const tabs = `<div class="seg">${[['score', 'Score'], ['dive', 'Deep dive'], ['career', 'Career'], ['badges', 'Badges']].map(([k, l]) => `<button class="${U.pt === k ? 'on' : ''}" data-act="ptK" data-v="${k}">${l}</button>`).join('')}</div>`;
   const body = U.pt === 'dive' ? diveTab() : U.pt === 'career' ? careerTab() : U.pt === 'badges' ? badgeTab() : scoreTab();
-  const y = sheetOpen() && $('#shBody') ? $('#shBody').scrollTop : 0, same = sheetOpen() && $('#sheet .sh-head h3') && $('#sheet .sh-head h3').textContent.includes('Money Pulse');
-  openSheet('💗 Money Pulse', tabs + body, 'tall'); if (same && U.ptKeep) $('#shBody').scrollTop = y; U.ptKeep = false;
+  const y = sheetOpen() && $('#shBody') ? $('#shBody').scrollTop : 0, same = sideOn('pulse');
+  openSheet(sideTitle('pulse'), tabs + body, 'tall side'); if (same && U.ptKeep) $('#shBody').scrollTop = y; U.ptKeep = false;
 }
 ACT.ptK = el => { U.pt = el.dataset.v; pulseSheet(); };
 function scoreTab() {
@@ -3480,12 +3501,14 @@ function pstats(from, to) {
 }
 /* net worth at a moment (exclusive timestamp); accounts opened later are left out */
 function nwAt(until) {
-  const c = until ? calc(until) : C, lim = until || '9999';
-  const mine = S.accounts.filter(a => mineA(a) && (a.openingDate || '') < lim);
+  const c = until ? calc(until) : C, lim = until || '9999', N = nwCfg();
+  const mine = S.accounts.filter(a => mineA(a) && (a.openingDate || '') < lim && !(N.skip || []).includes(a.name));
   const by = t => r2(mine.filter(t).reduce((s, a) => s + (c.bal[a.name] || 0), 0));
   const lo = d => r2(S.loans.filter(l => l.dir === d).reduce((s, l) => s + Math.max(0, c.lout[l.id] || 0), 0));
-  const liq = by(holderType), inv = by(a => a.type === 'investment'), card = by(a => a.type === 'card'), loans = r2(lo('owed') - lo('owe'));
-  return { liq, inv, card, loans, nw: r2(liq + inv + card + loans) };
+  /* a card limit is not your money: only what you owe on a card counts, and only if you choose so */
+  const dues = r2(mine.filter(a => a.type === 'card').reduce((s, a) => s + Math.min(0, c.bal[a.name] || 0), 0));
+  const liq = by(a => holderType(a) && N[a.type] !== false), inv = N.investment !== false ? by(a => a.type === 'investment') : 0, card = N.cardDues ? dues : 0, loans = N.loans ? r2(lo('owed') - lo('owe')) : 0;
+  return { liq, inv, card, dues, loans, nw: r2(liq + inv + card + loans) };
 }
 /* ▲▼ line under a KPI. good: 1 up is good, -1 up is bad, 0 neutral. pts: compare in percentage points. */
 function dline(cur, prev, good, pts, short) {
@@ -3544,7 +3567,7 @@ function renderInsights() {
   const cm = ym(), budget = r2(visCats().reduce((s, c) => s + (+c.budget || 0), 0)), spentM = sum(S.exp.filter(e => inP(e, cm) && myX(e))), dLeft = daysIn(cm) - new Date().getDate() + 1;
   const accsAll = S.accounts.filter(a => mineA(a) && (!a.archived || (C.bal[a.name] || 0) !== 0));
   const liq = r2(accsAll.filter(holderType).reduce((s, a) => s + (C.bal[a.name] || 0), 0)), invv = r2(accsAll.filter(a => a.type === 'investment').reduce((s, a) => s + (C.bal[a.name] || 0), 0)), owedCard = r2(accsAll.filter(a => a.type === 'card').reduce((s, a) => s + (C.bal[a.name] || 0), 0));
-  const loanOwe = loanTotal('owe'), loanOwed = loanTotal('owed'), nw = r2(liq + invv + owedCard - loanOwe + loanOwed);
+  const loanOwe = loanTotal('owe'), loanOwed = loanTotal('owed'), NW = nwAt(null), nw = NW.nw;
   const freeAll = r2(liq - accsAll.filter(holderType).reduce((s, a) => s + (C.held[a.name] || 0), 0));
   const dayTot = {}; exP.forEach(e => { const d = e.ts.slice(0, 10); dayTot[d] = (dayTot[d] || 0) + e.amount; });
   const noSpend = days > 0 ? Math.max(0, days - Object.keys(dayTot).filter(d => d <= endD).length) : 0;
@@ -3561,12 +3584,8 @@ function renderInsights() {
   if (f.range === 'month' || f.range === 'year' || f.range === 'fy') h += monthNav(f.range === 'fy' ? 'fy' : f.range === 'year');
   if (f.range === 'custom') h += `<div class="grid2" style="margin-bottom:12px"><input type="date" data-in="fFrom" value="${r.from}" max="${today()}"><input type="date" data-in="fTo" value="${r.to}" max="${today()}"></div>`;
   h += `<div class="chips"><button class="chip ${fc ? 'on' : ''}" data-act="fOpen">⚙ Filters${fc ? ' · ' + fc : ''}</button>${f.accs.map(a => `<button class="chip x" data-act="fDrop" data-k="accs" data-v="${esc(a)}">${esc(a)} ✕</button>`).join('')}${f.cats.map(a => `<button class="chip x" data-act="fDrop" data-k="cats" data-v="${esc(a)}">${cat(a).icon} ${esc(a)} ✕</button>`).join('')}${parseAmt(f.min) > 0 ? `<button class="chip x" data-act="fDrop" data-k="min">≥ ${fmtINR(parseAmt(f.min))} ✕</button>` : ''}${f.q.trim() ? `<button class="chip x" data-act="fDrop" data-k="q">"${esc(f.q.trim())}" ✕</button>` : ''}</div>`;
-  h += `<button class="alert info" data-act="ask" style="width:100%;text-align:left;border-left-color:var(--acc)"><span class="ic" style="background:var(--acc2)">✨</span><span class="mid"><b>Ask Ledger</b><small>"Food last month" · "Can I afford ₹50,000?" · "Top 5 expenses"</small></span><span class="ago">Ask</span></button>`;
-  { const wm = f.range === 'month' ? U.month : shiftM(ym(), -1); h += `<button class="alert info" data-act="wrapOpen" data-m="${wm}" style="width:100%;text-align:left;border-left-color:#EC4899"><span class="ic" style="background:#EC48991f">🎁</span><span class="mid"><b>${esc(mLabel(wm))} wrap</b><small>Your month as swipeable cards · share without amounts</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`; }
   if (rfOpen().length) h += refundsCard();
-  const plI = pulseNow();
-  if (plI) h += `<button class="alert info" data-act="pulseOpen" style="width:100%;text-align:left;border-left-color:${plI.col}"><span class="ic" style="background:var(--acc2)">💗</span><span class="mid"><b>Money Pulse · <span style="color:${plI.col}">${plI.score} ${plI.label}</span></b><small>This month's financial health. Tap for day, week, year and tips.</small></span><span class="ago">Open</span></button>`;
-  h += `<div class="hero"><div class="hl">Net worth today</div><div class="hv">${inrS(nw)}</div><div class="hs">Banks & cash <b>${inr(liq, 1)}</b> · Investments <b>${inr(invv, 1)}</b>${owedCard ? ' · Cards <b>' + inr(owedCard, 1) + '</b>' : ''}${loanOwe || loanOwed ? ' · Loans <b>' + inr(loanOwed - loanOwe, 1) + '</b>' : ''}</div></div>`;
+  h += `<button class="hero" data-act="nwOpen" style="width:100%;text-align:left;display:block"><div class="hl">Net worth today <span style="float:right;text-transform:none;letter-spacing:0;font-weight:700">What counts ›</span></div><div class="hv">${inrS(nw)}</div><div class="hs">Banks & cash <b>${inr(NW.liq, 1)}</b>${nwCfg().investment !== false ? ' · Investments <b>' + inr(NW.inv, 1) + '</b>' : ''}${NW.card ? ' · Card dues <b>' + inr(NW.card, 1) + '</b>' : ''}${NW.loans ? ' · Loans <b>' + inr(NW.loans, 1) + '</b>' : ''}</div>${live(cardLooksLimit).length ? '<div class="hs" style="color:var(--amber)">⚠️ A card balance looks like its limit · tap to fix</div>' : ''}</button>`;
   /* one comparison, picked by the person (default: previous period = MoM for a month) */
   const W = cmpWin(r), Q = pstats(r.from, W.end), P = W.win ? pstats(W.win.from, W.win.to) : null;
   const D = (k, good, pts) => W.win ? dline(Q[k], P && W.ok ? P[k] : null, good, pts, W.short) : '';
@@ -3900,20 +3919,21 @@ function renderSettings() {
   <div class="hint">Every night at 3 am a copy of your Sheet is saved as "2026-10-29 03:11 · Backup". Deleted backups go to Drive's bin, which Drive empties after 30 days (empty the bin to free space now).</div></div>
   <div class="card"><h2>Files on this phone</h2><button class="btn sec" data-act="exportJson">⬇ Download backup file (JSON)</button><button class="btn sec" data-act="impJson">⬆ Restore from a JSON file</button><input type="file" id="impFile" accept=".json,application/json" hidden><button class="btn sec" data-act="exportCsv">⬇ Download all entries (CSV)</button><button class="btn dng" data-act="clearLocal">Clear this phone's copy</button><div class="hint">The Google Sheet is your master copy. Before any restore a safety copy of the Sheet is made, so a restore can always be undone.</div></div>`);
   if (U.sp === 'backup' && S.url) U.after = bkLoad;
+  pg('sms', smartCard());
   pg('sms', `<div class="card"><h2>Bank SMS</h2><div class="lbl" style="margin-top:0">Card / account last 4 digits</div>${live(a => a.type !== 'cash' && a.type !== 'investment' && mineA(a)).map(a => `<div class="grid2" style="grid-template-columns:1fr 110px;align-items:center;margin-bottom:6px"><span style="font-weight:700">${esc(a.name)}</span><input data-in="acL4" data-n="${esc(a.name)}" inputmode="numeric" maxlength="12" value="${esc(a.l4 || '')}" placeholder="e.g. 1211"></div>`).join('')}<div class="hint">Matches SMS like "from XX1211" to the right account. Several numbers? Separate them with commas. The Ledger phone app fills these in for you the first time it sees each one.</div><button class="btn sec" data-act="smsTry">🧪 Paste an SMS to test</button></div>`);
-  pg('about', `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Ledger Android app (Settings → Phone app).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v8.6${AND ? ' · app ' + esc(andInfo().version || '') : ''}</div>`);
+  pg('about', `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Ledger Android app (Settings → Phone app).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v8.7${AND ? ' · app ' + esc(andInfo().version || '') : ''}</div>`);
   return settingsView(PG);
 }
 /* settings: a short menu, each item opens its own page (Android back / ‹ returns to the menu) */
 const SP = () => [
   ['Your data', [['sync', '☁️', 'Google Sheet & sync', !S.url ? 'Not connected' : lastErr ? 'Problem · tap to see' : 'Connected' + (S.lastSync ? ' · ' + S.lastSync : '')], ['backup', '🗂️', 'Backups & restore', 'Drive · Ledger App / Backups'], ['bin', '🗑️', 'Recently deleted', (S.bin.length ? S.bin.length + ' item' + (S.bin.length === 1 ? '' : 's') : 'Empty') + ' · kept ' + binDays() + ' days']]],
-  ['Money', [['accounts', '🏦', 'Accounts', S.accounts.length + ' account' + (S.accounts.length === 1 ? '' : 's')], ['cats', '🏷️', 'Categories, budgets & types', S.cfg.categories.length + ' categories'], ['sms', '📩', 'Bank SMS', 'Card digits · test an SMS']]],
+  ['Money', [['accounts', '🏦', 'Accounts', S.accounts.length + ' account' + (S.accounts.length === 1 ? '' : 's')], ['cats', '🏷️', 'Categories, budgets & types', S.cfg.categories.length + ' categories'], ['sms', '📩', 'Bank SMS', (pendIgnored().length ? pendIgnored().length + ' ignored · ' : '') + 'suggestions · card digits']]],
   ['App', [['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off'], ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Ledger v8.6']]]
 ];
 function settingsView(PG) {
   const all = SP().flatMap(g => g[1]), cur = U.sp && all.find(x => x[0] === U.sp);
   if (cur) { $('#title').textContent = cur[2]; $('#title').classList.add('sm'); return `<button class="back" data-act="spBack">‹ Settings</button>` + (PG[cur[0]] || '<div class="empty">Nothing here yet.</div>'); }
-  return SP().map(([g, items]) => `<div class="section-t">${g}</div><div class="group">${items.map(([k, i, t, sub]) => `<button class="item" data-act="spOpen" data-k="${k}"><span class="ic" style="background:var(--soft)">${i}</span><span class="mid"><b>${esc(t)}</b><small>${esc(sub)}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`).join('')}</div>`).join('') + '<div class="hint center" style="margin-top:18px">Ledger v8.5 · screens ' + APP_BUILD + (AND ? ' · phone app ' + esc(andInfo().version || '?') : '') + '</div>';
+  return SP().map(([g, items]) => `<div class="section-t">${g}</div><div class="group">${items.map(([k, i, t, sub]) => `<button class="item" data-act="spOpen" data-k="${k}"><span class="ic" style="background:var(--soft)">${i}</span><span class="mid"><b>${esc(t)}</b><small>${esc(sub)}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`).join('')}</div>`).join('') + '<div class="hint center" style="margin-top:18px">Ledger v8.7 · screens ' + APP_BUILD + (AND ? ' · phone app ' + esc(andInfo().version || '?') : '') + '</div>';
 }
 ACT.spOpen = el => { U.sp = el.dataset.k; try { history.pushState({ sp: 1 }, ''); } catch (e) { } U.fresh = true; render(); window.scrollTo(0, 0); };
 ACT.spBack = () => { if (history.state && history.state.sp) history.back(); else { U.sp = null; U.fresh = true; render(); window.scrollTo(0, 0); } };
@@ -4222,12 +4242,87 @@ function splash() {
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 520); }, quick ? 250 : 1250);
 }
 
+/* ---------- Settings → Bank SMS & suggestions: you decide what Ledger learns ---------- */
+function learnedPayees() {
+  const m = {}, add = (payee, dir, ts) => { const k = String(payee || '').trim().toLowerCase(); if (!k) return; const x = m[k + '|' + dir] || (m[k + '|' + dir] = { payee: String(payee).trim(), dir, ts }); if (ts > x.ts) x.ts = ts; };
+  const since = addDays(today(), -120);
+  S.pend.forEach(p => { if (p.status !== 'new' && p.payee && String(p.ts).slice(0, 10) >= since) add(p.payee, p.dir, p.ts); });
+  S.exp.forEach(e => { if (e.payee && e.amount > 0 && String(e.ts).slice(0, 10) >= since) add(e.payee, 'debit', e.ts); });
+  const seen = []; return Object.values(m).sort((a, b) => b.ts.localeCompare(a.ts)).filter(x => { if (seen.some(y => y.dir === x.dir && payeeSame(y.payee, x.payee) >= .9)) return false; seen.push(x); return true; }).slice(0, 60)
+    .map(x => Object.assign(x, { sg: payeeSuggest(x.payee, 0, x.dir) })).filter(x => x.sg.length);
+}
+function smartCard() {
+  const SC = smartCfg(), ig = pendIgnored(), igAll = S.pend.filter(p => p.status === 'ignored'), learnIg = igAll.filter(p => p.done !== 'bulk').length;
+  let h = `<div class="card"><h2>🚫 Ignored messages <small>${ig.length} in the last 60 days</small></h2>`;
+  if (!ig.length) h += `<div class="hint" style="margin:0">Nothing ignored recently.</div>`;
+  else {
+    h += `<div class="hint" style="margin-top:0">Tap any one to file it properly (expense, transfer, loan…).</div>`;
+    h += `<div class="btns"><button class="btn sec sm" data-act="igShow">${U.igOpen ? 'Hide the list' : 'Show all ' + ig.length}</button><button class="btn sec sm" data-act="igBack">↩️ Put all back to sort</button></div>`;
+    if (U.igOpen) h += pendListHtml(ig, true);
+  }
+  if (learnIg) h += `<button class="btn sec" data-act="igUnlearn">Stop learning from ${learnIg} ignored message${learnIg === 1 ? '' : 's'}</button><div class="hint">They stay ignored, but Ledger stops treating "ignored" as what you usually do with those payees.</div>`;
+  h += `</div>`;
+  const L = U.lpOpen ? learnedPayees() : null;
+  h += `<div class="card"><h2>🔁 Smart suggestions <small>learned from what you filed</small></h2>
+  <label class="check" style="margin-top:0"><input type="checkbox" data-in="smPre" ${SC.prefill !== false ? 'checked' : ''}> Fill in new SMS from what I did before</label>
+  <div class="hint">On: a new SMS from a payee you know comes filled in (never with Ignore). Off: Ledger only shows what you did before, and you tap to use it.</div>
+  <button class="btn sec sm" data-act="lpShow">${U.lpOpen ? 'Hide' : 'See'} what Ledger learned</button>`;
+  if (L) h += L.length ? `<div class="list" style="margin-top:10px">${L.map(x => { const t = x.sg[0]; return `<div class="srow"><span class="ic" style="background:var(--soft)">${x.dir === 'credit' ? '⬇️' : '⬆️'}</span><span class="mid"><b>${esc(x.payee)}</b><small>${x.sg.slice(0, 2).map(g => sgLabel(g.last, 1) + ' ' + g.n + '×').join(' · ')}</small></span><button class="btn sm sec" data-act="lpForget" data-p="${esc(x.payee)}">Forget</button></div>`; }).join('')}</div>` : `<div class="hint">Nothing learned yet.</div>`;
+  if (Object.keys(SC.forget || {}).length) h += `<button class="btn sec sm" data-act="lpReset">Undo all "Forget" (${Object.keys(SC.forget).length})</button>`;
+  return h + `</div>`;
+}
+ACT.igShow = () => { U.igOpen = !U.igOpen; render(); };
+ACT.lpShow = () => { U.lpOpen = !U.lpOpen; render(); };
+ACT.igBack = () => { const L = pendIgnored(); if (!L.length || !confirm('Put all ' + L.length + ' ignored messages back in 🔔 To sort?')) return; commit(L.map(p => up('Pending', Object.assign({}, p, { status: 'new', done: '' })))); U.igOpen = false; render(); bellBadge(); toast(L.length + ' back in To sort'); };
+ACT.igUnlearn = () => { const L = S.pend.filter(p => p.status === 'ignored' && p.done !== 'bulk'); commit(L.map(p => up('Pending', Object.assign({}, p, { done: 'bulk' })))); render(); toast('Ignored messages no longer teach Ledger'); };
+ACT.lpForget = el => { const SC = smartCfg(), F = Object.assign({}, SC.forget); F[el.dataset.p.toLowerCase()] = nowTs(); commit([cfgOp('smart', Object.assign(SC, { forget: F }))]); render(); toast('Forgot ' + el.dataset.p); };
+ACT.lpReset = () => { const SC = smartCfg(); commit([cfgOp('smart', Object.assign(SC, { forget: {} }))]); render(); toast('Suggestions restored'); };
+IN.smPre = t => { const SC = smartCfg(); commit([cfgOp('smart', Object.assign(SC, { prefill: t.checked }))]); toast(t.checked ? 'New SMS will be filled in' : 'New SMS will not be filled in'); };
+
+/* ---------- side panel: ✨ Ask · 💗 Pulse · 🎁 Wrap, one place, out of the way ---------- */
+const SIDE = [['ask', '✨ Ask'], ['pulse', '💗 Pulse'], ['wrap', '🎁 Wrap']];
+const sideTitle = k => { U.sideK = k; return `<span class="sidetabs">${SIDE.map(([x, l]) => `<button class="${x === k ? 'on' : ''}" data-act="sideK" data-v="${x}">${l}</button>`).join('')}</span>`; };
+const sideOn = k => sheetOpen() && $('#sheet').classList.contains('side') && U.sideK === k;
+ACT.side = () => ACT.sideK({ dataset: { v: U.sideK || 'ask' } });
+ACT.sideK = el => { const k = el.dataset.v; if (k === 'pulse') ACT.pulseOpen(); else if (k === 'wrap') wrapList(); else askSheet(); };
+function wrapList() {
+  const ms = []; for (let i = 0; i < 12; i++) { const m = shiftM(ym(), -i); if (S.exp.some(e => inP(e, m) && myX(e))) ms.push(m); }
+  openSheet(sideTitle('wrap'), `<div class="hint" style="margin-top:0">Your month as swipeable cards. Share them without amounts.</div>${ms.length ? ms.map(m => `<button class="srow" data-act="wrapOpen" data-m="${m}" style="width:100%;text-align:left"><span class="ic" style="background:#EC48991f">🎁</span><span class="mid"><b>${esc(mLabel(m))}</b><small>${m === ym() ? 'So far this month' : 'Full month'} · ${inr(sum(S.exp.filter(e => inP(e, m) && myX(e))), 1)} spent</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`).join('') : '<div class="empty">No months yet.</div>'}`, 'tall side');
+}
+
+/* ---------- net worth: choose what counts, cards with limits ---------- */
+function nwSheet() {
+  const N = nwCfg(), W = nwAt(null), skip = N.skip || [];
+  const tog = (k, on, t, sub) => `<button class="srow" data-act="nwTog" data-k="${k}" style="width:100%;text-align:left"><span class="ic" style="background:var(--soft)">${on ? '✅' : '⬜'}</span><span class="mid"><b>${t}</b><small>${sub}</small></span></button>`;
+  const accRow = a => { const on = !skip.includes(a.name); return `<button class="srow" data-act="nwAcc" data-n="${esc(a.name)}" style="width:100%;text-align:left;padding-left:22px"><span class="ic" style="background:var(--soft)">${on ? '✅' : '⬜'}</span><span class="mid"><b>${ACC_T[a.type][0]} ${esc(a.name)}</b><small>${on ? 'Counted' : 'Left out'}</small></span><b>${inr(C.bal[a.name] || 0)}</b></button>`; };
+  const grp = (k, t, sub) => { const L = live(a => mineA(a) && a.type === k); if (!L.length) return ''; const on = N[k] !== false; return tog(k, on, t, sub) + (on && L.length > 1 ? L.map(accRow).join('') : ''); };
+  const cards = live(a => mineA(a) && a.type === 'card');
+  const cardHtml = cards.map(a => { const b = C.bal[a.name] || 0, lim = cardLimit(a), due = Math.max(0, -b); return `<button class="srow" data-act="acctEdit" data-n="${esc(a.name)}" style="width:100%;text-align:left"><span class="ic" style="background:var(--soft)">💳</span><span class="mid"><b>${esc(a.name)}</b><small>${cardLooksLimit(a) ? '<span style="color:var(--amber)">⚠️ ' + inr(b) + ' was typed as the balance. Is that the limit? Tap to fix</span>' : (due ? '<span class="red">Owe ' + inr(due) + '</span>' : 'No dues ✓') + (lim ? ' · ' + inr(Math.max(0, lim - due)) + ' free of ' + inr(lim, 1) + ' limit' : ' · tap to add the limit')}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`; }).join('');
+  openSheet('Net worth · what counts', `<div class="hero" style="margin-top:0"><div class="hl">Net worth today</div><div class="hv">${inrS(W.nw)}</div><div class="hs">Only what is ticked below. Held-for-others money (Mom, Evol) is never counted.</div></div>
+  <div class="lbl">Your money</div>
+  ${grp('bank', '🏦 Bank accounts', 'Money in your banks')}${grp('cash', '💵 Cash in hand', 'Cash you are carrying')}${grp('wallet', '👛 Wallets / UPI', 'Paytm, Amazon Pay…')}${grp('investment', '📈 Investments', 'Groww and other investments, at their current value')}
+  <div class="lbl">Things you owe or are owed</div>
+  ${tog('cardDues', N.cardDues, '💳 Subtract credit card dues', N.cardDues ? 'Counting −' + inr(-W.dues) + ' you owe on cards' : 'Off · cards don\'t change your net worth' + (W.dues ? ' (you owe ' + inr(-W.dues) + ')' : ''))}
+  ${tog('loans', N.loans, '🤝 Include loans', 'Money friends owe you, minus money you owe them')}
+  <div class="hint">A credit card <b>limit</b> is never your money, so it is never counted. Only what you owe on a card can be subtracted, if you tick it.</div>
+  <div class="lbl">Credit cards</div>${cardHtml || '<div class="hint" style="margin-top:0">No credit card added yet.</div>'}
+  <button class="btn sec" data-act="cardNew">+ Add a credit card</button>`, 'tall');
+}
+ACT.nwOpen = () => nwSheet();
+ACT.nwTog = el => { const N = nwCfg(), k = el.dataset.k; N[k] = (k === 'cardDues' || k === 'loans') ? !N[k] : N[k] === false; commit([cfgOp('nw', N)]); const y = $('#shBody').scrollTop; nwSheet(); $('#shBody').scrollTop = y; render(); };
+ACT.nwAcc = el => { const N = nwCfg(), n = el.dataset.n, sk = (N.skip || []).slice(), i = sk.indexOf(n); if (i >= 0) sk.splice(i, 1); else sk.push(n); N.skip = sk; commit([cfgOp('nw', N)]); const y = $('#shBody').scrollTop; nwSheet(); $('#shBody').scrollTop = y; render(); };
+ACT.cardNew = () => acctSheet(null, 'card');
+
 /* ---------- keyboard: keep pop-ups and the box you type in above the keyboard ---------- */
 (() => {
   const vv = window.visualViewport; if (!vv) return;
   let last = -1;
   const fit = () => {
     const kb = Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop));
+    /* the phone shrinks the page for the keyboard (Android app) or lays the keyboard over it (browser): detect both */
+    const w = innerWidth; if (w !== fit.w) { fit.w = w; fit.max = 0; } fit.max = Math.max(fit.max || 0, innerHeight);
+    const open = kb > 60 || fit.max - innerHeight > 140;
+    document.documentElement.classList.toggle('kbd', open);
     const k = kb > 60 ? kb : 0; if (k === last) return; last = k;
     document.documentElement.style.setProperty('--kb', k + 'px');
     const a = document.activeElement; if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName) && a.closest('#sheet')) setTimeout(() => { try { a.scrollIntoView({ block: 'nearest' }); } catch (e) { } }, 60);
@@ -4235,7 +4330,9 @@ function splash() {
   vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); addEventListener('resize', fit);
 })();
 /* the phone shrank the page for the keyboard: bring the box being typed in back into view */
-addEventListener('resize', () => { const a = document.activeElement; if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName)) setTimeout(() => { try { a.scrollIntoView({ block: 'nearest' }); } catch (e) { } }, 80); });
+addEventListener('resize', () => { const a = document.activeElement; if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName)) setTimeout(() => { try { a.scrollIntoView({ block: a.closest('#sheet') ? 'nearest' : 'center' }); } catch (e) { } }, 120); });
+/* tapping a box on the page: bring it up to the middle once the keyboard is out */
+document.addEventListener('focusin', e => { const a = e.target; if (!a || !/^(INPUT|TEXTAREA)$/.test(a.tagName) || a.closest('#sheet') || /^(checkbox|radio|date|time|file)$/.test(a.type)) return; setTimeout(() => { try { a.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { } }, 350); });
 
 /* ---------- boot ---------- */
 applyTheme(); setupIcons();

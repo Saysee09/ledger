@@ -1,18 +1,21 @@
 ## Ledger v8.7 · What's new
 
+## Cleaner pages
+- **✨ button (top right)** opens a side panel with tabs: **Ask · Pulse · Wrap**. They are no longer cards on Expenses and Insights. Swipe right to close
+- **Expenses search** only searches your expenses now (note, category, account, amount, payee). Ask lives in the ✨ panel
+
 ## Fixed
-- **✨ Ask Ledger typing**: the question box now sits above the keyboard and grows to show your whole question as you type
-- **"Ignored" you never chose**: a payee you ignored once (or via "Ignore all") no longer comes pre-filled as **Ignore** next time. The form picks Expense (or what you really did before) and just tells you "Last time → Ignored"
-- **"Ignore all" no longer teaches Ledger** to ignore those shops or people
-- **App updates**: live versions were wrongly named "test" inside the app. From now on live = 8.0.N, test = 8.0.N-test
+- **Typing in search / Ask**: the bottom bar hides while the keyboard is open and the box you type in moves into view
+- **Net worth**: a credit card **limit** never counts as your money. Tap **Net worth** (Insights) to choose what counts. Default: banks + cash + investments. Optional: subtract card dues, include loans, leave out any account
+- **Credit cards** now have a **Credit limit** and **You owe** field. A card whose limit was typed in as its balance is flagged ⚠️ with a one-tap fix. Home shows what's free on each card. Add as many cards as you like (Net worth → + Add a credit card)
+- "Ignored" is never pre-filled from history, and "Ignore all" doesn't teach Ledger
+- App updates: live versions are no longer labelled "test"
 
-## New
-- **🚫 Ignored** in the 🔔 bell: every SMS ignored in the last 60 days. Tap one to file it properly (e.g. those Rapido rides)
-- **Repaid a loan / Got back to a new person**: from a bank SMS you can now pick **+ New person**. If you borrowed in cash and never logged it, Ledger logs the earlier borrow too (choose Cash, an account, or "Not tracked") and settles it with this payment
-- **🧪 Get test builds** (Settings → Phone app): keep getting test versions even after installing a live one
-
-## Reminder
-- Borrowing in cash and repaying online already works: borrow into **Cash in hand**, then each **Repay** can come from any account (ICICI, Kotak, cash), in any amounts
+## You decide what Ledger learns (Settings → Bank SMS)
+- **🚫 Ignored messages**: see them, tap one to file it, or **Put all back to sort**. **Stop learning** from them in one tap
+- **🔁 Smart suggestions**: turn pre-filling on or off, see what Ledger learned per payee, **Forget** any of them
+- 🧪 **Get test builds** switch in Settings → Phone app
+- Repaid a loan / Got back can now go to **+ New person** (logs the earlier cash borrow too)
 
 ## From 8.6
 - ↩️ Refunds & cashback tracker, 📅 salary month, comparisons in words, smoother Glass
