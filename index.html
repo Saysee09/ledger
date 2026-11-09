@@ -239,7 +239,8 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;max-width:560px;margin:0 auto;background:var(--card);border-radius:28px 28px 0 0;max-height:88vh;max-height:calc(100dvh - 24px);display:flex;flex-direction:column;transform:translateY(105%);transition:transform .34s cubic-bezier(.2,.9,.25,1);box-shadow:0 -10px 40px rgba(0,0,0,.16);overflow:hidden}
 .sheet.open{transform:none}
 .sheet.drag{transition:none}
-.sheet.tall{height:88vh;height:calc(100dvh - 24px)}
+.sheet.tall{height:88vh;height:calc(100dvh - 24px - var(--kb,0px))}
+.sheet{bottom:var(--kb,0px)!important;max-height:calc(100dvh - 24px - var(--kb,0px))!important}
 .grab{width:44px;height:5px;border-radius:5px;background:var(--faint);opacity:.5;margin:8px auto 0;flex:0 0 auto}
 .sh-top{flex:0 0 auto;touch-action:none;background:var(--card);border-bottom:1px solid var(--line)}
 .sh-head{display:flex;justify-content:space-between;align-items:center;padding:6px 14px 8px 18px;min-height:48px;gap:10px}
@@ -402,8 +403,12 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .a-big{font-size:1.6rem;font-weight:800;letter-spacing:-.03em}.a-big small{font-size:.85rem;color:var(--mute);font-weight:700}
 .a-sub{font-size:.78rem;color:var(--mute);margin-top:4px;line-height:1.45;font-weight:600}
 .a-a .kv{background:var(--card);margin-top:10px}.a-a .group{background:var(--card);margin-top:10px}.a-a .a-bars{margin-top:8px}
-.a-bar{position:sticky;bottom:calc(-28px - env(safe-area-inset-bottom));display:flex;gap:8px;background:var(--card);padding:10px 0 4px;margin-top:14px}
-.a-bar input{flex:1;min-width:0}.a-bar .btn{height:48px;min-height:48px}
+.ibx-ig>summary{list-style:none;cursor:pointer}.ibx-ig>summary::-webkit-details-marker{display:none}.ibx-ig>summary span:first-child::after{content:' ▾'}.ibx-ig[open]>summary span:first-child::after{content:' ▴'}
+.sh-foot{flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+.a-bar{display:flex;gap:8px;align-items:flex-end;margin:0}
+.a-bar textarea{flex:1;min-width:0;display:block;min-height:48px;max-height:132px;resize:none;overflow-y:auto;background:var(--soft);border:1.5px solid transparent;border-radius:14px;padding:12px 14px;font:inherit;font-size:16px;line-height:1.35;color:var(--ink);-webkit-appearance:none;appearance:none}
+.a-bar textarea:focus{outline:none;border-color:var(--acc)}.a-bar textarea::placeholder{color:var(--faint)}
+.a-bar .btn{height:48px;min-height:48px;flex:0 0 auto}
 .section-t{font-size:.72rem;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;margin:20px 6px 8px}
 </style>
 </head>
@@ -516,7 +521,7 @@ const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings',
 const CLOUD = { url: '__SHEET_URL__', clientId: '__WEB_CLIENT_ID__' };
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-05 b15';
+const APP_BUILD = '2026-11-09 b16';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -691,10 +696,10 @@ document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.ta
 
 /* ---------- bottom sheet ---------- */
 const sheetOpen = () => $('#sheet').classList.contains('open');
-function openSheet(title, html, cls) {
+function openSheet(title, html, cls, foot) {
   const s = $('#sheet'), wasOpen = sheetOpen();
   s.className = 'sheet ' + (cls || '') + (wasOpen ? ' open' : '');
-  s.innerHTML = `<div class="sh-top" id="shTop"><div class="grab"></div><div class="sh-head"><h3>${title || '&nbsp;'}</h3><button class="x" data-act="closeSheet" aria-label="Close">✕</button></div></div><div class="sh-body" id="shBody">${html}</div>`;
+  s.innerHTML = `<div class="sh-top" id="shTop"><div class="grab"></div><div class="sh-head"><h3>${title || '&nbsp;'}</h3><button class="x" data-act="closeSheet" aria-label="Close">✕</button></div></div><div class="sh-body" id="shBody">${html}</div>${foot ? `<div class="sh-foot" id="shFoot">${foot}</div>` : ''}`;
   s.style.transform = '';
   fitTiles(s);
   if (!wasOpen) {
@@ -844,7 +849,7 @@ ACT.updInstall = () => { const u = U.upd; if (!u) return; const b = $('#updBtn')
 ACT.updWeb = () => { if (U.upd) window.open(U.upd.page || U.upd.url, '_blank'); };
 window.onLedgerDl = (p, msg) => {
   const b = $('#updBtn'), bar = $('#updBar'), m = $('#updMsg'); if (!b) return;
-  if (p >= 0 && p <= 100) { bar.querySelector('i').style.width = p + '%'; b.textContent = 'Downloading… ' + p + '%'; return; }
+  if (p >= 0 && p < 100) { bar.querySelector('i').style.width = p + '%'; b.textContent = 'Downloading… ' + p + '%'; return; }
   if (p === 100) { bar.querySelector('i').style.width = '100%'; b.textContent = 'Checking the download…'; return; }
   if (p === 101) { b.textContent = 'Installing…'; m.innerHTML = 'Tap <b>Update</b> / <b>Install</b> on Android\'s screen. Ledger closes and reopens on the new version.'; return; }
   if (p === -2) { b.disabled = false; b.textContent = 'Install now'; m.innerHTML = 'One time only: turn on <b>Allow from this source</b> for Ledger, then come back. The install continues by itself.'; return; }
@@ -879,9 +884,11 @@ function inboxSheet() {
   const P = inboxParts(true), n = P.sort.length;
   let h = '';
   if (n) h += `<div class="ibx-h"><span>📩 To sort · ${n}</span><span style="text-transform:none;letter-spacing:0">bank SMS</span></div>` + pendListHtml(P.sort);
+  const ig = pendIgnored();
+  if (ig.length) h += `<details class="ibx-ig"${U.igOpen ? ' open' : ''} ontoggle="U.igOpen=this.open"><summary class="ibx-h"><span>🚫 Ignored · ${ig.length}</span><span style="text-transform:none;letter-spacing:0">last 60 days · tap one to file it</span></summary>${pendListHtml(ig, true)}</details>`;
   if (P.act) h += `<div class="ibx-h"><span>💳 Needs you</span></div>` + P.act;
   if (P.info) h += `<div class="ibx-h"><span>💡 Heads-up</span></div>` + P.info;
-  if (!h) h = `<div class="empty"><span class="big">✨</span>All caught up.<br>Bank SMS, card dues, bills and tips land here.</div>`;
+  if (!h || (!n && !P.act && !P.info)) h = `<div class="empty"><span class="big">✨</span>All caught up.<br>Bank SMS, card dues, bills and tips land here.</div>` + h;
   openSheet('🔔 Notifications', h, 'tall');
 }
 ACT.snooze = el => { S.prefs.snooze = S.prefs.snooze || {}; const t = today(); Object.keys(S.prefs.snooze).forEach(k => { if (S.prefs.snooze[k] < t) delete S.prefs.snooze[k]; }); S.prefs.snooze[el.dataset.k] = addDays(t, +el.dataset.d || 3); save(); const a = el.closest('.alert'); if (a) a.remove(); buzz(6); bellBadge(); if (!sheetOpen() && U.tab === 'home') render(); };
@@ -2143,10 +2150,11 @@ function pendingChip() {
 }
 ACT.pendOpen = () => inboxSheet();
 function pendSheet() { inboxSheet(); }
-function pendListHtml(L) {
-  return `<div class="group">${L.map(p => { const pk = payeeFind(p.payee); return `<button class="item" data-act="pendPick" data-id="${p.id}"><span class="ic" style="background:${p.dir === 'credit' ? '#12A15022' : 'var(--soft)'}">${p.dir === 'credit' ? '⬇️' : p.card ? '💳' : p.atm ? '🏧' : '⬆️'}</span><span class="mid"><b>${esc((pk && pk.note) || p.payee || (p.dir === 'credit' ? 'Money received' : 'Payment'))}${pk && pk.note ? ' <small class="mute" style="font-weight:600">· ' + esc(pk.category || pk.label || '') + '</small>' : ''}</b><small>${pk && pk.note && p.payee ? esc(p.payee) + ' · ' : ''}${esc(p.account || p.bank + (p.l4 ? ' ·' + p.l4 : '') || 'Unknown account')} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}</small></span><span class="amt ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</span></button>`; }).join('')}</div><button class="btn sec" data-act="pendIgnoreAll">Ignore all ${L.length}</button>`;
+const pendIgnored = () => { const since = addDays(today(), -60); return S.pend.filter(p => p.status === 'ignored' && String(p.ts || '').slice(0, 10) >= since).sort((a, b) => b.ts.localeCompare(a.ts)); };
+function pendListHtml(L, ig) {
+  return `<div class="group">${L.map(p => { const pk = payeeFind(p.payee); return `<button class="item" data-act="pendPick" data-id="${p.id}"><span class="ic" style="background:${p.dir === 'credit' ? '#12A15022' : 'var(--soft)'}">${p.dir === 'credit' ? '⬇️' : p.card ? '💳' : p.atm ? '🏧' : '⬆️'}</span><span class="mid"><b>${esc((pk && pk.note) || p.payee || (p.dir === 'credit' ? 'Money received' : 'Payment'))}${pk && pk.note ? ' <small class="mute" style="font-weight:600">· ' + esc(pk.category || pk.label || '') + '</small>' : ''}</b><small>${pk && pk.note && p.payee ? esc(p.payee) + ' · ' : ''}${esc(p.account || p.bank + (p.l4 ? ' ·' + p.l4 : '') || 'Unknown account')} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}</small></span><span class="amt ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</span></button>`; }).join('')}</div>${ig ? '' : `<button class="btn sec" data-act="pendIgnoreAll">Ignore all ${L.length}</button>`}`;
 }
-ACT.pendIgnoreAll = () => { if (!confirm('Mark all ' + pendNew().length + ' as ignored? They will not be added anywhere.')) return; commit(pendNew().map(p => up('Pending', Object.assign({}, p, { status: 'ignored' })))); render(); if (inboxCount().all) inboxSheet(); else shut(); };
+ACT.pendIgnoreAll = () => { if (!confirm('Ignore all ' + pendNew().length + ' messages? They will not be added anywhere. You can still file them later from 🚫 Ignored in the bell.')) return; commit(pendNew().map(p => up('Pending', Object.assign({}, p, { status: 'ignored', done: 'bulk' })))); render(); if (inboxCount().all) inboxSheet(); else shut(); };
 /* ---------- smart payee suggestions: same person / shop even when the bank writes the name differently ---------- */
 const NAME_STOP = new Set(['mr', 'mrs', 'ms', 'miss', 'dr', 'shri', 'smt', 'sri', 'kumari', 'the', 'and', 'pvt', 'ltd', 'private', 'limited', 'india', 'upi', 'to', 'from', 'by', 'payment', 'paid']);
 const nameToks = p => uniq(String(p || '').toLowerCase().replace(/@[a-z0-9.]+/g, ' ').replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(t => t.length >= 2 && !NAME_STOP.has(t) && !/^\d+$/.test(t)));
@@ -2165,7 +2173,7 @@ function payeeSame(a, b) {
 /* what an already-filed SMS became */
 function pastFiling(p) {
   const id = p.done; let e;
-  if (p.status === 'ignored') return { id: p.id, act: 'ignore', amount: p.amount, ts: p.ts };
+  if (p.status === 'ignored') return p.done === 'bulk' ? null : { id: p.id, act: 'ignore', amount: p.amount, ts: p.ts };
   if (!id) return null;
   if ((e = S.exp.find(x => x.id === id))) return e.amount < 0 ? { id, act: 'refund', category: e.category, note: '', acc: e.account, amount: -e.amount, ts: e.ts } : { id, act: 'exp', category: e.category, note: e.remarks, acc: e.account, amount: e.amount, ts: e.ts };
   if ((e = S.inc.find(x => x.id === id)) && e.source === 'Cashback') return { id, act: 'cashback', note: '', acc: e.account, amount: e.amount, ts: e.ts };
@@ -2224,8 +2232,9 @@ ACT.pendPick = el => {
   const p = S.pend.find(x => x.id === el.dataset.id); if (!p) return;
   const pk = payeeFind(p.payee) || {};
   const sg = payeeSuggest(p.payee, p.amount, p.dir, p.id);
-  U.pd = { sg, sgi: sg.length ? 0 : -1, id: p.id, note: pk.note || p.payee || '', act: pk.act && PEND_ACT[p.dir].some(a => a[0] === pk.act) ? pk.act : p.dir === 'credit' ? 'inc' : p.atm ? 'trf' : 'exp', account: p.account || (pk.acc && acc(pk.acc) ? pk.acc : ''), cat: pk.category || guessCat(p.payee) || '', loan: pk.loan || '', to: p.atm ? (live(a => a.type === 'cash')[0] || {}).name || '' : (pk.to && acc(pk.to) ? pk.to : '') };
-  if (sg.length) pdApply(U.pd, p, sg[0].last);
+  const fi = sg.findIndex(x => x.last.act !== 'ignore');
+  U.pd = { sg, sgi: fi, id: p.id, note: pk.note || p.payee || '', act: pk.act && PEND_ACT[p.dir].some(a => a[0] === pk.act) ? pk.act : p.dir === 'credit' ? 'inc' : p.atm ? 'trf' : 'exp', account: p.account || (pk.acc && acc(pk.acc) ? pk.acc : ''), cat: pk.category || guessCat(p.payee) || '', loan: pk.loan || '', to: p.atm ? (live(a => a.type === 'cash')[0] || {}).name || '' : (pk.to && acc(pk.to) ? pk.to : '') };
+  if (fi >= 0) pdApply(U.pd, p, sg[fi].last);
   /* a credit that matches a waiting refund, or says refund / cashback */
   const rm = rfMatch(p), rw = rfWord(p);
   if (rm) { U.pd.act = rm.kind; U.pd.rf = rm.id; if (!U.pd.account && rm.acc) U.pd.account = rm.acc; U.pd.note = ''; }
@@ -2235,7 +2244,8 @@ ACT.pendPick = el => {
 };
 function pdSugBox(P, p) {
   const sg = P.sg || []; if (!sg.length) return '';
-  const top = sg[0], L = top.last, n = sg.reduce((t, x) => t + x.n, 0);
+  const top = sg[0], n = sg.reduce((t, x) => t + x.n, 0), L = sg.map(x => x.last).sort((a, b) => String(b.ts || '').localeCompare(String(a.ts || '')))[0];
+  if (sg.length === 1 && top.last.act === 'ignore') return `<div class="sugbox"><div class="sg-h">🔁 You've had ${n} payment${n === 1 ? '' : 's'} with ${esc(p.payee)}</div><div class="sg-l">Last time ${dLabel(String(L.ts || '').slice(0, 10))} · ${inr(L.amount)} → 🚫 Ignored</div><div class="sg-l mute">Not filled in from that. Pick what this one is below.</div></div>`;
   return `<div class="sugbox"><div class="sg-h">🔁 You've had ${n} payment${n === 1 ? '' : 's'} with ${esc(p.payee)}</div><div class="sg-l">Last time ${dLabel(String(L.ts || '').slice(0, 10))} · ${inr(L.amount)} → ${sgLabel(L)}</div>${sg.length > 1 || P.sgi !== 0 ? `<div class="chips wrap" style="margin-top:8px">${sg.map((x, i) => `<button class="chip ${P.sgi === i ? 'on' : ''}" data-act="pdUse" data-i="${i}">${sgLabel(x.last, 1)} <small>${x.n}× · ${sgAmt(x)}</small></button>`).join('')}</div>` : `<div class="sg-l mute">${top.n}× · usually ${sgAmt(top)} · filled in for you</div>`}</div>`;
 }
 ACT.pdUse = el => { const P = U.pd, p = S.pend.find(x => x.id === P.id), x = (P.sg || [])[+el.dataset.i]; if (!P || !p || !x) return; P.sgi = +el.dataset.i; pdApply(P, p, x.last); const y = $('#shBody') ? $('#shBody').scrollTop : 0; pendForm(); if ($('#shBody')) $('#shBody').scrollTop = y; buzz(6); };
@@ -2265,7 +2275,9 @@ function pendForm() {
       else h += `<div class="hint">🎁 Logged as income · Cashback</div>`;
     }
     if (P.act === 'exp') h += `<div class="lbl">Category</div><div class="chips wrap">${visCats().map(c => chip('cat', c.name, c.icon + ' ' + esc(c.name))).join('')}</div>`;
-    if (['lend', 'repay', 'back', 'borrow'].includes(P.act)) { const dir = ['lend', 'back'].includes(P.act) ? 'owed' : 'owe', ls = S.loans.filter(l => !l.archived && l.dir === dir); h += `<div class="lbl">${dir === 'owed' ? 'Who owes you' : 'Who you owe'}</div><div class="chips wrap">${ls.map(l => chip('loan', l.id, '👤 ' + esc(l.name))).join('')}${['lend', 'borrow'].includes(P.act) ? chip('loan', 'new', '+ New person') : ''}</div>${P.loan === 'new' ? `<input id="pdPerson" value="${esc(p.payee)}" placeholder="Name">` : ''}`; }
+    if (['lend', 'repay', 'back', 'borrow'].includes(P.act)) { const dir = ['lend', 'back'].includes(P.act) ? 'owed' : 'owe', ls = S.loans.filter(l => !l.archived && l.dir === dir); h += `<div class="lbl">${dir === 'owed' ? 'Who owes you' : 'Who you owe'}</div><div class="chips wrap">${ls.map(l => chip('loan', l.id, '👤 ' + esc(l.name))).join('')}${chip('loan', 'new', '+ New person')}</div>${P.loan === 'new' ? `<input id="pdPerson" value="${esc(p.payee)}" placeholder="Name">` : ''}`;
+      if (P.loan === 'new' && ['repay', 'back'].includes(P.act)) { const ea = P.early || ''; h += `<div class="lbl">${P.act === 'repay' ? 'You borrowed this earlier in' : 'You lent this earlier from'}</div><div class="chips wrap">${accs.map(a => `<button class="chip ${ea === a.name ? 'on' : ''}" data-act="pdSet" data-f="early" data-v="${esc(a.name)}">${(a.others ? '👥' : ACC_T[a.type][0]) + ' ' + esc(a.name)}</button>`).join('')}<button class="chip ${ea === '' ? 'on' : ''}" data-act="pdSet" data-f="early" data-v="">Not tracked</button></div><div class="hint">Logs the earlier ${P.act === 'repay' ? 'borrow' : 'loan'} too, so ${P.act === 'repay' ? 'this repay settles it' : 'this settles it'}. "Not tracked" keeps your balances as they are; pick an account only if that money came into it and you never logged it.</div>`; }
+    }
     if (P.act === 'trf') h += `<div class="lbl">${p.dir === 'credit' ? 'From' : 'To'}</div><div class="chips wrap">${acChips('to')}</div>`;
     if (P.act === 'inv') h += `<div class="lbl">Invested into</div><div class="chips wrap">${live(a => a.type === 'investment').map(a => chip('to', a.name, '📈 ' + esc(a.name))).join('')}</div>`;
     const sg = payeeNotes(p.payee, payeeFind(p.payee)).filter(x => x !== P.note);
@@ -2295,7 +2307,15 @@ ACT.pdSave = () => {
   else if (P.act === 'inv') { if (!P.to) return toast('Pick the investment account'); ops.push(up('Investments', { id, ts, from: P.account, amount: a, type: S.cfg.invTypes[0], name: note, to: P.to, remarks: '' })); }
   else {
     let loan = S.loans.find(l => l.id === P.loan);
-    if (P.loan === 'new' || !loan) { if (!['lend', 'borrow'].includes(P.act)) return toast('Pick the person'); const nm = (($('#pdPerson') || {}).value || p.payee).trim(); if (!nm) return toast('Type the name'); loan = { id: uid('L'), name: nm, dir: P.act === 'lend' ? 'owed' : 'owe', note: '', archived: false, created: nowTs() }; ops.push(up('Loans', loan)); }
+    if (P.loan === 'new' || !loan) {
+      if (P.loan !== 'new') return toast('Pick the person');
+      const nm = (($('#pdPerson') || {}).value || p.payee).trim(); if (!nm) return toast('Type the name');
+      const dir = ['lend', 'back'].includes(P.act) ? 'owed' : 'owe';
+      loan = S.loans.find(l => !l.archived && l.dir === dir && l.name.toLowerCase() === nm.toLowerCase());
+      if (!loan) { loan = { id: uid('L'), name: nm, dir, note: '', archived: false, created: nowTs() }; ops.push(up('Loans', loan)); }
+      /* repaying / getting back money that was never logged: log the earlier borrow / loan first (a minute before) */
+      if (['repay', 'back'].includes(P.act)) { const ea = P.early || '', t0 = new Date(Date.parse(ts.replace(' ', 'T')) - 60000), pad = n => String(n).padStart(2, '0'), ts0 = isNaN(t0) ? ts : `${t0.getFullYear()}-${pad(t0.getMonth() + 1)}-${pad(t0.getDate())} ${pad(t0.getHours())}:${pad(t0.getMinutes())}:${pad(t0.getSeconds())}`; ops.push(up('LoanLog', { id: uid('N'), ts: ts0, person: loan.name, action: P.act === 'repay' ? 'Borrow' : 'Lend', amount: a, account: ea, remarks: 'Earlier' + (ea ? ' · ' + ea : ' · not tracked'), loanId: loan.id, ref: '' })); }
+    }
     const action = { lend: 'Lend', borrow: 'Borrow', repay: 'Repay', back: 'Receive' }[P.act];
     ops.push(up('LoanLog', { id, ts, person: loan.name, action, amount: a, account: P.account, remarks: note, loanId: loan.id, ref: '' }));
     P.loan = loan.id;
@@ -2558,11 +2578,13 @@ function phoneCard() {
   <div class="srow"><span class="ic" style="background:var(--soft)">🔋</span><span class="mid"><b>Battery: Unrestricted</b><small>${I.battery ? '✓ Samsung will not stop Ledger' : 'Needed so Samsung does not stop SMS reading'}</small></span>${I.battery ? '' : '<button class="btn sm" data-act="andBattery">Fix</button>'}</div>
   <div class="srow"><span class="ic" style="background:var(--soft)">👆</span><span class="mid"><b>App lock</b><small>${esc(lockSummary())}</small></span><button class="btn sm sec" data-act="spOpen" data-k="security">Change</button></div>
   <div class="srow"><span class="ic" style="background:var(--soft)">🧩</span><span class="mid"><b>Home-screen widgets</b><small>Long-press your home screen → Widgets → Ledger. Four to pick from; they refresh each time you open Ledger.</small></span></div>
+  ${AND && AND.setBeta ? `<div class="srow"><span class="ic" style="background:var(--soft)">🧪</span><span class="mid"><b>Get test builds</b><small>${I.beta ? '✓ On · new test versions are offered here before they go live' : 'Off · only live versions'}</small></span><button class="btn sm sec" data-act="andBeta">${I.beta ? 'Turn off' : 'Turn on'}</button></div>` : ''}
   <button class="btn sec sm" data-act="updCheck">⬆️ Check for app update</button>${U.upd ? `<div class="hint green">Version ${esc(updVer(U.upd))} is ready · <a href="#" data-act="updOpen" style="color:var(--acc);font-weight:800">What's new</a></div>` : ''}
   <div class="hint">SMS are read only on this phone. Only completed debits and credits go to your "to sort" list and your own Google Sheet.</div></div>`;
 }
 ACT.andPerm = () => { try { AND.requestSms(); } catch (e) { } };
 ACT.andBattery = () => { try { AND.openBattery(); } catch (e) { } };
+ACT.andBeta = () => { if (!AND || !AND.setBeta) return toast('Install the newest app from GitHub first'); const on = !andInfo().beta; try { AND.setBeta(on ? '1' : '0'); } catch (e) { } U.upd = null; render(); toast(on ? 'Test builds on' : 'Only live versions now'); try { AND.updateCheck(); } catch (e) { } };
 ACT.andUpd = () => { window.__ledgerManualUpd = true; try { AND.checkUpdate(); toast('Checking…'); } catch (e) { } };
 ACT.andScan = () => {
   let L = []; try { L = JSON.parse(AND.readInbox(30) || '[]'); } catch (e) { return toast('Could not read SMS'); }
@@ -3139,9 +3161,14 @@ function askSheet(q) {
   let h = '';
   if (!U.ask.length) h = `<div class="a-hero"><div class="a-ic">✨</div><b>Ask anything about your money</b><small>Answers come from your own entries, worked out on this phone. Nothing is sent anywhere.</small></div>` + sugHtml();
   else h = U.ask.map(({ q, a }) => `<div class="a-q">${esc(q)}</div><div class="a-a">${a.h}${a.act ? `<button class="btn sec sm" style="margin-top:10px" data-act="${a.act[1]}" data-n="${esc(a.act[2])}" data-k="${esc(a.act[2])}">${esc(a.act[0])} ›</button>` : ''}${a.f ? `<div class="chips wrap" style="margin-top:8px">${a.f.map(x => `<button class="chip" data-act="askQ" data-q="${esc(x)}">${esc(x)}</button>`).join('')}</div>` : ''}</div>${a.sug ? sugHtml() : ''}`).join('') + `<button class="more" data-act="askSug">💡 Show example questions</button>`;
-  openSheet('✨ Ask Ledger', `<div id="askLog">${h}</div><form class="a-bar" id="askF" onsubmit="ACT.askSend();return false"><input id="askIn" placeholder="e.g. Food last month" autocomplete="off" enterkeyhint="send" data-enter="1"><button class="btn sm" type="submit" aria-label="Ask">Ask</button></form>`, 'tall');
+  openSheet('✨ Ask Ledger', `<div id="askLog">${h}</div>`, 'tall', `<form class="a-bar" id="askF" onsubmit="ACT.askSend();return false"><textarea id="askIn" rows="1" placeholder="e.g. Food last month" autocomplete="off" autocapitalize="sentences" enterkeyhint="send" data-enter="1"></textarea><button class="btn sm" type="submit" aria-label="Ask">Ask</button></form>`);
   const body = $('#shBody'); if (body && U.ask.length) { const qs = $$('#askLog .a-q'); const last = qs[qs.length - 1]; if (last) body.scrollTop = last.offsetTop - 8; }
-  const i = $('#askIn'); if (i) i.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); ACT.askSend(); } };
+  const i = $('#askIn'); if (i) {
+    /* the box grows with what you type (up to 4 lines) so the whole question stays visible */
+    const grow = () => { i.style.height = 'auto'; i.style.height = Math.min(i.scrollHeight + 3, 132) + 'px'; };
+    i.oninput = grow;
+    i.onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ACT.askSend(); } };
+  }
 }
 ACT.ask = () => { const q = U.tab === 'home' && $('#view input[data-in=q]') ? $('#view input[data-in=q]').value.trim() : ''; if (q) { U.q = ''; $('#view input[data-in=q]').value = ''; if ($('#list')) $('#list').innerHTML = homeList(); askSheet(q); } else askSheet(); };
 ACT.askQ = el => { const q = el.dataset.q, m = q.match(/^Loan calculator for (.+)$/); if (m) { shut(); S.prefs.calc = Object.assign({}, S.prefs.calc, { price: String(askAmt(m[1].toLowerCase()) || '') }); save(); U.pseg = 'calc'; setTab('goals'); return; } askSheet(q); };
@@ -4194,6 +4221,21 @@ function splash() {
   el.classList.add('go');
   setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 520); }, quick ? 250 : 1250);
 }
+
+/* ---------- keyboard: keep pop-ups and the box you type in above the keyboard ---------- */
+(() => {
+  const vv = window.visualViewport; if (!vv) return;
+  let last = -1;
+  const fit = () => {
+    const kb = Math.max(0, Math.round(innerHeight - vv.height - vv.offsetTop));
+    const k = kb > 60 ? kb : 0; if (k === last) return; last = k;
+    document.documentElement.style.setProperty('--kb', k + 'px');
+    const a = document.activeElement; if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName) && a.closest('#sheet')) setTimeout(() => { try { a.scrollIntoView({ block: 'nearest' }); } catch (e) { } }, 60);
+  };
+  vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); addEventListener('resize', fit);
+})();
+/* the phone shrank the page for the keyboard: bring the box being typed in back into view */
+addEventListener('resize', () => { const a = document.activeElement; if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName)) setTimeout(() => { try { a.scrollIntoView({ block: 'nearest' }); } catch (e) { } }, 80); });
 
 /* ---------- boot ---------- */
 applyTheme(); setupIcons();

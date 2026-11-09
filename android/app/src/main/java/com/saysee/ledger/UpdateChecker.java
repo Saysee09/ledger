@@ -42,6 +42,17 @@ final class UpdateChecker {
 
     static boolean isTest(Context c) { return myName(c).contains("test"); }
 
+    /** "Get test builds": on by default for anyone who has ever run a test build (older live builds were labelled test too) */
+    static boolean beta(Context c) {
+        SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        if (!p.contains("beta")) p.edit().putBoolean("beta", isTest(c)).apply();
+        return p.getBoolean("beta", false) || isTest(c);
+    }
+
+    static void setBeta(Context c, boolean on) {
+        c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean("beta", on).putString("latest", "").apply();
+    }
+
     private static String get(String url) throws Exception {
         HttpURLConnection h = (HttpURLConnection) new URL(url).openConnection();
         h.setConnectTimeout(10000);
@@ -63,7 +74,7 @@ final class UpdateChecker {
         try {
             JSONArray a = new JSONArray(get(API));
             int mine = myCode(c);
-            boolean test = isTest(c);
+            boolean test = beta(c);
             JSONObject best = null;
             int bestN = mine;
             for (int i = 0; i < a.length(); i++) {

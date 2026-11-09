@@ -593,6 +593,8 @@ public class MainActivity extends AppCompatActivity {
             try {
                 JSONObject o = new JSONObject();
                 o.put("version", getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
+                o.put("code", UpdateChecker.myCode(MainActivity.this));
+                o.put("beta", UpdateChecker.beta(MainActivity.this));
                 o.put("sms", has(Manifest.permission.RECEIVE_SMS) && has(Manifest.permission.READ_SMS));
                 o.put("smsLast", SmsStore.last(MainActivity.this));
                 o.put("notif", Build.VERSION.SDK_INT < 33 || has(Manifest.permission.POST_NOTIFICATIONS));
@@ -673,6 +675,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         /** newest version found on GitHub (JSON) or "" */
+        /** turn "Get test builds" on or off */
+        @JavascriptInterface
+        public void setBeta(String on) { UpdateChecker.setBeta(MainActivity.this, "1".equals(on) || "true".equals(on)); }
+
         @JavascriptInterface
         public String updateInfo() { return UpdateChecker.saved(MainActivity.this); }
 
