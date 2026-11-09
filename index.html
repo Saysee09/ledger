@@ -414,6 +414,7 @@ html.kbd .nav,html.kbd .fab{display:none!important}
 .igp>.mid{flex:1;min-width:0;display:flex;flex-direction:column;align-items:stretch}.igp>.mid b,.igp>.mid small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.igp .amt{flex:0 0 auto;padding-left:8px}.igp .amt{margin-left:auto}
 .nickb{font:inherit;color:inherit;background:none;border:0;padding:0;font-weight:700;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer}.nickb span{font-size:.8em;text-decoration:none}
 .recc .srow small{white-space:normal}.recc .btn.sm{padding:0 12px;flex:0 0 auto}
+.stackbar{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--soft);gap:2px}.stackbar i{display:block;height:100%}
 .sh-foot{flex:0 0 auto;background:var(--card);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
 .a-bar{display:flex;gap:8px;align-items:flex-end;margin:0}
 .a-bar textarea{flex:1;min-width:0;display:block;min-height:48px;max-height:132px;resize:none;overflow-y:auto;background:var(--soft);border:1.5px solid transparent;border-radius:14px;padding:12px 14px;font:inherit;font-size:16px;line-height:1.35;color:var(--ink);-webkit-appearance:none;appearance:none}
@@ -1779,17 +1780,58 @@ function renderMoney() {
 }
 ACT.mseg = el => { U.mseg = el.dataset.k; render(); };
 ACT.new = el => compose(el.dataset.k);
+/* ---------- investments: portfolio, returns, gold by grams, SIPs ---------- */
+const INV_IC = t => /gold|silver/i.test(t) ? '🪙' : /mutual|mf|sip/i.test(t) ? '📊' : /fd|rd|ppf|deposit|nps|epf/i.test(t) ? '🏦' : /etf|index/i.test(t) ? '🧺' : /crypto/i.test(t) ? '🪙' : '📈';
+const isGold = x => /gold/i.test(x.type || '') || /gold/i.test(x.name || '');
+/* value now: saved value, or grams × today's gold rate, else what you put in */
+function holdVal(x) {
+  const HV = S.cfg.holdings || {}, v = HV[x.k], rate = +((HV._gold || {}).rate) || 0;
+  if (v && +v.g > 0 && rate > 0 && isGold(x)) return { v: r2(v.g * rate), at: (HV._gold || {}).at || v.at, est: false, g: +v.g };
+  if (v && v.v != null) return { v: +v.v, at: v.at, est: false, g: +v.g || 0 };
+  return { v: x.put, at: '', est: true, g: 0 };
+}
+/* yearly return (XIRR) from every buy, sale and today's value */
+function xirr(flows) {
+  if (flows.length < 2 || !flows.some(f => f.a < 0) || !flows.some(f => f.a > 0)) return null;
+  const t0 = Date.parse(flows[0].d), yrs = f => (Date.parse(f.d) - t0) / 864e5 / 365;
+  if (yrs(flows[flows.length - 1]) < 60 / 365) return null; /* too new for a yearly figure */
+  let r = .1;
+  for (let i = 0; i < 60; i++) {
+    let f = 0, df = 0; flows.forEach(x => { const t = yrs(x), p = Math.pow(1 + r, t); f += x.a / p; df -= t * x.a / (p * (1 + r)); });
+    if (!isFinite(f) || !isFinite(df) || df === 0) return null; const nr = r - f / df; if (!isFinite(nr) || nr <= -.99) return null; if (Math.abs(nr - r) < 1e-7) return nr; r = nr;
+  }
+  return null;
+}
+function holdFlows(keys, valNow) {
+  const F = S.inv.filter(e => keys.includes((e.type || '') + '|' + (e.name || '(no name)'))).map(e => ({ d: e.ts.slice(0, 10), a: isBuy(e) ? -e.amount : +e.amount })).sort((a, b) => a.d.localeCompare(b.d));
+  if (valNow > 0) F.push({ d: today(), a: valNow }); return F;
+}
+const pct = (x, d = 1) => (x >= 0 ? '+' : '−') + Math.abs(Math.round(x * 100 * Math.pow(10, d)) / Math.pow(10, d)) + '%';
 function invView() {
-  const all = S.inv.filter(isBuy), sold = S.inv.filter(e => !isBuy(e)), cost = sum(sold.map(e => ({ amount: e.cost }))), got = sum(sold), tot = r2(sum(all) - cost), mon = sum(all.filter(e => inP(e, U.month))), ia = live(a => a.type === 'investment');
-  let h = `<div class="hero" style="--hc:#2F7BF5"><div class="hl">Still invested</div><div class="hv">${inrS(tot)}</div><div class="hs"><b>${inr(mon)}</b> put in during ${mLabel(U.month)}${ia.length ? ' · Accounts worth <b>' + inr(ia.reduce((s, a) => s + (C.bal[a.name] || 0), 0)) + '</b>' : ''}</div>${sold.length ? `<div class="hs">Sold / withdrawn <b>${inr(got)}</b> · profit booked <b class="${got - cost >= 0 ? 'green' : 'red'}">${got - cost >= 0 ? '+' : '−'}${inr(Math.abs(got - cost))}</b></div>` : ''}</div>`;
-  if (ia.length) h += `<div class="strip">${ia.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>📈 ${esc(a.name)}</span><b>${inr(C.bal[a.name])}</b><small>Tap to update value</small></button>`).join('')}</div>`;
+  const sold = S.inv.filter(e => !isBuy(e)), cost = sum(sold.map(e => ({ amount: e.cost }))), got = sum(sold), mon = sum(S.inv.filter(e => isBuy(e) && inP(e, U.month)));
+  const hl = holdings().filter(x => x.put > .004).map(x => Object.assign(x, { val: holdVal(x), first: (S.inv.filter(e => isBuy(e) && (e.type + '|' + (e.name || '(no name)')) === x.k).map(e => e.ts).sort()[0] || '').slice(0, 10) }));
+  const put = r2(hl.reduce((a, x) => a + x.put, 0)), now = r2(hl.reduce((a, x) => a + x.val.v, 0)), gain = r2(now - put), unv = hl.filter(x => x.val.est).length;
+  const xr = xirr(holdFlows(hl.map(x => x.k), now));
+  let h = `<div class="hero" style="--hc:#2F7BF5"><div class="hl">Portfolio · worth now</div><div class="hv">${inrS(now)}</div>
+  <div class="hs">Invested <b>${inr(put)}</b> · Gain <b class="${gain >= 0 ? 'green' : 'red'}">${gain >= 0 ? '+' : '−'}${inr(Math.abs(gain))}${put ? ' (' + pct(gain / put) + ')' : ''}</b>${xr != null ? ' · <b>' + pct(xr) + '</b> a year' : ''}</div>
+  <div class="hs"><b>${inr(mon)}</b> put in during ${mLabel(U.month)}${sold.length ? ` · booked <b class="${got - cost >= 0 ? 'green' : 'red'}">${got - cost >= 0 ? '+' : '−'}${inr(Math.abs(got - cost))}</b> on sales` : ''}</div>
+  ${unv ? `<div class="hs" style="color:var(--amber)">${unv} holding${unv === 1 ? '' : 's'} without a current value · counted at what you put in</div>` : ''}</div>`;
+  { const ia = live(a => a.type === 'investment'); if (ia.length) h += `<div class="strip">${ia.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>📈 ${esc(a.name)}</span><b>${inr(C.bal[a.name])}</b><small>Account · tap to update</small></button>`).join('')}</div>`; }
   h += `<div class="btns" style="margin:0 0 14px"><button class="btn" data-act="new" data-k="inv">+ Log investment</button><button class="btn sec" data-act="sellPick">↩ Sell / withdraw</button></div>`;
-  if (tot > 0) {
-    const ty = {}; holdings().forEach(x => { if (x.put > .004) ty[x.type] = (ty[x.type] || 0) + x.put; });
-    const cols = ['#2F7BF5', '#12A150', '#F59E0B', '#A855F7', '#EC4899', '#14B8A6', '#64748B'];
-    h += `<div class="card"><h2>By type</h2>${Object.entries(ty).sort((a, b) => b[1] - a[1]).map(([t, v], i) => `<div class="brow"><div class="h"><span><i class="dot" style="background:${cols[i % cols.length]}"></i>${esc(t)}</span><span><b>${inr(v)}</b> <small class="mute">${Math.round(v / tot * 100)}%</small></span></div><div class="bar"><i style="width:${v / tot * 100}%;background:${cols[i % cols.length]}"></i></div></div>`).join('')}</div>`;
-    const hl = holdings().filter(x => x.put > .004), HV = S.cfg.holdings || {}, valued = hl.filter(x => HV[x.k]), inV = r2(valued.reduce((a, x) => a + x.put, 0)), nowV = r2(valued.reduce((a, x) => a + HV[x.k].v, 0));
-    if (hl.length) h += `<div class="card"><h2>Holdings <small>tap one to update its value</small></h2>${valued.length ? `<div class="kv" style="margin-bottom:8px"><div><span>Put in (valued holdings)</span><b>${inr(inV)}</b></div><div><span>Worth now</span><b>${inr(nowV)}</b></div><div><span>Gain</span><b class="${nowV >= inV ? 'green' : 'red'}">${nowV >= inV ? '+' : '−'}${inr(Math.abs(nowV - inV))}${inV ? ' · ' + (nowV >= inV ? '+' : '−') + Math.abs(Math.round((nowV - inV) / inV * 1000) / 10) + '%' : ''}</b></div></div>` : ''}${hl.map(x => { const v = HV[x.k], g = v ? v.v - x.put : 0; return `<button class="srow" data-act="holdVal" data-k="${esc(x.k)}" data-sell="1"><span class="mid"><b>${esc(x.name)}</b><small>${esc(x.type)}${x.acc ? ' · ' + esc(x.acc) : ''} · put in ${inr(x.put)}${v ? ' · updated ' + esc(dLabel(v.at)) : ''}</small></span><span style="text-align:right"><span class="amt">${v ? inr(v.v) : '<span class="mute" style="font-size:.78rem">Add value</span>'}</span>${v ? `<br><small class="${g >= 0 ? 'green' : 'red'}" style="font-size:.72rem;font-weight:800">${g >= 0 ? '+' : '−'}${x.put ? Math.abs(Math.round(g / x.put * 1000) / 10) : 0}%</small>` : ''}</span></button>`; }).join('')}</div>`;
+  /* SIPs running (from Plan → Bills) */
+  const sips = S.rem.filter(r => r.active !== false && r.kind === 'sip');
+  h += `<div class="card"><h2>📆 SIPs <small>${sips.length ? inr(sips.reduce((a, r) => a + remAmt(r) * (r.unit === 'month' ? 1 / (+r.every || 1) : r.unit === 'week' ? 4.33 / (+r.every || 1) : r.unit === 'year' ? 1 / 12 / (+r.every || 1) : 0), 0)) + ' a month' : ''}</small></h2>${sips.length ? sips.map(r => `<button class="srow" data-act="remEdit" data-id="${esc(r.id)}" style="width:100%;text-align:left"><span class="ic" style="background:#2F7BF51f">📊</span><span class="mid"><b>${esc(r.name)}</b><small>${inr(remAmt(r))} · ${remRepeat(r).toLowerCase()} · next ${dLabel(remDueDate(r))}${r.invTo ? ' · into ' + esc(r.invTo) : ''}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`).join('') : '<div class="hint" style="margin-top:0">No SIP added. Add one to get a reminder (it can log itself on the date).</div>'}<button class="btn sec sm" data-act="sipNew" style="margin-top:8px">+ Add SIP</button></div>`;
+  if (hl.length) {
+    /* allocation by what it is worth now */
+    const ty = {}; hl.forEach(x => ty[x.type || 'Other'] = (ty[x.type || 'Other'] || 0) + x.val.v);
+    const cols = ['#2F7BF5', '#12A150', '#F59E0B', '#A855F7', '#EC4899', '#14B8A6', '#64748B'], tt = Object.entries(ty).sort((a, b) => b[1] - a[1]);
+    h += `<div class="card"><h2>Where it is</h2><div class="stackbar">${tt.map(([t, v], i) => `<i style="width:${now ? v / now * 100 : 0}%;background:${cols[i % cols.length]}"></i>`).join('')}</div>${tt.map(([t, v], i) => `<div class="brow" style="margin-top:8px"><div class="h"><span><i class="dot" style="background:${cols[i % cols.length]}"></i>${INV_IC(t)} ${esc(t)}</span><span><b>${inr(v)}</b> <small class="mute">${now ? Math.round(v / now * 100) : 0}%</small></span></div></div>`).join('')}</div>`;
+    const HV = S.cfg.holdings || {}, gr = HV._gold || {};
+    h += `<div class="card"><h2 style="display:block">Holdings<small style="display:block;margin-top:3px">Tap one to update its value${hl.some(isGold) ? ' or grams' : ''}</small></h2>`;
+    if (hl.some(isGold)) h += `<button class="srow" data-act="goldRate" style="width:100%;text-align:left"><span class="ic" style="background:#F59E0B1f">🪙</span><span class="mid"><b>Gold rate ${gr.rate ? inr(gr.rate) + '/g' : 'not set'}</b><small>${gr.rate ? 'Updated ' + esc(dLabel(gr.at)) + ' · all gold holdings use it' : 'Set today\'s rate once; gold holdings with grams update by themselves'}</small></span><span class="ago">${gr.rate ? 'Update' : 'Set'}</span></button>`;
+    h += hl.map(x => { const v = x.val, g = r2(v.v - x.put), xr1 = v.est ? null : xirr(holdFlows([x.k], v.v)), stale = !v.est && v.at && dayDiff(v.at, today()) > 31;
+      return `<button class="srow" data-act="holdVal" data-k="${esc(x.k)}" style="width:100%;text-align:left"><span class="ic" style="background:#2F7BF51f">${INV_IC(x.type)}</span><span class="mid"><b>${esc(x.name)}</b><small>${esc(x.type)}${v.g ? ' · ' + v.g + ' g' : ''} · invested ${inr(x.put)}${x.first ? ' since ' + esc(mLabel(x.first.slice(0, 7), 1)) + ' ' + x.first.slice(2, 4) : ''}${stale ? ' · <span style="color:var(--amber)">value from ' + esc(dLabel(v.at)) + '</span>' : ''}</small></span><span style="text-align:right;flex:0 0 auto"><span class="amt">${v.est ? '<span class="mute" style="font-size:.78rem">Add value</span>' : inr(v.v)}</span>${v.est ? '' : `<br><small class="${g >= 0 ? 'green' : 'red'}" style="font-size:.72rem;font-weight:800">${x.put ? pct(g / x.put) : ''}${xr1 != null ? ' · ' + pct(xr1, 0) + '/yr' : ''}</small>`}</span></button>`; }).join('');
+    h += `<div class="hint">"a year" is your yearly return (XIRR): it counts when each rupee went in, so SIPs are judged fairly.</div></div>`;
   }
   const list = S.inv.filter(e => inP(e, U.month)).sort((a, b) => b.ts.localeCompare(a.ts));
   h += monthNav() + (list.length ? groupDays(list, e => isBuy(e) ? row({ sheet: 'Investments', id: e.id, icon: '📈', color: '#2F7BF5', t: e.name || e.type, s: e.type + ' · ' + e.from + (e.to ? ' → ' + e.to : ''), amt: e.amount, sign: 0, cls: 'blue' }) : row({ sheet: 'Investments', id: e.id, icon: '💹', color: '#11A04F', t: 'Sold · ' + (e.name || e.type), s: (e.from || 'Not tracked') + ' → ' + e.to + ' · ' + (e.amount - e.cost >= 0 ? 'profit ' : 'loss ') + fmtINR(Math.abs(e.amount - e.cost)), amt: e.amount, sign: 1 }), false) : `<div class="empty">No investments in ${mLabel(U.month)}.</div>`);
@@ -1845,15 +1887,20 @@ ACT.slSave = () => {
   const g = r2(got - cost); toast(fmtINR(got) + ' into ' + L.to + ' · ' + (g >= 0 ? 'profit ' : 'loss ') + fmtINR(Math.abs(g)));
 };
 ACT.holdVal = el => {
-  const x = holdings().find(h => h.k === el.dataset.k), v = (S.cfg.holdings || {})[x.k]; U.hv = x.k;
+  const x = holdings().find(h => h.k === el.dataset.k), v = (S.cfg.holdings || {})[x.k], gold = isGold(x), rate = +(((S.cfg.holdings || {})._gold || {}).rate) || 0; U.hv = x.k;
   openSheet(esc(x.name), `<div class="kv"><div><span>Put in</span><b>${inr(x.put)}</b></div><div><span>Type</span><b>${esc(x.type)}</b></div>${x.acc ? `<div><span>Held in</span><b>${esc(x.acc)}</b></div>` : ''}</div>
-  <div class="lbl">Value now (from your Groww / bank app)</div><label class="amtbox"><span>₹</span><input id="hvAmt" inputmode="decimal" value="${v ? v.v : ''}" placeholder="0"></label>
+  ${gold ? `<div class="lbl">Grams you hold</div><input id="hvG" inputmode="decimal" value="${v && v.g ? v.g : ''}" placeholder="e.g. 2.5" data-in="hvG"><div class="hint" id="hvGh">${rate ? 'At ' + inr(rate) + '/g' : 'Set the gold rate on the Invest page and this updates by itself'}</div>` : ''}
+  <div class="lbl">Value now (from your Groww / bank app)</div><label class="amtbox"><span>₹</span><input id="hvAmt" inputmode="decimal" value="${v && v.v != null ? v.v : ''}" placeholder="0"></label>
   <button class="btn big" data-act="hvSave">Save value</button><button class="btn sec" data-act="sellOpen" data-k="${esc(x.k)}">↩ Sold / withdrew this</button>${v ? '<button class="btn dng" data-act="hvDel">Remove value</button>' : ''}`);
 };
+IN.hvG = t => { const g = parseAmt(t.value), rate = +(((S.cfg.holdings || {})._gold || {}).rate) || 0; if (g > 0 && rate > 0) { $('#hvAmt').value = r2(g * rate); amtFmt($('#hvAmt')); $('#hvGh').textContent = g + ' g × ' + fmtINR(rate) + '/g'; } };
+ACT.goldRate = () => { const gr = ((S.cfg.holdings || {})._gold) || {}; openSheet('🪙 Gold rate today', `<div class="lbl" style="margin-top:0">Rate per gram ₹ (24K or what you hold)</div><label class="amtbox"><span>₹</span><input id="grIn" inputmode="decimal" value="${gr.rate || ''}" placeholder="e.g. 7,800"></label><div class="hint center">Every gold holding with grams saved is valued at grams × this rate.</div><button class="btn big" data-act="grSave">Save rate</button>`); };
+ACT.grSave = () => { const r = parseAmt($('#grIn').value); if (!(r > 0)) return toast('Enter the rate'); commit([cfgOp('holdings', Object.assign({}, S.cfg.holdings, { _gold: { rate: r, at: today() } }))]); shut(); render(); toast('Gold rate saved'); };
+ACT.sipNew = () => remSheet(null, { kind: 'sip', name: 'SIP', amount: '', every: 1, unit: 'month', next: nextFirst(), auto: true });
 ACT.hvSave = () => {
-  const v = parseAmt($('#hvAmt').value); if (isNaN(v) || v < 0) return toast('Enter the value');
-  const H = Object.assign({}, S.cfg.holdings, { [U.hv]: { v, at: today() } }); commit([cfgOp('holdings', H)]);
-  const x = holdings().find(h => h.k === U.hv), same = x && x.acc ? holdings().filter(h => h.acc === x.acc) : [];
+  const v = parseAmt($('#hvAmt').value), g = $('#hvG') ? parseAmt($('#hvG').value) : NaN; if (isNaN(v) || v < 0) return toast('Enter the value');
+  const H = Object.assign({}, S.cfg.holdings, { [U.hv]: Object.assign({ v, at: today() }, g > 0 ? { g } : {}) }); commit([cfgOp('holdings', H)]);
+  const x = holdings().find(h => h.k === U.hv), same = x && x.acc ? holdings().filter(h => h.acc === x.acc && h.put > .004) : [];
   if (same.length && same.every(h => H[h.k])) {
     const tot = r2(same.reduce((a, h) => a + H[h.k].v, 0)), d = r2(tot - (C.bal[x.acc] || 0));
     if (Math.abs(d) > .004 && confirm('All holdings in ' + x.acc + ' now add up to ' + fmtINR(tot) + '. Update ' + x.acc + "'s value to match?")) commit([cfgOp('matched', Object.assign({}, S.cfg.matched, { [x.acc]: nowTs() })), up('Adjustments', { id: uid('J'), ts: nowTs(), account: x.acc, amount: d, remarks: 'Value updated to ' + fmtINR(tot) + ' (sum of holdings)' })]);

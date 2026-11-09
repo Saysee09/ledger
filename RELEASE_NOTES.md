@@ -1,6 +1,7 @@
 ## Ledger v8.7 · What's new
 
 ## Newest
+- **📈 Investments, rebuilt** (Money → Invest): portfolio worth now vs invested, gain and **yearly return (XIRR)** overall and per holding, "Where it is" split by type, **🪙 gold by grams × today's rate**, and your **SIPs** with + Add SIP
 - **✏️ Payee nicknames**: tap the payee name on any bank SMS (or in Settings → Bank SMS → what Ledger learned) and rename it, e.g. Roppen Transpor → Rapido. Shown everywhere, and search finds it
 - **🔎 Smart search** on Expenses: `uber >200` · `food last month` · `100-300` · `5 nov` · `oct` · `#evol` · `under 50`
 - **🔁 Repeat payments spotted** (Plan → Bills, and a heads-up in the bell): rent, subscriptions, recharges found from your history. **+ Remind** turns one into a reminder; ✕ hides it for good
