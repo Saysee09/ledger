@@ -1,6 +1,9 @@
 ## Brokeless v9.0 · What's new
 
 - **Ledger is now Brokeless** 💸 Same app, same data, new name
+- **🔐 Sign in with Google**: new users get a private Brokeless Sheet in their own Google Drive. Use it on any phone or laptop; nobody else can see it
+- **New-user setup** with clean defaults: bank, cash and card, default categories, generic bill presets
+- **💬 Feedback** now reaches the app maker's inbox
 
 - **📥 Import old data** (Settings → Import old data): expenses from a CSV or rows pasted from Excel / Google Sheets (Date, Amount, Category, Account, Note), and **salary / income month by month** (Month, Amount). Template to download, preview before importing, duplicates skipped, old entries never disturb today's balances
 - **💬 Send feedback** (Settings → Help us improve): idea, problem or like, with an optional reply email. It goes straight to the app maker's inbox

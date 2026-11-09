@@ -29,6 +29,12 @@ import android.webkit.WebView;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.IntentSenderRequest;
+import com.google.android.gms.auth.api.identity.AuthorizationRequest;
+import com.google.android.gms.auth.api.identity.AuthorizationResult;
+import com.google.android.gms.auth.api.identity.Identity;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.Scope;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -92,6 +98,34 @@ public class MainActivity extends AppCompatActivity {
                 fileCb.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(r.getResultCode(), r.getData()));
                 fileCb = null;
             });
+
+    /** Google Drive access: the user's OK screen comes back here */
+    private final ActivityResultLauncher<IntentSenderRequest> driveAsk = registerForActivityResult(
+            new ActivityResultContracts.StartIntentSenderForResult(), r -> {
+                try {
+                    AuthorizationResult ar = Identity.getAuthorizationClient(this).getAuthorizationResultFromIntent(r.getData());
+                    driveDone(ar.getAccessToken(), ar.getAccessToken() == null ? "Sign-in cancelled" : "");
+                } catch (Exception e) { driveDone(null, "Sign-in cancelled"); }
+            });
+
+    private void driveDone(String tok, String err) { js("window.onDriveToken&&onDriveToken(" + q(tok) + "," + q(err) + ")"); }
+
+    /** asks Google for a Drive token (only files Brokeless makes). Silent when the user already said yes. */
+    private void driveAuth(boolean interactive) {
+        try {
+            java.util.List<Scope> sc = java.util.Arrays.asList(new Scope("https://www.googleapis.com/auth/drive.file"), new Scope("email"), new Scope("profile"), new Scope("openid"));
+            AuthorizationRequest req = AuthorizationRequest.builder().setRequestedScopes(sc).build();
+            Identity.getAuthorizationClient(this).authorize(req)
+                    .addOnSuccessListener(res -> {
+                        if (res.hasResolution() && res.getPendingIntent() != null) {
+                            if (!interactive) { driveDone(null, "needs-consent"); return; }
+                            try { driveAsk.launch(new IntentSenderRequest.Builder(res.getPendingIntent().getIntentSender()).build()); }
+                            catch (Exception e) { driveDone(null, "Could not open Google sign-in"); }
+                        } else driveDone(res.getAccessToken(), res.getAccessToken() == null ? "No token from Google" : "");
+                    })
+                    .addOnFailureListener(e -> driveDone(null, e instanceof ApiException ? "Google sign-in error " + ((ApiException) e).getStatusCode() + ". Check the phone has Google Play services." : String.valueOf(e.getMessage())));
+        } catch (Exception e) { driveDone(null, String.valueOf(e.getMessage())); }
+    }
 
     private final ActivityResultLauncher<String[]> permAsk = registerForActivityResult(
             new ActivityResultContracts.RequestMultiplePermissions(), r -> js("window.onLedgerPerm&&onLedgerPerm()"));
@@ -683,6 +717,10 @@ public class MainActivity extends AppCompatActivity {
             if (!v.isEmpty()) up.edit().remove("justUpdated").apply();
             return v;
         }
+
+        /** Google Drive sign-in for "Sign in with Google" (Drive mode). "1" = may show the account / OK screen */
+        @JavascriptInterface
+        public void driveAuth(String interactive) { ui.post(() -> MainActivity.this.driveAuth("1".equals(interactive))); }
 
         /** turn "Get test builds" on or off */
         @JavascriptInterface

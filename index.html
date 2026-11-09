@@ -534,7 +534,7 @@ const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings',
 /* Your Sheet and Google sign-in client (safe to be public: neither opens data without your Google account or secret key) */
 const CLOUD = { url: '__SHEET_URL__', clientId: '__WEB_CLIENT_ID__' };
 /* feedback inbox: a small script on the owner's Google account; users never see where it goes */
-const FEEDBACK = { url: '__FEEDBACK_URL__' };
+const FEEDBACK = { url: 'https://script.google.com/macros/s/AKfycbySVWBIS19EnBmGYOGPmcAZET9eKBUqw4oqpW3EvzS75K32tWarvKtMXToExs1PL_P3JA/exec' };
 const fbOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(FEEDBACK.url);
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
@@ -645,11 +645,208 @@ const isSplit = id => S.loan.some(l => l.ref === id && l.action === 'Lend');
 const myX = e => !isOthers(e.account) || !!e.mine;
 const isBuy = e => e.kind !== 'Sell';
 
+
+/* =========================================================
+   DRIVE MODE: Sign in with Google → a private "Brokeless" Sheet in the user's own Drive.
+   No server: the app talks to Google directly with the user's token (scope drive.file = only files this app made).
+   ========================================================= */
+const GLOGO = '<svg viewBox="0 0 48 48" width="22" height="22" style="vertical-align:-5px;margin-right:6px"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.6-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.6-.4-3.5z"/></svg>';
+const GCLIENT = '420501779100-n7reb6b0oilrg4bele7s8r6i4qg59054.apps.googleusercontent.com';
+const GSCOPE = 'openid email profile https://www.googleapis.com/auth/drive.file';
+const isDrive = () => !!(S.drive && S.drive.id);
+const linked = () => isDrive() || !!(S.url && S.key);
+/* same tabs and columns as the Sheet script, so a Drive Sheet looks like the classic one */
+const DSHEETS = {
+  Expenses: [['ts', 'Timestamp'], ['account', 'Payment Method'], ['amount', 'Amount'], ['category', 'Category'], ['remarks', 'Remarks'], ['photo', 'Photo'], ['id', 'ID'], ['payee', 'Payee'], ['mine', 'For Me']],
+  Income: [['ts', 'Timestamp'], ['account', 'Account'], ['amount', 'Amount'], ['source', 'Source'], ['remarks', 'Remarks'], ['id', 'ID'], ['payee', 'Payee']],
+  Transfers: [['ts', 'Timestamp'], ['from', 'From'], ['to', 'To'], ['amount', 'Amount'], ['remarks', 'Remarks'], ['id', 'ID']],
+  Investments: [['ts', 'Timestamp'], ['from', 'Paid From'], ['amount', 'Amount'], ['type', 'Type'], ['name', 'Name'], ['to', 'Invested Into'], ['remarks', 'Remarks'], ['id', 'ID'], ['kind', 'Kind'], ['cost', 'Cost']],
+  EMILog: [['ts', 'Timestamp'], ['emi', 'EMI'], ['account', 'Paid From'], ['amount', 'Amount'], ['period', 'For Month'], ['remarks', 'Remarks'], ['emiId', 'EMI ID'], ['id', 'ID']],
+  GoalLog: [['ts', 'Timestamp'], ['goal', 'Goal'], ['action', 'Action'], ['amount', 'Amount'], ['account', 'Account'], ['remarks', 'Remarks'], ['goalId', 'Goal ID'], ['ref', 'Ref'], ['id', 'ID']],
+  LoanLog: [['ts', 'Timestamp'], ['person', 'Person'], ['action', 'Action'], ['amount', 'Amount'], ['account', 'Account'], ['remarks', 'Remarks'], ['loanId', 'Loan ID'], ['ref', 'Ref'], ['id', 'ID']],
+  Adjustments: [['ts', 'Timestamp'], ['account', 'Account'], ['amount', 'Amount'], ['remarks', 'Remarks'], ['id', 'ID']],
+  Accounts: [['name', 'Name'], ['type', 'Type'], ['opening', 'Opening Balance'], ['openingDate', 'Balance As Of'], ['archived', 'Archived'], ['order', 'Order'], ['id', 'ID'], ['others', 'Held For Others'], ['keptIn', 'Kept In'], ['phone', 'WhatsApp'], ['l4', 'SMS Digits'], ['billDay', 'Bill Day']],
+  Goals: [['name', 'Name'], ['kind', 'Type'], ['target', 'Target'], ['account', 'Account'], ['icon', 'Icon'], ['color', 'Color'], ['archived', 'Archived'], ['created', 'Created'], ['id', 'ID'], ['deadline', 'Reach By']],
+  EMIs: [['name', 'Name'], ['amount', 'Amount'], ['dueDay', 'Due Day'], ['account', 'Account'], ['startMonth', 'Start Month'], ['total', 'Total EMIs'], ['paidBefore', 'Paid Before'], ['active', 'Active'], ['note', 'Note'], ['id', 'ID']],
+  Loans: [['name', 'Person'], ['dir', 'Direction'], ['note', 'Note'], ['archived', 'Archived'], ['created', 'Created'], ['id', 'ID'], ['acct', 'Held Account']],
+  Reminders: [['name', 'Name'], ['kind', 'Kind'], ['amount', 'Amount'], ['account', 'Paid From'], ['category', 'Category'], ['invType', 'Invest Type'], ['invTo', 'Invested Into'], ['every', 'Every'], ['unit', 'Unit'], ['next', 'Next Due'], ['time', 'Time'], ['auto', 'Auto Log'], ['cal', 'Calendar'], ['active', 'Active'], ['snooze', 'Snoozed To'], ['lastDone', 'Last Done'], ['note', 'Note'], ['id', 'ID'], ['then', 'Then Amount'], ['thenFrom', 'New Price From']],
+  Pending: [['ts', 'Timestamp'], ['amount', 'Amount'], ['dir', 'Direction'], ['payee', 'Payee'], ['bank', 'Bank'], ['l4', 'Digits'], ['account', 'Account'], ['card', 'Card'], ['atm', 'ATM'], ['ref', 'Ref'], ['status', 'Status'], ['done', 'Filed As'], ['raw', 'Message'], ['id', 'ID']],
+  Deleted: [['ts', 'Deleted At'], ['what', 'What'], ['amount', 'Amount'], ['tab', 'Tab'], ['date', 'Entry Date'], ['sms', 'SMS'], ['data', 'Data'], ['id', 'ID']]
+};
+const DTITLE = { EMILog: 'EMI Log', GoalLog: 'Goal Log', LoanLog: 'Loan Log', Pending: 'Bank SMS', Deleted: 'Recently deleted' };
+const dTab = k => DTITLE[k] || k, D_ORDER = Object.keys(DSHEETS), D_CFG = 'Settings';
+const D_NUM = new Set(['amount', 'opening', 'target', 'dueDay', 'total', 'paidBefore', 'order', 'every', 'cost', 'billDay', 'then']);
+const D_BOOL = new Set(['archived', 'active', 'others', 'auto', 'cal', 'card', 'atm', 'mine']);
+const D_DATE = new Set(['ts', 'openingDate', 'created', 'next', 'snooze', 'lastDone', 'deadline', 'thenFrom', 'period', 'startMonth', 'date']);
+/* a date someone typed by hand in the Sheet comes back as a serial number */
+function dSerial(v, k) {
+  const d = new Date(Date.UTC(1899, 11, 30) + Math.round(v * 864e5)), y = d.getUTCFullYear(), m = p2(d.getUTCMonth() + 1), dd = p2(d.getUTCDate());
+  if (k === 'period' || k === 'startMonth') return y + '-' + m;
+  if (['next', 'snooze', 'lastDone', 'deadline', 'thenFrom', 'date'].includes(k)) return y + '-' + m + '-' + dd;
+  return y + '-' + m + '-' + dd + ' ' + p2(d.getUTCHours()) + ':' + p2(d.getUTCMinutes()) + ':' + p2(d.getUTCSeconds());
+}
+function dCell(k, v) {
+  if (v === '' || v == null) return D_NUM.has(k) ? 0 : D_BOOL.has(k) ? false : '';
+  if (D_BOOL.has(k)) return v === true || /^(true|yes|1)$/i.test(String(v));
+  if (D_NUM.has(k)) { const n = typeof v === 'number' ? v : parseFloat(String(v).replace(/[,₹\s]/g, '')); return isFinite(n) ? n : 0; }
+  if (D_DATE.has(k) && typeof v === 'number') return dSerial(v, k);
+  return String(v);
+}
+
+/* ---- the user's Google token: Android asks the phone, the web uses Google's sign-in pop-up ---- */
+let dTok = null, dTokWait = null;
+function gTokenAndroid(interactive) {
+  return new Promise((ok, no) => {
+    const t = setTimeout(() => { window.onDriveToken = null; no(new Error('Google sign-in did not answer')); }, interactive ? 180000 : 25000);
+    window.onDriveToken = (tok, err) => { clearTimeout(t); window.onDriveToken = null; tok ? ok(tok) : no(Object.assign(new Error(err || 'Sign-in cancelled'), { consent: err === 'needs-consent' })); };
+    try { AND.driveAuth(interactive ? '1' : '0'); } catch (e) { clearTimeout(t); no(new Error('Update the Brokeless phone app to sign in with Google')); }
+  });
+}
+let gTokClient = null;
+async function gTokenWeb(interactive) {
+  await gisLoad();
+  return new Promise((ok, no) => {
+    if (!gTokClient) gTokClient = google.accounts.oauth2.initTokenClient({ client_id: GCLIENT, scope: GSCOPE, callback: () => { } });
+    gTokClient.callback = r => r && r.access_token ? ok(r.access_token) : no(new Error((r && (r.error_description || r.error)) || 'Sign-in cancelled'));
+    gTokClient.error_callback = e => no(Object.assign(new Error(e && e.type === 'popup_closed' ? 'Sign-in cancelled' : 'Google sign-in was blocked. Tap the sync button to try again.'), { consent: true }));
+    try { gTokClient.requestAccessToken({ prompt: interactive ? 'select_account' : '', hint: (S.drive && S.drive.email) || undefined }); } catch (e) { no(e); }
+  });
+}
+async function gToken(interactive) {
+  if (!interactive && dTok && dTok.exp > Date.now() + 60000) return dTok.t;
+  if (dTokWait && !interactive) return dTokWait;
+  const p = (AND ? gTokenAndroid(interactive) : gTokenWeb(interactive)).then(t => { dTok = { t, exp: Date.now() + 50 * 60000 }; return t; });
+  dTokWait = p.finally(() => { dTokWait = null; });
+  return dTokWait;
+}
+/* one Google API call; a stale token is renewed once */
+async function gapi(method, url, body, again) {
+  const t = await gToken(false);
+  const r = await fetch(url, { method, headers: Object.assign({ Authorization: 'Bearer ' + t }, body ? { 'Content-Type': 'application/json' } : {}), body: body ? JSON.stringify(body) : undefined });
+  if (r.status === 401 && !again) { dTok = null; return gapi(method, url, body, true); }
+  const j = r.status === 204 ? {} : await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error((j.error && j.error.message) || ('Google said ' + r.status)), { status: r.status });
+  return j;
+}
+const SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets', DRIVE_API = 'https://www.googleapis.com/drive/v3/files';
+
+/* ---- find or create the user's Brokeless Sheet ---- */
+async function driveFind() {
+  const q = encodeURIComponent("appProperties has { key='brokeless' and value='1' } and trashed=false and mimeType='application/vnd.google-apps.spreadsheet'");
+  const r = await gapi('GET', DRIVE_API + '?q=' + q + '&orderBy=modifiedTime desc&pageSize=5&fields=files(id,name,modifiedTime)');
+  return (r.files || [])[0] || null;
+}
+async function driveCreate() {
+  const sheets = D_ORDER.map(k => ({ properties: { title: dTab(k), gridProperties: { frozenRowCount: 1 } } })).concat([{ properties: { title: D_CFG, gridProperties: { frozenRowCount: 1 } } }]);
+  const ss = await gapi('POST', SHEETS_API, { properties: { title: 'Brokeless', locale: 'en_IN', timeZone: 'Asia/Kolkata' }, sheets });
+  await gapi('POST', SHEETS_API + '/' + ss.spreadsheetId + '/values:batchUpdate', { valueInputOption: 'RAW', data: D_ORDER.map(k => ({ range: dTab(k) + '!A1', values: [DSHEETS[k].map(c => c[1])] })).concat([{ range: D_CFG + '!A1', values: [['Key', 'Value']] }]) });
+  await gapi('PATCH', DRIVE_API + '/' + ss.spreadsheetId + '?fields=id', { appProperties: { brokeless: '1' }, description: 'Your Brokeless money data. Only you can see this file.' });
+  return { id: ss.spreadsheetId, name: 'Brokeless' };
+}
+/* tabs added in a later version of Brokeless are created on the fly */
+async function driveEnsureTabs() {
+  if (U.dTabsOk === S.drive.id) return;
+  const r = await gapi('GET', SHEETS_API + '/' + S.drive.id + '?fields=sheets.properties.title'), have = new Set((r.sheets || []).map(x => x.properties.title));
+  const miss = D_ORDER.map(dTab).concat([D_CFG]).filter(t => !have.has(t));
+  if (miss.length) await gapi('POST', SHEETS_API + '/' + S.drive.id + ':batchUpdate', { requests: miss.map(t => ({ addSheet: { properties: { title: t, gridProperties: { frozenRowCount: 1 } } } })) });
+  U.dTabsOk = S.drive.id;
+}
+/* read every tab into the same shape the Sheet script returns */
+async function driveRead() {
+  await driveEnsureTabs();
+  const ranges = D_ORDER.map(k => dTab(k) + '!A1:ZZ').concat([D_CFG + '!A1:B']);
+  const r = await gapi('GET', SHEETS_API + '/' + S.drive.id + '/values:batchGet?valueRenderOption=UNFORMATTED_VALUE&' + ranges.map(x => 'ranges=' + encodeURIComponent(x)).join('&'));
+  const vr = r.valueRanges || [], data = {}, rows = {};
+  D_ORDER.forEach((k, i) => {
+    const v = (vr[i] && vr[i].values) || [], head = (v[0] || []).map(String), keyOf = {};
+    DSHEETS[k].forEach(([key, title]) => { const j = head.indexOf(title); if (j >= 0) keyOf[j] = key; });
+    rows[k] = Math.max(0, v.length - 1);
+    data[k] = v.slice(1).filter(row => row.some(c => c !== '' && c != null)).map(row => { const o = {}; DSHEETS[k].forEach(([key]) => o[key] = dCell(key, '')); Object.entries(keyOf).forEach(([j, key]) => o[key] = dCell(key, row[j])); return o; }).filter(o => o.id);
+  });
+  const config = {}; ((vr[D_ORDER.length] && vr[D_ORDER.length].values) || []).slice(1).forEach(([k, v]) => { if (k) { try { config[String(k)] = JSON.parse(v); } catch (e) { } } });
+  rows[D_CFG] = Math.max(0, (((vr[D_ORDER.length] || {}).values) || []).length - 1);
+  return { ok: true, version: 99, data, config, rows };
+}
+/* write whole tabs back (header + rows), blanking any rows left over below */
+async function driveWrite(tabs, rows) {
+  if (!tabs.length) return;
+  const data = tabs.map(k => {
+    if (k === D_CFG) { const L = Object.keys(S.cfg).sort().map(key => [key, JSON.stringify(S.cfg[key])]); while (L.length < (rows[k] || 0)) L.push(['', '']); return { range: D_CFG + '!A1', values: [['Key', 'Value']].concat(L) }; }
+    const cols = DSHEETS[k], L = (S[COLL[k]] || []).map(o => cols.map(([key]) => { const v = o[key]; return v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : v; }));
+    while (L.length < (rows[k] || 0)) L.push(cols.map(() => ''));
+    return { range: dTab(k) + '!A1', values: [cols.map(c => c[1])].concat(L) };
+  });
+  await gapi('POST', SHEETS_API + '/' + S.drive.id + '/values:batchUpdate', { valueInputOption: 'RAW', data });
+}
+const D_ACC_TABS = ['Expenses', 'Income', 'Transfers', 'Investments', 'EMILog', 'GoalLog', 'LoanLog', 'Adjustments', 'Accounts', 'Goals', 'EMIs', 'Loans', 'Reminders', 'Pending'];
+function driveDirty(ops) {
+  const t = new Set();
+  ops.forEach(o => {
+    if (o.op === 'config') t.add(D_CFG);
+    else if (o.op === 'renameAccount') D_ACC_TABS.forEach(x => t.add(x));
+    else if (o.op === 'renameCategory') { ['Expenses', 'Reminders'].forEach(x => t.add(x)); t.add(D_CFG); }
+    else if (o.sheet && DSHEETS[o.sheet]) t.add(o.sheet);
+  });
+  return [...t];
+}
+/* sync: read what is in Drive, replay this phone's waiting changes on top, write the changed tabs back */
+async function driveSync(silent) {
+  if (!isDrive() || busy) return false;
+  busy = true; lastErr = ''; setStatus();
+  try {
+    const d = await driveRead(), n = S.outbox.length, dirty = driveDirty(S.outbox.slice(0, n));
+    applyRemote(d);
+    if (dirty.length) await driveWrite(dirty, d.rows);
+    S.outbox.splice(0, n);
+    S.lastSync = hm(new Date()); lastPull = Date.now(); lastErr = '';
+    busy = false; binPurge(true); save(); render();
+    if (!silent) toast('Up to date ✓');
+    if (S.outbox.length) setTimeout(() => driveSync(true), 1500);
+    return true;
+  } catch (e) {
+    busy = false; lastErr = e.consent ? 'Tap to sign in again' : netMsg(e); setStatus();
+    if (!silent) toast(e.consent ? 'Sign in with Google again to sync' : 'Could not sync: ' + lastErr);
+    return false;
+  }
+}
+/* ---- sign in → find or make the Sheet → load ---- */
+async function driveSignIn() {
+  try {
+    toast('Opening Google sign-in…');
+    await gToken(true);
+    const me = await gapi('GET', 'https://www.googleapis.com/oauth2/v3/userinfo');
+    toast('Finding your Brokeless…');
+    let f = await driveFind(), fresh = false;
+    if (!f) { f = await driveCreate(); fresh = true; }
+    const hadLocal = S.accounts.length || S.exp.length;
+    S.drive = { id: f.id, email: me.email || '', name: me.name || '', since: nowTs() }; S.url = ''; S.key = ''; S.srvV = 99; save();
+    /* a brand-new Drive Sheet takes whatever this phone already has */
+    if (fresh && hadLocal) { Object.keys(COLL).forEach(k => (S[COLL[k]] || []).forEach(r => S.outbox.push(up(k, r)))); Object.keys(S.cfg).forEach(k => S.outbox.push(cfgOp(k, S.cfg[k]))); }
+    else if (fresh) Object.keys(S.cfg).forEach(k => S.outbox.push(cfgOp(k, S.cfg[k])));
+    save();
+    const ok = await driveSync(true); if (!ok) return toast('Signed in, but could not load yet: ' + lastErr);
+    shut(); render();
+    toast(fresh ? '✓ Your private Brokeless Sheet is ready in Google Drive' : '✓ Welcome back' + (me.given_name ? ', ' + me.given_name : ''));
+    if (!S.accounts.length) setTimeout(onboardAccounts, 400);
+  } catch (e) { if (e.message !== 'Sign-in cancelled') toast(e.consent ? 'Google sign-in needs your OK. Try again.' : netMsg(e)); }
+}
+function driveCard() {
+  const D = S.drive;
+  return `<div class="card"><h2 style="display:block">☁️ Google Drive<small style="display:block;margin-top:3px">Signed in as ${esc(D.email || 'your Google account')}</small></h2>
+  <div class="hint" style="margin-top:0">Everything is saved in a private Sheet called <b>Brokeless</b> in your own Google Drive. Only you can see it.</div>
+  <div class="hint">${lastErr ? '⚠️ ' + esc(lastErr) : '✓ ' + (S.outbox.length ? S.outbox.length + ' change(s) waiting' : 'Everything saved') + (S.lastSync ? ' · last sync ' + S.lastSync : '')}</div>
+  <div class="btns"><button class="btn sec sm" data-act="syncNow">Sync now</button><a class="btn sec sm" href="https://docs.google.com/spreadsheets/d/${esc(D.id)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center">Open my Sheet</a></div>
+  ${lastErr ? '<button class="btn" data-act="dReauth">Sign in again</button>' : ''}
+  <button class="btn dng" data-act="dSignOut">Sign out</button>
+  <div class="hint">Monthly email reports, nightly Drive backups and calendar alerts aren't available with Google sign-in yet. Use <b>Backups → Download backup file</b> now and then.</div></div>`;
+}
+
 /* ---------- sync ---------- */
 let busy = false, lastErr = '', lastPull = 0;
 const netMsg = e => e.message === 'Failed to fetch' || e.message === 'Load failed' ? 'No connection' : (e.message || 'No connection');
 async function post(body) { const r = await fetch(S.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ key: S.key }, body)) }); return r.json(); }
 async function flush() {
+  if (isDrive()) { if (!S.outbox.length || busy) return setStatus(); clearTimeout(U.dFl); U.dFl = setTimeout(() => driveSync(true), 2000); return setStatus(); }
   if (busy || !S.url || !S.key || !S.outbox.length) return setStatus();
   busy = true; lastErr = ''; setStatus();
   try {
@@ -663,6 +860,7 @@ async function flush() {
   busy = false; setStatus();
 }
 async function pull(silent) {
+  if (isDrive()) return driveSync(silent);
   if (!S.url || !S.key) { if (!silent) toast('Connect your Sheet in Settings'); return false; }
   await flush();
   if (S.outbox.length && lastErr) { if (!silent) toast('Could not reach Sheet: ' + lastErr); return false; }
@@ -672,6 +870,19 @@ async function pull(silent) {
     const d = await fetch(u.toString()).then(x => x.json());
     if (!d.ok) throw new Error(d.error || 'Load failed');
     if (!d.version || d.version < APP_V) throw new Error('Your Sheet runs an old script (v' + (d.version || '?') + '). Paste the new Code.gs → Save → run setup → Deploy → Manage deployments → ✏️ → New version');
+    applyRemote(d);
+    busy = false; binPurge(true); save(); pushSignin(); render(); flush();
+    if (!silent) toast('Up to date ✓');
+    return true;
+  } catch (e) {
+    busy = false; lastErr = netMsg(e); setStatus();
+    if (!silent) toast('Could not load: ' + lastErr);
+    return false;
+  }
+}
+/* put a fresh copy of the Sheet into the app, then replay this phone's waiting changes on top */
+function applyRemote(d) {
+  {
     const oldBin = S.bin || [], hasBin = !!(d.data && Array.isArray(d.data.Deleted));
     Object.keys(COLL).forEach(k => { if (k === 'Deleted' && !hasBin) return; S[COLL[k]] = (d.data && d.data[k]) || []; });
     S.srvV = +d.version || 0;
@@ -684,18 +895,11 @@ async function pull(silent) {
     S.outbox.forEach(localApply);
     push.forEach(k => S.outbox.push(cfgOp(k, S.cfg[k])));
     S.lastSync = hm(new Date()); lastPull = Date.now(); lastErr = '';
-    busy = false; binPurge(true); save(); pushSignin(); render(); flush();
-    if (!silent) toast('Up to date ✓');
-    return true;
-  } catch (e) {
-    busy = false; lastErr = netMsg(e); setStatus();
-    if (!silent) toast('Could not load: ' + lastErr);
-    return false;
   }
 }
 function setStatus() {
   const b = $('#syncBtn'); if (!b) return; let c = '', t = '';
-  if (!S.url) { c = 'off'; t = S.outbox.length ? 'On phone' : 'Offline'; }
+  if (!linked()) { c = 'off'; t = S.outbox.length ? 'On phone' : 'Offline'; }
   else if (busy) { c = 'busy'; t = 'Syncing'; }
   else if (lastErr) { c = 'err'; t = S.outbox.length ? 'Retry · ' + S.outbox.length : 'Retry'; }
   else if (S.outbox.length) { c = 'pend'; t = S.outbox.length + ' pending'; }
@@ -703,7 +907,16 @@ function setStatus() {
   b.className = 'sync ' + c; $('#syncTxt').textContent = t;
 }
 const ACT = {}, IN = {};
-ACT.syncNow = async () => { toast(($('#syncTxt') || {}).textContent === 'Offline' ? 'Not connected to your Sheet · Settings → Google Sheet' : (($('#syncTxt') || {}).textContent || '') + ' · syncing…'); await flush(); if (!S.outbox.length) await pull(false); else toast(lastErr ? 'Offline. ' + S.outbox.length + ' change(s) safe on this phone' : 'Sending…'); };
+/* Drive sign-in buttons */
+ACT.dSignIn = () => driveSignIn();
+ACT.dReauth = async () => { try { await gToken(true); lastErr = ''; driveSync(false); } catch (e) { toast(netMsg(e)); } };
+ACT.dSignOut = async () => {
+  if (!confirm('Sign out of ' + (S.drive.email || 'Google') + '?\n\nYour data stays safe in your Brokeless Sheet in Google Drive. This phone forgets it until you sign in again.')) return;
+  if (S.outbox.length) { await driveSync(true); if (S.outbox.length && !confirm(S.outbox.length + ' change(s) could not be uploaded and will be lost. Sign out anyway?')) return; }
+  try { if (window.google && google.accounts && google.accounts.oauth2 && dTok) google.accounts.oauth2.revoke(dTok.t, () => { }); } catch (e) { }
+  localStorage.removeItem(KEY); location.reload();
+};
+ACT.syncNow = async () => { if (isDrive()) { if (/sign in/i.test(lastErr)) return ACT.dReauth(); toast('Syncing…'); return driveSync(false); } if (!linked()) { setTab('settings'); return ACT.spOpen({ dataset: { k: 'sync' } }); } toast(($('#syncTxt') || {}).textContent === 'Offline' ? 'Not connected to your Sheet · Settings → Google Sheet' : (($('#syncTxt') || {}).textContent || '') + ' · syncing…'); await flush(); if (!S.outbox.length) await pull(false); else toast(lastErr ? 'Offline. ' + S.outbox.length + ' change(s) safe on this phone' : 'Sending…'); };
 
 /* ---------- events ---------- */
 document.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (!el) return; const f = ACT[el.dataset.act]; if (f) { e.preventDefault(); f(el, e); } });
@@ -973,7 +1186,7 @@ const cardLimit = a => +(((S.cfg.cards || {}).limits || {})[a.name]) || 0;
 const cardLooksLimit = a => a.type === 'card' && mineA(a) && !a.archived && (C.bal[a.name] || 0) > 1000 && +a.opening > 1000;
 function cardDues(all) {
   const t = today(), dn = +t.slice(8, 10);
-  return live(a => a.type === 'card' && mineA(a) && cardDue(a) > .004).filter(a => all || (dn >= cardDay(a) && !snoozed('card|' + a.name + '|' + ym()))).map(a => `<div class="alert ${dn >= cardDay(a) ? 'over' : ''}"><span class="ic" style="background:var(--soft)">💳</span><span class="mid"><b>${esc(a.name)} · ${inr(cardDue(a))} due</b><small>${dn >= cardDay(a) ? 'Bill day passed (' + cardDay(a) + 'th). Pay from ICICI / Kotak.' : 'Bill day ' + cardDay(a) + ' ' + mLabel(ym(), 1) + '. Already counted in your spending.'}</small></span><button class="btn sm" data-act="payCard" data-n="${esc(a.name)}">Pay</button>${dn >= cardDay(a) ? `<button class="ax" data-act="snooze" data-k="card|${esc(a.name)}|${ym()}" data-d="1" aria-label="Tomorrow">✕</button>` : ''}</div>`).join('');
+  return live(a => a.type === 'card' && mineA(a) && cardDue(a) > .004).filter(a => all || (dn >= cardDay(a) && !snoozed('card|' + a.name + '|' + ym()))).map(a => `<div class="alert ${dn >= cardDay(a) ? 'over' : ''}"><span class="ic" style="background:var(--soft)">💳</span><span class="mid"><b>${esc(a.name)} · ${inr(cardDue(a))} due</b><small>${dn >= cardDay(a) ? 'Bill day passed (' + cardDay(a) + 'th). Pay it from your bank.' : 'Bill day ' + cardDay(a) + ' ' + mLabel(ym(), 1) + '. Already counted in your spending.'}</small></span><button class="btn sm" data-act="payCard" data-n="${esc(a.name)}">Pay</button>${dn >= cardDay(a) ? `<button class="ax" data-act="snooze" data-k="card|${esc(a.name)}|${ym()}" data-d="1" aria-label="Tomorrow">✕</button>` : ''}</div>`).join('');
 }
 ACT.payCard = el => {
   const card = acc(el.dataset.n), banks = live(a => a.type === 'bank' && mineA(a)).concat(live(a => a.type === 'wallet' && mineA(a))); if (!banks.length) return toast('Add a bank account first');
@@ -990,7 +1203,7 @@ ACT.cpSave = () => {
   S.prefs.cardFrom = P.from; save(); shut(); render(); buzz(14); const left = cardDue(acc(P.n)); toast(left > .004 ? 'Paid · ' + fmtINR(left) + ' still due' : P.n + ' fully paid ✓');
 };
 function renderHome() {
-  if (!S.accounts.length) return `<div class="card"><div class="empty"><span class="big">👋</span>Let's add your bank accounts, cash and Groww with today's balances.</div><button class="btn" data-act="onboard">Set up accounts</button>${!S.url ? '<button class="btn sec" data-act="welcome">Connect Google Sheet</button>' : ''}</div>`;
+  if (!S.accounts.length) return `<div class="card"><div class="empty"><span class="big">👋</span>Let's add your bank accounts, cash and cards with today's balances.</div><button class="btn" data-act="onboard">Set up accounts</button>${!S.url ? '<button class="btn sec" data-act="welcome">Connect Google Sheet</button>' : ''}</div>`;
   const m = U.month, es = S.exp.filter(e => inP(e, m) && myX(e)), spent = sum(es), emiAmt = sum(S.emi.filter(e => inP(e, m) && !isOthers(e.account)));
   const budget = r2(visCats().reduce((s, c) => s + (+c.budget || 0), 0));
   const cur = m === ym(), dim = daysIn(m), dn = cur ? new Date().getDate() : dim;
@@ -1676,13 +1889,14 @@ ACT.aDel = () => {
 ACT.onboard = () => onboardAccounts();
 ACT.welcome = () => welcome();
 function welcome() {
-  openSheet('', `<div class="detail"><div class="logo">${LOGO('lk')}</div><div class="dv" style="font-size:1.6rem">Welcome to Brokeless</div><div class="dt">Every rupee across banks, cash, investments, EMIs, loans and goals.</div></div>
-  ${cloudOk() ? `<div id="gBtnBox" class="gbox">${gButton()}</div><div class="hint center">Use the Google account that owns your Brokeless Sheet.</div><details class="hint"><summary>Use the secret key instead</summary>` : ''}
+  openSheet('', `<div class="detail"><div class="logo">${LOGO('lk')}</div><div class="dv" style="font-size:1.7rem">Welcome to Brokeless</div><div class="dt">Every rupee across banks, cash, cards, investments, EMIs, loans and goals.</div></div>
+  <button class="btn big gsi" data-act="dSignIn">${GLOGO} Sign in with Google</button>
+  <div class="hint center">Your data is saved in a private Sheet in <b>your own</b> Google Drive. Nobody else, not even us, can see it. <a href="https://saysee09.github.io/ledger/privacy.html" target="_blank" rel="noopener">Privacy</a></div>
+  <button class="btn sec" data-act="wSkip">Try it first, sign in later</button>
+  <details class="hint" style="margin-top:14px"><summary>Advanced: connect your own Sheet script</summary>
   <div class="lbl">Google Sheet web app URL</div><input id="wUrl" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
   <div class="lbl">Secret key</div><input id="wKey" placeholder="Shown when you ran setup()" autocomplete="off">
-  <button class="btn big" data-act="wConnect">Connect & continue</button><button class="btn sec" data-act="wSkip">Start without Sheet for now</button>
-  <div class="hint center">Without a Sheet everything stays on this phone and is uploaded once you connect.</div>${cloudOk() ? '</details>' : ''}`);
-  if (cloudOk() && !AND) gisRender();
+  <button class="btn" data-act="wConnect">Connect & continue</button></details>`);
 }
 /* ---------- Sign in with Google ---------- */
 function gButton() { return AND ? `<button class="btn big gsi" data-act="gSignIn"><svg viewBox="0 0 48 48" width="22" height="22"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Sign in with Google</button>` : '<div id="gBtn"></div>'; }
@@ -1745,10 +1959,10 @@ ACT.wConnect = async () => {
   if (!S.accounts.length) onboardAccounts(); else shut();
 };
 ACT.wSkip = () => onboardAccounts();
-function obRow(n, t) { return `<div class="obr"><input class="obn" value="${esc(n || '')}" placeholder="Account name"><select class="obt">${Object.entries(ACC_T).map(([k, [i, l]]) => `<option value="${k}" ${k === (t || 'bank') ? 'selected' : ''}>${i} ${l}</option>`).join('')}</select><input class="obo" inputmode="decimal" placeholder="Balance right now ₹"></div>`; }
+function obRow(n, t) { return `<div class="obr"><input class="obn" value="${esc(n || '')}" placeholder="${t === 'card' ? 'e.g. HDFC Credit Card (optional)' : t === 'cash' ? 'Cash in hand' : 'e.g. HDFC Bank, SBI'}"><select class="obt">${Object.entries(ACC_T).map(([k, [i, l]]) => `<option value="${k}" ${k === (t || 'bank') ? 'selected' : ''}>${i} ${l}</option>`).join('')}</select><input class="obo" inputmode="decimal" placeholder="Balance right now ₹"></div>`; }
 function onboardAccounts() {
-  openSheet('Your accounts', `<div class="hint">Add every place your money sits with the balance it shows <b>right now</b>. Balances start counting from this moment, so they will always match your bank.</div>
-  <div id="obRows">${obRow('ICICI Bank', 'bank')}${obRow('Kotak Bank', 'bank')}${obRow('Cash in hand', 'cash')}${obRow('Groww', 'investment')}</div>
+  openSheet('Your accounts', `<div class="hint">Add every place your money sits with the balance it shows <b>right now</b>. Balances start counting from this moment, so they will always match your bank. For a credit card, type what you <b>owe</b> (0 if paid); add its limit later in Net worth.</div>
+  <div id="obRows">${obRow('', 'bank')}${obRow('Cash in hand', 'cash')}${obRow('', 'card')}</div>
   <button class="btn sec" data-act="obAdd">+ Another account</button><button class="btn big" data-act="obSave">Start tracking</button>`, 'tall');
 }
 ACT.obAdd = () => $('#obRows').insertAdjacentHTML('beforeend', obRow());
@@ -1756,7 +1970,7 @@ ACT.obSave = () => {
   const ts = nowTs(), seen = new Set(S.accounts.map(a => a.name.toLowerCase()));
   const rows = $$('.obr').map(r => ({ n: r.querySelector('.obn').value.trim(), t: r.querySelector('.obt').value, o: parseAmt(r.querySelector('.obo').value) })).filter(r => r.n && !seen.has(r.n.toLowerCase()) && (seen.add(r.n.toLowerCase()), true));
   if (!rows.length) return toast('Add at least one account');
-  commit(rows.map((r, i) => up('Accounts', { id: uid('A'), name: r.n, type: r.t, opening: isNaN(r.o) ? 0 : r.o, openingDate: ts, archived: false, order: S.accounts.length + i })));
+  commit(rows.map((r, i) => up('Accounts', { id: uid('A'), name: r.n, type: r.t, opening: isNaN(r.o) ? 0 : (r.t === 'card' ? -Math.abs(r.o) : r.o), openingDate: ts, archived: false, order: S.accounts.length + i })));
   shut(); render(); toast('You are all set 🎉');
 };
 
@@ -2889,9 +3103,9 @@ ACT.remEdit = el => remSheet(S.rem.find(x => x.id === el.dataset.id));
 const nextFirst = () => shiftM(ym(), 1) + '-01';
 const catOr = (n, f) => S.cfg.categories.some(c => c.name === n) ? n : (f && S.cfg.categories.some(c => c.name === f) ? f : visCats()[0].name);
 const REM_PRESETS = () => [
-  { l: '🏠 Rent ₹9,250', v: { kind: 'bill', name: 'Rent', amount: 9250, category: catOr('Household'), every: 1, unit: 'month', next: nextFirst(), auto: true } },
-  { l: '☁️ Google subscription ₹210', v: { kind: 'bill', name: 'Google subscription', amount: 210, category: catOr('Personal & Lifestyle', 'Miscellaneous'), every: 1, unit: 'month', next: nextFirst(), auto: true } },
-  { l: '📱 Recharge ₹899 · 3 months', v: { kind: 'bill', name: 'Phone recharge', amount: 899, category: catOr('Household'), every: 3, unit: 'month', next: '2026-12-13' < today() ? nextFirst() : '2026-12-13', auto: false } },
+  { l: '🏠 Rent', v: { kind: 'bill', name: 'Rent', amount: '', category: catOr('Household'), every: 1, unit: 'month', next: nextFirst(), auto: true } },
+  { l: '☁️ Subscription (Netflix, Google…)', v: { kind: 'bill', name: 'Subscription', amount: '', category: catOr('Personal & Lifestyle', 'Miscellaneous'), every: 1, unit: 'month', next: nextFirst(), auto: true } },
+  { l: '📱 Phone recharge', v: { kind: 'bill', name: 'Phone recharge', amount: '', category: catOr('Household'), every: 1, unit: 'month', next: nextFirst(), auto: false } },
   { l: '📈 Monthly SIP', v: { kind: 'sip', name: 'SIP', amount: '', every: 1, unit: 'month', next: nextFirst(), auto: true } },
   { l: '✅ Review Brokeless weekly', v: { kind: 'task', name: 'Review Brokeless', every: 1, unit: 'week', next: addDays(monday(today()), 7) } },
   { l: '⚖️ Match bank balances', v: { kind: 'task', name: 'Match bank balances in Brokeless', every: 2, unit: 'week', next: addDays(today(), 1) } }
@@ -3064,7 +3278,7 @@ function planBillsCard(E) {
 ACT.pnAddMiss = () => { const K = planCheck(U.cpe); K.missing.forEach(c => U.cpe.items.push({ n: c.icon + ' ' + c.name, m: 'amt', v: c.amt })); pnRe(); toast('Added ' + K.missing.length + ' to the plan'); };
 /* ---------- MY PLANS: your own salary split, saved to the Sheet (name it "November Plan") ----------
    item: { n: name, m: 'amt' | 'pct' (of salary) | 'left' (% of what is left after the others), v: number } */
-const PLAN_SUG = ['🏠 Rent', '🍽️ Food', '🚕 Travel', '👩 Mom', '🪙 Gold', '🛟 Emergency fund', '🛡️ Insurance', '📈 SIP', '🧾 Bills', '🛍️ Shopping', '🎁 Fun', '💳 Card bill'];
+const PLAN_SUG = ['🏠 Rent', '🍽️ Food', '🚕 Travel', '👪 Family', '🪙 Gold', '🛟 Emergency fund', '🛡️ Insurance', '📈 SIP', '🧾 Bills', '🛍️ Shopping', '🎁 Fun', '💳 Card bill'];
 const PL_COL = ['#5B5BF7', '#12A150', '#F59E0B', '#E5484D', '#0EA5E9', '#A855F7', '#EC4899', '#14B8A6', '#F97316', '#64748B'];
 const plList = () => ((S.cfg.plans || {}).list || []);
 function planMath(pl) {
@@ -4072,8 +4286,12 @@ function wrapCard() {
 function renderSettings() {
   const PG = {}, pg = (k, x) => { PG[k] = (PG[k] || '') + x; };
   const st = !S.url ? 'Not connected. Entries are kept on this phone and uploaded once you connect.' : lastErr ? '⚠️ ' + esc(lastErr) + (S.outbox.length ? ' · ' + S.outbox.length + ' change(s) safe on this phone' : '') : '✓ Connected · ' + (S.outbox.length ? S.outbox.length + ' change(s) waiting' : 'everything saved') + (S.lastSync ? ' · last sync ' + S.lastSync : '');
-  pg('sync', `<div class="card"><h2>Google Sheet</h2><div class="lbl" style="margin-top:0">Web app URL</div><input id="sUrl" value="${esc(S.url)}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"><div class="lbl">Secret key</div><input id="sKey" type="password" value="${esc(S.key)}" placeholder="Ledger menu → Show secret key" autocomplete="off">
-  <button class="btn" data-act="sConnect">Save & connect</button><div class="btns"><button class="btn sec sm" data-act="syncNow">Sync now</button><button class="btn sec sm" data-act="reload">Reload from Sheet</button></div><div class="hint">${st}</div></div>`);
+  if (isDrive()) pg('sync', driveCard());
+  else {
+    if (!S.url) pg('sync', `<div class="card"><h2 style="display:block">☁️ Save to your Google Drive<small style="display:block;margin-top:3px">Recommended · free · private</small></h2><div class="hint" style="margin-top:0">Sign in with Google and Brokeless keeps everything in a private Sheet in <b>your</b> Google Drive. Use it on any phone or laptop. Nobody else can see it.</div><button class="btn big gsi" data-act="dSignIn">${GLOGO} Sign in with Google</button></div>`);
+    pg('sync', (S.url ? '' : '<details class="card"><summary style="font-weight:800;cursor:pointer">Advanced: use your own Sheet script</summary>') + `<div class="card"><h2>Google Sheet</h2><div class="lbl" style="margin-top:0">Web app URL</div><input id="sUrl" value="${esc(S.url)}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"><div class="lbl">Secret key</div><input id="sKey" type="password" value="${esc(S.key)}" placeholder="Ledger menu → Show secret key" autocomplete="off">
+  <button class="btn" data-act="sConnect">Save & connect</button><div class="btns"><button class="btn sec sm" data-act="syncNow">Sync now</button><button class="btn sec sm" data-act="reload">Reload from Sheet</button></div><div class="hint">${st}</div></div>` + (S.url ? '' : '</details>'));
+  }
   pg('sync', signinCard());
   pg('accounts', `<div class="card"><h2>Accounts <small>tap to edit</small></h2>${S.accounts.slice().sort((a, b) => (a.order || 0) - (b.order || 0)).map(a => `<button class="srow" data-act="acctEdit" data-n="${esc(a.name)}"><span class="ic" style="background:var(--soft)">${(ACC_T[a.type] || ['•'])[0]}</span><span class="mid"><b>${esc(a.name)}${a.archived ? '<em class="tag">hidden</em>' : ''}${a.others ? '<em class="tag">others</em>' : ''}</b><small>${a.others ? '👥 Held for others' + (a.keptIn ? ' in ' + esc(a.keptIn) : '') : (ACC_T[a.type] || ['', a.type])[1]} · since ${dLabel((a.openingDate || '').slice(0, 10))}</small></span><span class="amt ${(C.bal[a.name] || 0) < 0 ? 'red' : ''}">${inr(C.bal[a.name])}</span></button>`).join('') || '<div class="empty">No accounts yet.</div>'}<button class="btn" data-act="acctNew">+ Add account</button></div>`);
   pg('cats', `<div class="card"><h2>Categories & budgets <small>monthly</small></h2>${S.cfg.categories.map((c, i) => `<div class="srow"><span class="ic" style="background:${c.color}1f">${c.icon}</span><button class="mid" data-act="catEdit" data-i="${i}"><b>${esc(c.name)}${c.hidden ? '<em class="tag">hidden</em>' : ''}</b><small>${c.budget > 0 ? 'Budget ' + inr(c.budget) : 'No budget · tap to set'}${(b => b ? ` · <span class="${c.budget > 0 && c.budget < b ? 'red' : ''}">bills ${inr(b)}/mo${c.budget > 0 && c.budget < b ? ' > budget' : ''}</span>` : '')(catBills()[c.name] || 0)}</small></button><button class="mv" data-act="catMove" data-i="${i}" data-d="-1" aria-label="Move up">↑</button><button class="mv" data-act="catMove" data-i="${i}" data-d="1" aria-label="Move down">↓</button></div>`).join('')}<button class="btn" data-act="catNew">+ Add category</button><div class="hint">Budget alerts appear on the Expenses tab at 80% and 100%.</div></div>`);
@@ -4122,7 +4340,7 @@ function renderSettings() {
 }
 /* settings: a short menu, each item opens its own page (Android back / ‹ returns to the menu) */
 const SP = () => [
-  ['Your data', [['sync', '☁️', 'Google Sheet & sync', !S.url ? 'Not connected' : lastErr ? 'Problem · tap to see' : 'Connected' + (S.lastSync ? ' · ' + S.lastSync : '')], ['backup', '🗂️', 'Backups & restore', 'Drive · Ledger App / Backups'], ['import', '📥', 'Import old data', 'Expenses from a CSV · salary month by month'], ['bin', '🗑️', 'Recently deleted', (S.bin.length ? S.bin.length + ' item' + (S.bin.length === 1 ? '' : 's') : 'Empty') + ' · kept ' + binDays() + ' days']]],
+  ['Your data', [['sync', '☁️', isDrive() ? 'Google Drive & sync' : 'Google Sheet & sync', isDrive() ? (lastErr ? 'Problem · tap to see' : (S.drive.email || 'Signed in') + (S.lastSync ? ' · ' + S.lastSync : '')) : !S.url ? 'Not connected' : lastErr ? 'Problem · tap to see' : 'Connected' + (S.lastSync ? ' · ' + S.lastSync : '')], ['backup', '🗂️', 'Backups & restore', 'Drive · Ledger App / Backups'], ['import', '📥', 'Import old data', 'Expenses from a CSV · salary month by month'], ['bin', '🗑️', 'Recently deleted', (S.bin.length ? S.bin.length + ' item' + (S.bin.length === 1 ? '' : 's') : 'Empty') + ' · kept ' + binDays() + ' days']]],
   ['Money', [['accounts', '🏦', 'Accounts', S.accounts.length + ' account' + (S.accounts.length === 1 ? '' : 's')], ['cats', '🏷️', 'Categories, budgets & types', S.cfg.categories.length + ' categories'], ['sms', '📩', 'Bank SMS', (pendIgnored().length ? pendIgnored().length + ' ignored · ' : '') + 'suggestions · card digits']]],
   ['App', [['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off'], ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Brokeless v9.0']]],
   ['Help us improve', [['feedback', '💬', 'Send feedback', (S.prefs.fbQ || []).length ? (S.prefs.fbQ.length + ' waiting to send') : 'Ideas, problems, what you like']]]
@@ -4702,7 +4920,7 @@ try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () =
 binPurge();
 setTab('home');
 bootLock();
-if (S.url && S.key) flush().then(() => pull(true)).then(() => { if (runAuto()) render(); });
+if (linked()) (isDrive() ? pull(true) : flush().then(() => pull(true))).then(() => { if (runAuto()) render(); });
 else if (!S.accounts.length) setTimeout(welcome, 450);
 else if (runAuto()) render();
 setInterval(flush, 30000);
@@ -4718,7 +4936,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) { if (U.noLock && Date.now() < U.noLock) { U.hiddenAt = 0; flush(); return; } U.hiddenAt = Date.now(); try { localStorage.setItem(HID, U.hiddenAt); } catch (e) { } flush(); return; }
   if (AND) drainSms();
   if (U.hiddenAt && $('#lock').hidden && lockDue(U.hiddenAt)) showLock('unlock');
-  else if (S.url && S.key && !S.outbox.length && Date.now() - lastPull > 60000) pull(true);
+  else if (linked() && !S.outbox.length && Date.now() - lastPull > 60000) pull(true);
 });
 </script>
 </body>
