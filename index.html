@@ -535,7 +535,7 @@ const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings',
 const CLOUD = { url: '__SHEET_URL__', clientId: '__WEB_CLIENT_ID__' };
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-10 b18';
+const APP_BUILD = '2026-11-10 b19';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -4112,7 +4112,7 @@ function renderSettings() {
   if (U.sp === 'backup' && S.url) U.after = bkLoad;
   pg('sms', smartCard());
   pg('sms', `<div class="card"><h2>Bank SMS</h2><div class="lbl" style="margin-top:0">Card / account last 4 digits</div>${live(a => a.type !== 'cash' && a.type !== 'investment' && mineA(a)).map(a => `<div class="grid2" style="grid-template-columns:1fr 110px;align-items:center;margin-bottom:6px"><span style="font-weight:700">${esc(a.name)}</span><input data-in="acL4" data-n="${esc(a.name)}" inputmode="numeric" maxlength="12" value="${esc(a.l4 || '')}" placeholder="e.g. 1211"></div>`).join('')}<div class="hint">Matches SMS like "from XX1211" to the right account. Several numbers? Separate them with commas. The Ledger phone app fills these in for you the first time it sees each one.</div><button class="btn sec" data-act="smsTry">🧪 Paste an SMS to test</button></div>`);
-  pg('about', `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Ledger Android app (Settings → Phone app).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v8.8${AND ? ' · app ' + esc(andInfo().version || '') : ''}</div>`);
+  pg('about', `<div class="card"><h2>Install on your phone</h2><div class="hint" style="margin:0">Best: the Ledger Android app (Settings → Phone app).<br>Or in Brave / Chrome: ⋮ menu → <b>Add to Home screen</b>.<br>iPhone (Safari): Share → <b>Add to Home Screen</b>.<br>It then opens full-screen like a normal app.</div></div><div class="hint center">Ledger v8.9${AND ? ' · app ' + esc(andInfo().version || '') : ''}</div>`);
   return settingsView(PG);
 }
 /* settings: a short menu, each item opens its own page (Android back / ‹ returns to the menu) */
@@ -4124,7 +4124,7 @@ const SP = () => [
 function settingsView(PG) {
   const all = SP().flatMap(g => g[1]), cur = U.sp && all.find(x => x[0] === U.sp);
   if (cur) { $('#title').textContent = cur[2]; $('#title').classList.add('sm'); return `<button class="back" data-act="spBack">‹ Settings</button>` + (PG[cur[0]] || '<div class="empty">Nothing here yet.</div>'); }
-  return SP().map(([g, items]) => `<div class="section-t">${g}</div><div class="group">${items.map(([k, i, t, sub]) => `<button class="item" data-act="spOpen" data-k="${k}"><span class="ic" style="background:var(--soft)">${i}</span><span class="mid"><b>${esc(t)}</b><small>${esc(sub)}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`).join('')}</div>`).join('') + '<div class="hint center" style="margin-top:18px">Ledger v8.8 · screens ' + APP_BUILD + (AND ? ' · phone app ' + esc(andInfo().version || '?') : '') + '</div>';
+  return SP().map(([g, items]) => `<div class="section-t">${g}</div><div class="group">${items.map(([k, i, t, sub]) => `<button class="item" data-act="spOpen" data-k="${k}"><span class="ic" style="background:var(--soft)">${i}</span><span class="mid"><b>${esc(t)}</b><small>${esc(sub)}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`).join('')}</div>`).join('') + '<div class="hint center" style="margin-top:18px">Ledger v8.9 · screens ' + APP_BUILD + (AND ? ' · phone app ' + esc(andInfo().version || '?') : '') + '</div>';
 }
 ACT.spOpen = el => { U.sp = el.dataset.k; try { history.pushState({ sp: 1 }, ''); } catch (e) { } U.fresh = true; render(); window.scrollTo(0, 0); };
 ACT.spBack = () => { if (history.state && history.state.sp) history.back(); else { U.sp = null; U.fresh = true; render(); window.scrollTo(0, 0); } };
@@ -4550,6 +4550,9 @@ const amtFmtAll = root => requestAnimationFrame(() => (root || document).querySe
 addEventListener('resize', () => { const a = document.activeElement; if (a && /^(INPUT|TEXTAREA)$/.test(a.tagName)) setTimeout(() => { try { a.scrollIntoView({ block: a.closest('#sheet') ? 'nearest' : 'center' }); } catch (e) { } }, 120); });
 /* tapping a box on the page: bring it up to the middle once the keyboard is out */
 document.addEventListener('focusin', e => { const a = e.target; if (!a || !/^(INPUT|TEXTAREA)$/.test(a.tagName) || a.closest('#sheet') || /^(checkbox|radio|date|time|file)$/.test(a.type)) return; setTimeout(() => { try { a.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { } }, 350); });
+
+/* just updated? say so once (Android closes the app while it installs an update) */
+setTimeout(() => { try { const v = AND && AND.justUpdated && AND.justUpdated(); if (v) { U.upd = null; toast('✅ Updated to Ledger ' + v + ' · all set'); } } catch (e) { } }, 2500);
 
 /* ---------- boot ---------- */
 applyTheme(); setupIcons();

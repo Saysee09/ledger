@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 /** Looks at the GitHub Releases of the Ledger repo for a newer APK (test builds also see test releases). */
 final class UpdateChecker {
     private static final String API = "https://api.github.com/repos/Saysee09/ledger/releases?per_page=15";
-    private static final String PREFS = "ledger_update";
+    static final String PREFS = "ledger_update";
     static final String CHANNEL = "app_updates";
 
     private UpdateChecker() { }

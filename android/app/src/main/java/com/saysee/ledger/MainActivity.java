@@ -675,6 +675,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         /** newest version found on GitHub (JSON) or "" */
+        /** the version just installed by an update, once (empty afterwards) */
+        @JavascriptInterface
+        public String justUpdated() {
+            android.content.SharedPreferences up = getSharedPreferences(UpdateChecker.PREFS, MODE_PRIVATE);
+            String v = up.getString("justUpdated", "");
+            if (!v.isEmpty()) up.edit().remove("justUpdated").apply();
+            return v;
+        }
+
         /** turn "Get test builds" on or off */
         @JavascriptInterface
         public void setBeta(String on) { UpdateChecker.setBeta(MainActivity.this, "1".equals(on) || "true".equals(on)); }

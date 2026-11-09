@@ -1,4 +1,8 @@
-## Ledger v8.8 · What's new
+## Ledger v8.9 · What's new
+
+- **After an update**: Android closes the app while installing. Ledger now pops a notification **"✅ Ledger updated · tap to open"** the moment it's done, and says so when it opens
+
+## From 8.8
 
 - **Cleaner pages**:
   - **Expenses**: total, one "Free to spend" line, the bell line, search and your list. That's it
