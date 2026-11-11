@@ -1,5 +1,8 @@
 ## Brokeless v9.0 · What's new
 
+- **Fixed: page moving behind a pop-up**: swiping up or down on a card / account screen no longer scrolls the page behind it
+- **Fixed: tabs jumping back**: on Money (Accounts · Income · Transfers · Invest · EMIs · Loans) tapping EMIs or Loans keeps the row where you swiped it, with the tab you picked in view
+- **Card showing its limit as a balance** (e.g. ₹1,49,271): now flagged ⚠️ on the card with a **Fix** button that fills in the limit and what you owe. **Match** on a card now asks "what you owe", never the limit left
 - **💳 Pay your card any day**: tap the card (Money → Accounts) → **Pay**. Full amount or a part, before or after the bill day
 - **💳 Card bill from SMS, one tap**: when you pay the card, the bank SMS (money out) and the card SMS (payment received) are joined into one line in the bell: **"Paid ICICI Credit Card ₹30?" → ✓ Yes, I paid**. Already logged it with Pay? Both SMS are filed quietly. The phone notification says "card payment received · tap to confirm"
 - **📊 How much of the limit is used**: each card shows % used and how much is left before **your safe line (30%, change it in the card's Edit screen)**. A heads-up appears in the bell when you cross it
