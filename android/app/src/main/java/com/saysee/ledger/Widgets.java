@@ -64,7 +64,7 @@ final class Widgets {
     private static RemoteViews build(Context c, Class<?> k, JSONObject d) {
         String pkg = c.getPackageName();
         boolean empty = d.length() == 0;
-        String at = empty ? "Open Ledger once to fill this in" : "Updated " + s(d, "at", "");
+        String at = empty ? "Open Brokeless once to fill this in" : "Updated " + s(d, "at", "");
         if (k == FreeWidget.class) {
             RemoteViews v = new RemoteViews(pkg, R.layout.widget_free);
             v.setTextViewText(R.id.w_value, s(d, "free", "₹ —"));
@@ -100,7 +100,7 @@ final class Widgets {
         }
         RemoteViews v = new RemoteViews(pkg, R.layout.widget_pulse);
         v.setTextViewText(R.id.w_value, s(d, "pulse", "—"));
-        v.setTextViewText(R.id.w_sub, empty ? "Open Ledger" : s(d, "pulseLabel", ""));
+        v.setTextViewText(R.id.w_sub, empty ? "Open Brokeless" : s(d, "pulseLabel", ""));
         v.setTextViewText(R.id.w_delta, s(d, "pulseDelta", ""));
         try { v.setTextColor(R.id.w_value, Color.parseColor(s(d, "pulseCol", "#FFFFFF"))); } catch (Exception ignored) { }
         v.setOnClickPendingIntent(R.id.w_root, open(c, "pulse", 40));

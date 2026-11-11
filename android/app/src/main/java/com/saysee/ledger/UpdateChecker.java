@@ -22,7 +22,7 @@ import java.nio.charset.StandardCharsets;
 /** Looks at the GitHub Releases of the Ledger repo for a newer APK (test builds also see test releases). */
 final class UpdateChecker {
     private static final String API = "https://api.github.com/repos/Saysee09/ledger/releases?per_page=15";
-    private static final String PREFS = "ledger_update";
+    static final String PREFS = "ledger_update";
     static final String CHANNEL = "app_updates";
 
     private UpdateChecker() { }
@@ -58,7 +58,7 @@ final class UpdateChecker {
         h.setConnectTimeout(10000);
         h.setReadTimeout(20000);
         h.setRequestProperty("Accept", "application/vnd.github+json");
-        h.setRequestProperty("User-Agent", "Ledger-Android");
+        h.setRequestProperty("User-Agent", "Brokeless-Android");
         if (h.getResponseCode() != 200) throw new Exception("HTTP " + h.getResponseCode());
         InputStream in = h.getInputStream();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -136,17 +136,17 @@ final class UpdateChecker {
         if (nm == null) return;
         if (nm.getNotificationChannel(CHANNEL) == null) {
             NotificationChannel ch = new NotificationChannel(CHANNEL, "App updates", NotificationManager.IMPORTANCE_DEFAULT);
-            ch.setDescription("When a new version of Ledger is ready to install");
+            ch.setDescription("When a new version of Brokeless is ready to install");
             nm.createNotificationChannel(ch);
         }
         Intent open = new Intent(c, MainActivity.class).setAction("ledger.widget.update").putExtra(Widgets.EXTRA, "update")
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pi = PendingIntent.getActivity(c, 50, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         String first = "";
-        for (String line : u.optString("notes").split("\n")) { String t = line.replaceAll("^[#*\\-\\s]+", "").trim(); if (!t.isEmpty() && !t.toLowerCase().startsWith("ledger")) { first = t; break; } }
+        for (String line : u.optString("notes").split("\n")) { String t = line.replaceAll("^[#*\\-\\s]+", "").trim(); if (!t.isEmpty() && !t.toLowerCase().startsWith("ledger") && !t.toLowerCase().startsWith("brokeless")) { first = t; break; } }
         android.app.Notification n = new android.app.Notification.Builder(c, CHANNEL)
                 .setSmallIcon(R.drawable.ic_stat_rupee)
-                .setContentTitle("Ledger " + u.optString("tag").replaceAll("\\D+", ".").replaceAll("^\\.", "8.0.") + " is ready · tap to install")
+                .setContentTitle("Brokeless " + u.optString("tag").replaceAll("\\D+", ".").replaceAll("^\\.", "8.0.") + " is ready · tap to install")
                 .setContentText(first.isEmpty() ? "See what's new" : first)
                 .setAutoCancel(true)
                 .setContentIntent(pi)

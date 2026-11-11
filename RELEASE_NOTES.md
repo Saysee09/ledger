@@ -1,4 +1,34 @@
-## Ledger v8.8 · What's new
+## Brokeless v9.0 · What's new
+
+- **SMS access blocked by the phone?** The set-up screen now has an **Open Brokeless in phone settings** button with the two taps to do there (⋮ → Allow restricted settings)
+- **Settings → Permissions & phone app** (was "Phone app"): shows SMS, Notifications and Battery at a glance, with a button to open the phone's own settings for Brokeless
+- **📲 Permissions asked at set-up**: after your balances, one screen with **Read bank SMS**, **Notifications** and **Battery: Unrestricted**, each with what it is for and one button. If Android blocks SMS access for an app installed from a link, it shows the exact steps
+- **With Google sign-in, no more "Connect the Sheet first"**: Email reports and the Google Calendar tick are hidden (they only work with your own Sheet script). Settings → Google Drive & sync explains where your data is saved, with **Open my Sheet**
+- **Fixed: Sign in with Google stopped at "Unsupported locale: en_IN"** while making your Sheet
+- **🔑 → Google: switch your own Brokeless to Google sign-in** (Settings → Google Sheet & sync → Switch to Google sign-in). No more URL and secret key. Everything on your phone is copied into a private "Brokeless" Sheet in your Drive and counted; your old Sheet stays untouched as a spare. If anything fails half-way you stay exactly where you were
+- **☁️ Daily Drive backup with Google sign-in**: a copy is saved in Drive → "Brokeless backups" the first time you open the app each day. Settings → Backups: back up now, restore (a safety copy is made first), delete, keep last 7 / 15 / 30
+- **🏦 Pick your banks** on first set-up: tap your banks, cards and wallets (initials in each bank's colour), then type the balances. Bank SMS are matched to them automatically, and more banks are recognised (Canara, Union, BOI, IDBI, Indian, IOB, UCO, Bandhan, HSBC and more)
+- **👋 Quick tour**: 5 swipe cards after set-up, with **Skip** on every card
+- **📖 How it works** (Settings): a short guide for each part of the app, each with a button that takes you there, plus "Play the tour"
+- **Fixed: page moving behind a pop-up**: swiping up or down on a card / account screen no longer scrolls the page behind it
+- **Fixed: tabs jumping back**: on Money (Accounts · Income · Transfers · Invest · EMIs · Loans) tapping EMIs or Loans keeps the row where you swiped it, with the tab you picked in view
+- **Card showing its limit as a balance** (e.g. ₹1,49,271): now flagged ⚠️ on the card with a **Fix** button that fills in the limit and what you owe. **Match** on a card now asks "what you owe", never the limit left
+- **💳 Pay your card any day**: tap the card (Money → Accounts) → **Pay**. Full amount or a part, before or after the bill day
+- **💳 Card bill from SMS, one tap**: when you pay the card, the bank SMS (money out) and the card SMS (payment received) are joined into one line in the bell: **"Paid ICICI Credit Card ₹30?" → ✓ Yes, I paid**. Already logged it with Pay? Both SMS are filed quietly. The phone notification says "card payment received · tap to confirm"
+- **📊 How much of the limit is used**: each card shows % used and how much is left before **your safe line (30%, change it in the card's Edit screen)**. A heads-up appears in the bell when you cross it
+- **Paying the card is never a second expense**: a card spend counts on the day you swipe; paying the bill only moves money bank → card
+- Fixed: bank SMS showing "Dispute Call 1800…" as the payee
+
+- **Ledger is now Brokeless** 💸 Same app, same data, new name
+- **🔐 Sign in with Google**: new users get a private Brokeless Sheet in their own Google Drive. Use it on any phone or laptop; nobody else can see it
+- **New-user setup** with clean defaults: bank, cash and card, default categories, generic bill presets
+- **💬 Feedback** now reaches the app maker's inbox
+
+- **📥 Import old data** (Settings → Import old data): expenses from a CSV or rows pasted from Excel / Google Sheets (Date, Amount, Category, Account, Note), and **salary / income month by month** (Month, Amount). Template to download, preview before importing, duplicates skipped, old entries never disturb today's balances
+- **💬 Send feedback** (Settings → Help us improve): idea, problem or like, with an optional reply email. It goes straight to the app maker's inbox
+- **After an update**: Android closes the app while installing. Ledger now pops a notification **"✅ Ledger updated · tap to open"** the moment it's done, and says so when it opens
+
+## From 8.8
 
 - **Cleaner pages**:
   - **Expenses**: total, one "Free to spend" line, the bell line, search and your list. That's it

@@ -98,13 +98,17 @@ public final class SmsStore {
         boolean promise = Pattern.compile("\\b(refund|cash ?back|reversal)", Pattern.CASE_INSENSITIVE).matcher(body).find()
                 && Pattern.compile("\\b(initiated|processed|will be|will reflect|within \\d|working days|business days|expected)", Pattern.CASE_INSENSITIVE).matcher(body).find()
                 && !Pattern.compile("avl\\.? ?bal|available bal", Pattern.CASE_INSENSITIVE).matcher(body).find();
+        /* "Payment of Rs 30 has been received on your Credit Card": you paid the card bill, one tap confirms it */
+        boolean cardPay = in && Pattern.compile("credit ?card", Pattern.CASE_INSENSITIVE).matcher(body).find()
+                && Pattern.compile("\\b(payment|thank)", Pattern.CASE_INSENSITIVE).matcher(body).find()
+                && !Pattern.compile("\\b(refund|revers|cash ?back)", Pattern.CASE_INSENSITIVE).matcher(body).find();
         Intent open = new Intent(c, MainActivity.class).putExtra(MainActivity.EXTRA_PENDING, true)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         PendingIntent pi = PendingIntent.getActivity(c, 1, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
         android.app.Notification n = new android.app.Notification.Builder(c, CHANNEL)
                 .setSmallIcon(R.drawable.ic_stat_rupee)
-                .setContentTitle(promise ? amt + "refund on the way" : amt + (in ? "received" : "paid") + " · tap to sort")
-                .setContentText(promise ? "Ledger will watch for it and tell you if it's late" : "Ledger saved this bank message for you")
+                .setContentTitle(promise ? amt + "refund on the way" : cardPay ? amt + "card payment received · tap to confirm" : amt + (in ? "received" : "paid") + " · tap to sort")
+                .setContentText(promise ? "Brokeless will watch for it and tell you if it's late" : "Brokeless saved this bank message for you")
                 .setAutoCancel(true)
                 .setContentIntent(pi)
                 .build();
