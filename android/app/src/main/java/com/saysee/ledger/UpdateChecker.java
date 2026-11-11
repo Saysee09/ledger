@@ -154,4 +154,49 @@ final class UpdateChecker {
         nm.notify(2001, n);
         p.edit().putString("notified", tag).apply();
     }
+
+    /** On or after the 1st (from 8 am), once a month: "Your October money report is ready". Off when the user turned it off or the month had no entries. */
+    static void monthReport(Context c) {
+        try {
+            SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            String ym = String.format(java.util.Locale.US, "%04d-%02d", cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH) + 1);
+            String had = p.getString("rpHad", "");
+            if (!p.getBoolean("rpOn", true) || ym.equals(p.getString("rpDone", "")) || had.isEmpty() || had.compareTo(ym) >= 0) return;
+            if (cal.get(java.util.Calendar.HOUR_OF_DAY) < 8) return;
+            if (Build.VERSION.SDK_INT >= 33 && c.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
+            NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm == null) return;
+            if (nm.getNotificationChannel("reports") == null) {
+                NotificationChannel ch = new NotificationChannel("reports", "Monthly report", NotificationManager.IMPORTANCE_DEFAULT);
+                ch.setDescription("On the 1st, when last month's summary is ready");
+                nm.createNotificationChannel(ch);
+            }
+            cal.add(java.util.Calendar.MONTH, -1);
+            String name = new java.text.SimpleDateFormat("MMMM", java.util.Locale.ENGLISH).format(cal.getTime());
+            Intent open = new Intent(c, MainActivity.class).setAction("ledger.widget.report").putExtra(Widgets.EXTRA, "report")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            PendingIntent pi = PendingIntent.getActivity(c, 51, open, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+            android.app.Notification n = new android.app.Notification.Builder(c, "reports")
+                    .setSmallIcon(R.drawable.ic_stat_rupee)
+                    .setContentTitle("Your " + name + " money report is ready")
+                    .setContentText("Spent, saved and top categories · tap to open")
+                    .setAutoCancel(true)
+                    .setContentIntent(pi)
+                    .build();
+            nm.notify(2002, n);
+            p.edit().putString("rpDone", ym).apply();
+        } catch (Exception ignored) { }
+    }
+
+    /** Called by the app each time it opens: is the reminder wanted, and does the current month have entries (it is "last month" on the 1st). */
+    static void monthReportSet(Context c, boolean on, boolean hasData) {
+        SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        SharedPreferences.Editor e = p.edit().putBoolean("rpOn", on);
+        if (hasData) {
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            e.putString("rpHad", String.format(java.util.Locale.US, "%04d-%02d", cal.get(java.util.Calendar.YEAR), cal.get(java.util.Calendar.MONTH) + 1));
+        }
+        e.apply();
+    }
 }

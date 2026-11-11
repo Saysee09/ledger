@@ -678,6 +678,12 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
+        /** Monthly report reminder: wanted or not, and whether this month has any entries yet. */
+        @JavascriptInterface
+        public void setMonthReport(boolean on, boolean hasData) {
+            UpdateChecker.monthReportSet(MainActivity.this, on, hasData);
+        }
+
         /** Android's own page for this app (App info): permissions, and ⋮ → "Allow restricted settings". */
         @JavascriptInterface
         public void openAppSettings() {

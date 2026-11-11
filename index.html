@@ -285,6 +285,7 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .alert{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:16px;padding:10px 12px;margin-bottom:10px;box-shadow:var(--sh)}
 .alert.over{border-left-color:var(--red)}
 .cuse{margin:0 0 12px}.cuse-t{position:relative;height:12px;border-radius:99px;background:var(--soft);border:1px solid var(--line)}.cuse-t i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;min-width:4px}.cuse-t u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);border-radius:2px;text-decoration:none}
+.rpc{padding:8px 0;border-top:1px solid var(--line)}.rpc:first-of-type{border-top:none}.rpc-h{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:.9rem;font-weight:700}.rpc-h span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rpc-h b{flex:0 0 auto}.rpc-b{height:6px;border-radius:99px;background:var(--soft);margin:6px 0 4px;overflow:hidden}.rpc-b i{display:block;height:100%;border-radius:99px}.rpc small{font-size:.74rem}
 .srow.pw{align-items:flex-start}.srow.pw .mid b,.srow.pw .mid small{white-space:normal;overflow:visible;text-overflow:clip;display:block}.srow.pw .mid small{margin-top:2px;line-height:1.35}
 .alert.cpay{border-left-color:var(--green);flex-wrap:wrap}.alert.cpay .mid{flex:1 1 0;min-width:0}.alert.cpay .cpb{flex:1 0 100%;display:flex;gap:8px;align-items:center}.alert.cpay .cpb .btn{flex:1;margin:0}
 .gcard,.ecard{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px;box-shadow:var(--sh);margin-bottom:12px}
@@ -547,7 +548,7 @@ const FEEDBACK = { url: 'https://script.google.com/macros/s/AKfycbySVWBIS19EnBmG
 const fbOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(FEEDBACK.url);
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-11 b25';
+const APP_BUILD = '2026-11-11 b26';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -848,7 +849,7 @@ function driveCard() {
   <div class="btns"><button class="btn sec sm" data-act="syncNow">Sync now</button><a class="btn sec sm" href="https://docs.google.com/spreadsheets/d/${esc(D.id)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center">Open my Sheet</a></div>
   ${lastErr ? '<button class="btn" data-act="dReauth">Sign in again</button>' : ''}
   <button class="btn dng" data-act="dSignOut">Sign out</button>
-  <div class="hint">☁️ A backup copy is saved in Drive → <b>Brokeless backups</b> each day you open the app${S.prefs.dBk ? ' · last ' + dLabel(S.prefs.dBk) : ''}. Monthly email reports and Google Calendar alerts aren't available with Google sign-in yet.</div></div>`;
+  <div class="hint">☁️ A backup copy is saved in Drive → <b>Brokeless backups</b> each day you open the app${S.prefs.dBk ? ' · last ' + dLabel(S.prefs.dBk) : ''}. Your month's summary is in Settings → <b>Monthly report</b>. Google Calendar alerts aren't available with Google sign-in yet.</div></div>`;
 }
 
 /* ---------- sync ---------- */
@@ -1027,6 +1028,61 @@ async function driveRestore(id) {
   if (!await driveSync(true)) throw new Error(lastErr || 'could not save');
 }
 
+/* ---------- monthly report, inside the app (works for everyone, no server needed) ----------
+   Settings → Monthly report. On the 1st the bell (and the phone) says last month's report is ready;
+   "Send to my email" opens your mail app with the report already written, addressed to you. */
+function repData(m) {
+  const D = wrapData(m), saved = r2(D.inc - D.spent - D.emi), days = D.cur ? new Date().getDate() : daysIn(m);
+  const top = S.exp.filter(e => inP(e, m) && myX(e) && e.amount > 0).sort((a, b) => b.amount - a.amount).slice(0, 5);
+  const cards = live(a => a.type === 'card' && mineA(a)).map(a => [a.name, cardDue(a)]).filter(x => x[1] > .004);
+  return Object.assign(D, { saved, rate: D.inc > 0 ? Math.round(saved / D.inc * 100) : null, avg: days ? r2(D.spent / days) : 0, ch: D.prev > 0 ? Math.round((D.spent - D.prev) / D.prev * 100) : null, top, cards });
+}
+const repMail = () => (S.drive && S.drive.email) || (S.cfg.report || {}).email || '';
+function repText(m) {
+  const D = repData(m), L = mLabel(m), P = mLabel(shiftM(m, -1)), o = [];
+  o.push('Brokeless · ' + L + (D.cur ? ' (so far)' : ''), '');
+  o.push('Spent: ' + fmtINR(D.spent) + (D.ch == null ? '' : ' (' + (D.ch === 0 ? 'same as ' : Math.abs(D.ch) + '% ' + (D.ch < 0 ? 'less' : 'more') + ' than ') + P + ')'));
+  o.push('Income: ' + fmtINR(D.inc)); if (D.emi) o.push('EMIs: ' + fmtINR(D.emi)); if (D.inv) o.push('Invested: ' + fmtINR(D.inv));
+  if (D.rate != null) o.push((D.saved >= 0 ? 'Left over: ' : 'Overspent: ') + fmtINR(Math.abs(D.saved)) + ' (' + D.rate + '% of income)');
+  o.push('Average per day: ' + fmtINR(D.avg), 'Entries: ' + D.n + ' · no-spend days: ' + D.noSpend);
+  if (D.cats.length) { o.push('', 'WHERE IT WENT'); D.cats.slice(0, 8).forEach(([n, v]) => { const b = +cat(n).budget; o.push('- ' + n + ': ' + fmtINR(v) + ' (' + Math.round(v / D.spent * 100) + '%)' + (b > 0 ? ' · budget ' + fmtINR(b) + (v > b ? ' · OVER by ' + fmtINR(v - b) : ' · ok') : '')); }); }
+  if (D.top.length) { o.push('', 'BIGGEST SPENDS'); D.top.forEach(e => o.push('- ' + fmtINR(e.amount) + ' · ' + (e.remarks || e.payee || e.category) + ' · ' + dLabel(e.ts.slice(0, 10)))); }
+  if (D.cards.length) { o.push('', 'CARD DUES NOW'); D.cards.forEach(([n, v]) => o.push('- ' + n + ': ' + fmtINR(v))); }
+  o.push('', 'Free to spend now: ' + fmtINR(freeTotal()), '', 'Sent from Brokeless, from my own phone.');
+  return o.join('\n');
+}
+function repCard() {
+  const m = U.rpm && U.rpm <= ym() ? U.rpm : shiftM(ym(), -1), D = repData(m), mail = repMail();
+  const dl = D.ch == null ? '' : `<small class="${D.ch > 0 ? 'red' : 'green'}">${D.ch === 0 ? 'same as last month' : (D.ch > 0 ? '▲ ' : '▼ ') + Math.abs(D.ch) + '% vs ' + mLabel(shiftM(m, -1), 1)}</small>`;
+  const nav = `<div class="mnav" style="margin:0 0 12px"><button data-act="repShift" data-n="-1" aria-label="Previous">‹</button><b>${mLabel(m)}${D.cur ? ' · so far' : ''}</b><button data-act="repShift" data-n="1" aria-label="Next" ${m >= ym() ? 'disabled' : ''}>›</button></div>`;
+  if (!D.n && !D.inc) return `<div class="card">${nav}<div class="empty"><span class="big">📭</span>Nothing logged in ${mLabel(m)}.<br>Pick another month with the arrows.</div></div>` + repOpts();
+  return `<div class="card">${nav}
+  <div class="detail" style="padding-top:0"><div class="dv">${inr(D.spent)}</div><div class="dt">spent · ${D.n} entr${D.n === 1 ? 'y' : 'ies'} ${dl ? '· ' + dl : ''}</div></div>
+  <div class="kv"><div><span>Income</span><b class="green">${inr(D.inc)}</b></div>${D.emi ? `<div><span>EMIs</span><b>${inr(D.emi)}</b></div>` : ''}${D.inv ? `<div><span>Invested</span><b>${inr(D.inv)}</b></div>` : ''}${D.rate != null ? `<div><span>${D.saved >= 0 ? 'Left over' : 'Overspent'}</span><b class="${D.saved >= 0 ? 'green' : 'red'}">${inr(Math.abs(D.saved))} · ${D.rate}%</b></div>` : ''}<div><span>Average per day</span><b>${inr(D.avg)}</b></div><div><span>No-spend days</span><b>${D.noSpend} of ${D.dim}</b></div></div></div>
+  ${D.cats.length ? `<div class="card"><h2>Where it went</h2>${D.cats.slice(0, 8).map(([n, v]) => { const c = cat(n), b = +c.budget, p = Math.round(v / D.spent * 100); return `<div class="rpc"><div class="rpc-h"><span>${c.icon} ${esc(n)}</span><b>${inr(v)} <small class="mute">${p}%</small></b></div><div class="rpc-b"><i style="width:${Math.max(2, p)}%;background:${c.color}"></i></div>${b > 0 ? `<small class="${v > b ? 'red' : 'mute'}">${v > b ? 'Over budget by ' + inr(v - b) : 'Within budget of ' + inr(b, 1)}</small>` : ''}</div>`; }).join('')}</div>` : ''}
+  ${D.top.length ? `<div class="card"><h2>Biggest spends</h2>${D.top.map(e => `<div class="srow"><span class="ic" style="background:${cat(e.category).color}22">${cat(e.category).icon}</span><span class="mid"><b>${esc(e.remarks || e.payee || e.category)}</b><small>${esc(e.category)} · ${dLabel(e.ts.slice(0, 10))}</small></span><b style="flex:0 0 auto">${inr(e.amount)}</b></div>`).join('')}</div>` : ''}
+  ${D.cards.length ? `<div class="card"><h2>Card dues now</h2><div class="kv">${D.cards.map(([n, v]) => `<div><span>${esc(n)}</span><b class="red">${inr(v)}</b></div>`).join('')}</div></div>` : ''}
+  <div class="card"><h2>Send it</h2><a class="btn" href="mailto:${encodeURIComponent(mail)}?subject=${encodeURIComponent('Brokeless · ' + mLabel(m) + ' report')}&body=${encodeURIComponent(repText(m))}">✉️ Send to ${mail ? esc(mail) : 'my email'}</a>
+  <div class="btns"><button class="btn sec" data-act="repShare">Share</button><button class="btn sec" data-act="wrapOpenM" data-m="${m}">🎁 Monthly Wrap</button></div>
+  <div class="hint">Your mail app opens with the report already written${mail ? ' and addressed to you' : ''}. Tap Send there. Nothing is sent without you, and the numbers never pass through anyone else's server.</div></div>` + repOpts();
+}
+const repOpts = () => `<div class="card"><h2>Remind me</h2><label class="check" style="margin-top:0"><input type="checkbox" data-in="repOn" ${S.prefs.mrep !== false ? 'checked' : ''}> Tell me on the 1st when last month's report is ready</label><div class="hint">${AND ? 'A phone notification and a line in the 🔔 bell.' : 'A line in the 🔔 bell when you open Brokeless.'}</div></div>`;
+IN.repOn = t => { S.prefs.mrep = t.checked; save(); repSync(); toast(t.checked ? 'You will be told on the 1st' : 'Reminder off'); };
+ACT.repShift = el => { const m = U.rpm && U.rpm <= ym() ? U.rpm : shiftM(ym(), -1); U.rpm = shiftM(m, +el.dataset.n); if (U.rpm > ym()) U.rpm = ym(); const y = window.scrollY; render(); window.scrollTo(0, y); };
+ACT.repSent = () => { S.prefs.repSeen = ym(); save(); };
+ACT.repShare = async () => { const m = U.rpm && U.rpm <= ym() ? U.rpm : shiftM(ym(), -1), t = repText(m); try { if (navigator.share) { await navigator.share({ title: 'Brokeless · ' + mLabel(m), text: t }); return; } } catch (e) { if (e && e.name === 'AbortError') return; } try { await navigator.clipboard.writeText(t); toast('Copied ✓ Paste it anywhere'); } catch (e) { toast('Could not share from here'); } };
+ACT.wrapOpenM = el => { try { wrapShow(el.dataset.m); } catch (e) { toast('Open ✨ → Wrap'); } };
+function repOpen(m) { U.rpm = m || shiftM(ym(), -1); S.prefs.repSeen = ym(); save(); shut(); U.tab = 'settings'; U.sp = 'mreport'; U.fresh = true; render(); window.scrollTo(0, 0); bellBadge(); }
+ACT.repOpen = () => repOpen();
+/* bell: once a month, when last month has entries and the report has not been opened yet */
+function repAlert() {
+  const pm = shiftM(ym(), -1); if (S.prefs.mrep === false || S.prefs.repSeen === ym() || !S.exp.some(e => inP(e, pm))) return '';
+  return `<div class="alert info"><span class="ic" style="background:var(--soft)">📊</span><span class="mid"><b>Your ${mLabel(pm).replace(/ \d{4}$/, '')} report is ready</b><small>Spent, saved, top categories. Send it to your email in one tap.</small></span><button class="btn sm" data-act="repOpen">Open</button><button class="ax" data-act="repSeen" aria-label="Dismiss">✕</button></div>`;
+}
+ACT.repSeen = () => { S.prefs.repSeen = ym(); save(); render(); if (inboxCount().all) inboxSheet(); else shut(); };
+/* the phone app sends the "report is ready" notification on the 1st; tell it whether you want it and whether this month has anything in it */
+function repSync() { try { if (AND && AND.setMonthReport) AND.setMonthReport(S.prefs.mrep !== false, S.exp.some(e => inP(e, ym()))); } catch (e) { } }
+
 /* ---------- events ---------- */
 document.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (!el) return; const f = ACT[el.dataset.act]; if (f) { e.preventDefault(); f(el, e); } });
 document.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.in && IN[t.dataset.in]) IN[t.dataset.in](t); });
@@ -1120,7 +1176,7 @@ function widgetSnap() {
 function widgetPush() { try { if (S.accounts.length) AND.setWidgets(JSON.stringify(widgetSnap())); } catch (e) { } }
 /* a widget button opened the app */
 function widgetAct(a) {
-  if (!a) return; const go = () => { if (a === 'exp' || a === 'inc') { setTab('home'); compose(a); } else if (a === 'inbox') inboxSheet(); else if (a === 'pulse') { setTab('home'); ACT.pulseOpen(); } else if (a === 'insights') setTab('insights'); else if (a === 'update') { updLoad(); updSheet(); } else setTab('home'); };
+  if (!a) return; const go = () => { if (a === 'exp' || a === 'inc') { setTab('home'); compose(a); } else if (a === 'inbox') inboxSheet(); else if (a === 'pulse') { setTab('home'); ACT.pulseOpen(); } else if (a === 'insights') setTab('insights'); else if (a === 'report') repOpen(); else if (a === 'update') { updLoad(); updSheet(); } else setTab('home'); };
   setTimeout(go, 200);
 }
 window.__ledgerAction = a => widgetAct(a);
@@ -1214,7 +1270,7 @@ ACT.updCheck = () => { if (!AND || !AND.updateCheck) return toast('Update the ph
 function heldDues() { return live(a => a.others).filter(a => heldOwed(a.name) > .004).map(a => `<div class="alert"><span class="ic" style="background:var(--soft)">🤝</span><span class="mid"><b>You owe ${esc(a.name)} ${inr(heldOwed(a.name))}</b><small>Used from ${esc(a.name)}'s money for yourself</small></span><button class="btn sm" data-act="heldPay" data-n="${esc(a.name)}">Pay back</button></div>`).join(''); }
 function inboxParts(all) {
   const keep = U.nudgeAll; U.nudgeAll = true;
-  try { return { sort: pendSort(), act: cardPayAlerts() + updAlert() + cardDues(all) + remDue() + emiDue() + heldDues(), info: cardUseAlerts() + refundAlerts() + recurAlert() + budgetAlerts() + goalNudges() + nudges() }; } finally { U.nudgeAll = keep; }
+  try { return { sort: pendSort(), act: cardPayAlerts() + updAlert() + cardDues(all) + remDue() + emiDue() + heldDues(), info: repAlert() + cardUseAlerts() + refundAlerts() + recurAlert() + budgetAlerts() + goalNudges() + nudges() }; } finally { U.nudgeAll = keep; }
 }
 const nAlerts = h => (h.match(/class="alert/g) || []).length;
 function inboxCount() { if (!S.accounts.length) return { all: 0, sort: 0, act: 0 }; const P = inboxParts(false), A = inboxParts(true); return { sort: P.sort.length, act: nAlerts(P.act), info: nAlerts(P.info), all: P.sort.length + nAlerts(A.act) + nAlerts(P.info), badge: P.sort.length + nAlerts(P.act) + nAlerts(P.info) }; }
@@ -2267,7 +2323,7 @@ const HELP = [
   ['🤝', 'Loans & split bills', ['Money → Loans: "I lent" or "I borrowed", then mark repayments.', 'Split a bill while adding an expense: your share is the expense, the rest is owed to you.'], 'Open Loans', 'money:loans'],
   ['🎯', 'Goals', ['Plan → Goals. A goal sets money aside inside an account.', '"Free to spend" is your banks and cash minus goal money.', 'Add money to a goal or take it out whenever you like.'], 'Open Plan', 'plan:goals'],
   ['🔔', 'Bills & reminders', ['Plan → Bills. Add rent, recharges, subscriptions, SIPs.', 'A bill can remind you, or log itself on the due day.', 'Brokeless also spots payments that repeat and offers to remind you.'], 'Open Bills', 'plan:rem'],
-  ['📊', 'Insights & budget', ['Insights has Overview, Spending, Trends and Net worth. Change the month at the top.', 'Set a monthly budget per category in Settings → Categories.', 'Tap Net worth to choose what counts.'], 'Open Insights', 'tab:insights'],
+  ['📊', 'Insights & budget', ['Insights has Overview, Spending, Trends and Net worth. Change the month at the top.', 'Set a monthly budget per category in Settings → Categories.', 'Settings → Monthly report sums up last month and can send it to your email.', 'Tap Net worth to choose what counts.'], 'Open Insights', 'tab:insights'],
   ['✨', 'Ask · Pulse · Wrap', ['Tap ✨ at the top right.', 'Ask answers questions about your own data, on your phone.', 'Pulse is your money health score. Wrap is a shareable story of your month.'], '', ''],
   ['🔐', 'Lock, privacy & backups', ['Settings → Lock & privacy: fingerprint, PIN, pattern or password.', '👁 at the top hides all amounts.', 'With Google sign-in your data is in a private Sheet in your own Drive, with a backup copy each day you open the app.', 'Settings → Backups: restore a copy or download a file.'], 'Open Backups', 'sp:backup']
 ];
@@ -4639,6 +4695,7 @@ function renderSettings() {
   <div class="hint">${S.theme === 'glass' ? 'Glass: see-through frosted cards over a soft colour wash. Picks bright or night to match your phone, unless you choose one.' : 'Auto follows your phone\'s light / dark setting. Try ✨ Glass for frosted see-through cards.'}</div></div>`);
   pg('bin', binCard());
   pg('help', helpCard());
+  if (U.sp === 'mreport') pg('mreport', repCard());
   pg('backup', isDrive() ? `<div class="card"><h2>Google Drive backups <small>Drive → Brokeless backups</small></h2><button class="btn" data-act="bkNow">☁️ Back up now</button>
   <div class="lbl">Keep daily backups</div><div class="seg" style="margin:0">${[7, 15, 30].map(k => `<button class="${bkKeepN() === k ? 'on' : ''}" data-act="bkKeep" data-v="${k}">Last ${k}</button>`).join('')}</div>
   <div id="bkBox" style="margin-top:12px"><div class="hint">Loading your backups…</div></div>
@@ -4660,7 +4717,7 @@ function renderSettings() {
 const SP = () => [
   ['Your data', [['sync', '☁️', isDrive() ? 'Google Drive & sync' : 'Google Sheet & sync', isDrive() ? (lastErr ? 'Problem · tap to see' : (S.drive.email || 'Signed in') + (S.lastSync ? ' · ' + S.lastSync : '')) : !S.url ? 'Not connected' : lastErr ? 'Problem · tap to see' : 'Connected' + (S.lastSync ? ' · ' + S.lastSync : '')], ['backup', '🗂️', 'Backups & restore', isDrive() ? 'Drive · daily' + (S.prefs.dBk ? ' · last ' + dLabel(S.prefs.dBk) : '') : 'Drive · Ledger App / Backups'], ['import', '📥', 'Import old data', 'Expenses from a CSV · salary month by month'], ['bin', '🗑️', 'Recently deleted', (S.bin.length ? S.bin.length + ' item' + (S.bin.length === 1 ? '' : 's') : 'Empty') + ' · kept ' + binDays() + ' days']]],
   ['Money', [['accounts', '🏦', 'Accounts', S.accounts.length + ' account' + (S.accounts.length === 1 ? '' : 's')], ['cats', '🏷️', 'Categories, budgets & types', S.cfg.categories.length + ' categories'], ['sms', '📩', 'Bank SMS', (pendIgnored().length ? pendIgnored().length + ' ignored · ' : '') + 'suggestions · card digits']]],
-  ['App', [['help', '📖', 'How it works', 'Short guides · replay the tour'], ['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ...(S.url && S.key ? [['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off']] : []), ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Permissions & phone app', AND ? (i => ['SMS ' + (i.sms ? '✓' : '✕ off'), 'Notifications ' + (i.notif ? '✓' : '✕ off'), 'Battery ' + (i.battery ? '✓' : '✕ off')].join(' · '))(andInfo()) : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Brokeless v9.0']]],
+  ['App', [['help', '📖', 'How it works', 'Short guides · replay the tour'], ['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['mreport', '📊', 'Monthly report', 'Last month · send to your email'], ...(S.url && S.key ? [['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off']] : []), ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Permissions & phone app', AND ? (i => ['SMS ' + (i.sms ? '✓' : '✕ off'), 'Notifications ' + (i.notif ? '✓' : '✕ off'), 'Battery ' + (i.battery ? '✓' : '✕ off')].join(' · '))(andInfo()) : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Brokeless v9.0']]],
   ['Help us improve', [['feedback', '💬', 'Send feedback', (S.prefs.fbQ || []).length ? (S.prefs.fbQ.length + ' waiting to send') : 'Ideas, problems, what you like']]]
 ];
 function settingsView(PG) {
@@ -5242,9 +5299,10 @@ try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () =
 binPurge();
 setTab('home');
 bootLock();
-if (linked()) (isDrive() ? pull(true) : flush().then(() => pull(true))).then(() => { if (runAuto()) render(); });
+if (linked()) (isDrive() ? pull(true) : flush().then(() => pull(true))).then(() => { if (runAuto()) render(); repSync(); });
 else if (!S.accounts.length) setTimeout(welcome, 450);
 else if (runAuto()) render();
+repSync();
 setInterval(flush, 30000);
 window.addEventListener('online', flush);
 if (AND) {

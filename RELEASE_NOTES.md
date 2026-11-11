@@ -1,3 +1,9 @@
+## Brokeless v9.1 · What's new
+
+- **📊 Monthly report in the app** (Settings → Monthly report): spent vs last month, income, what was left over, average per day, where it went with budgets, the 5 biggest spends and card dues. Use ‹ › for any month
+- **✉️ Send to my email**: opens your mail app with the report already written and addressed to your Google account. You tap Send. Works with Google sign-in, no extra permission
+- **🔔 On the 1st**: a phone notification and a line in the bell say last month's report is ready. Switch it off on the same page
+
 ## Brokeless v9.0 · What's new
 
 - **SMS access blocked by the phone?** The set-up screen now has an **Open Brokeless in phone settings** button with the two taps to do there (⋮ → Allow restricted settings)
