@@ -54,8 +54,13 @@ html[data-glass]::before{content:'';position:fixed;inset:-2px;z-index:-1;pointer
 .recall.on{border-style:solid}
 .item small.wrap{white-space:normal;overflow:visible;text-overflow:clip}
 html.wr-on,html.wr-on body{overflow:hidden}
+#tour{z-index:96}.tr-skip{width:auto!important;padding:0 16px;font-size:.9rem!important}.tr-l{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-direction:column;gap:10px}.tr-l li{background:rgba(255,255,255,.14);border-radius:14px;padding:11px 14px;font-size:.92rem;font-weight:600;line-height:1.35}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(max(70px,4.4rem),1fr));gap:8px}.btile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 2px 8px;border-radius:16px;background:var(--soft);border:2px solid transparent;min-width:0}.btile small{font-size:.68rem;font-weight:700;color:var(--mute);text-align:center;line-height:1.15;overflow-wrap:break-word;max-width:100%}.btile.on{border-color:var(--acc);background:var(--acc2)}.btile.on small{color:var(--ink)}
+.bbadge{flex:0 0 auto;width:46px;height:46px;border-radius:14px;color:#fff;font-weight:800;font-size:11px;letter-spacing:.02em;display:grid;place-items:center;line-height:1}
+.obr2{background:var(--soft);padding:10px;border-radius:18px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px}.obr2 input{background:var(--card)}.obh{display:flex;align-items:center;gap:10px}.obh .obn{flex:1;min-width:0;font-weight:700}.obh .bbadge{width:40px;height:40px;font-size:10px}
+.hlp{border-top:1px solid var(--line);padding:4px 0}.hlp:first-of-type{border-top:none}.hlp summary{display:flex;align-items:center;gap:12px;padding:8px 0;cursor:pointer;list-style:none}.hlp summary::-webkit-details-marker{display:none}.hlp summary .ic{flex:0 0 auto}.hlp summary b{flex:1}.hlp summary::after{content:'›';color:var(--mute);font-size:1.2rem;transition:transform .15s}.hlp[open] summary::after{transform:rotate(90deg)}.hlp ol{margin:2px 0 10px 22px;padding:0;font-size:.88rem;line-height:1.5;color:var(--mute)}.hlp li{margin-bottom:5px}.hlp .btn{margin:0 0 10px}
 html.sh-on,html.sh-on body{overflow:hidden;overscroll-behavior:none}.sheet,.sh-body{overscroll-behavior:contain}.scrim{touch-action:none}
-#wrap{position:fixed;inset:0;z-index:95;background:#0B0A1F;display:flex;flex-direction:column;color:#fff;animation:fade .25s ease}
+#wrap,#tour{position:fixed;inset:0;z-index:95;background:#0B0A1F;display:flex;flex-direction:column;color:#fff;animation:fade .25s ease}
 .wr-top{position:absolute;left:0;right:0;top:0;z-index:2;padding:calc(10px + env(safe-area-inset-top)) 14px 0;pointer-events:none}
 .wr-prog{display:flex;gap:4px}.wr-prog i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.3)}.wr-prog i.on{background:#fff}
 .wr-bar{display:flex;align-items:center;gap:6px;margin-top:8px;pointer-events:auto}.wr-bar b{flex:1;text-align:center;font-size:.9rem;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -541,7 +546,7 @@ const FEEDBACK = { url: 'https://script.google.com/macros/s/AKfycbySVWBIS19EnBmG
 const fbOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(FEEDBACK.url);
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-11 b21';
+const APP_BUILD = '2026-11-11 b22';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -755,10 +760,10 @@ async function driveEnsureTabs() {
   U.dTabsOk = S.drive.id;
 }
 /* read every tab into the same shape the Sheet script returns */
-async function driveRead() {
-  await driveEnsureTabs();
+async function driveRead(id) {
+  const sid = id || S.drive.id; if (!id) await driveEnsureTabs();
   const ranges = D_ORDER.map(k => dTab(k) + '!A1:ZZ').concat([D_CFG + '!A1:B']);
-  const r = await gapi('GET', SHEETS_API + '/' + S.drive.id + '/values:batchGet?valueRenderOption=UNFORMATTED_VALUE&' + ranges.map(x => 'ranges=' + encodeURIComponent(x)).join('&'));
+  const r = await gapi('GET', SHEETS_API + '/' + sid + '/values:batchGet?valueRenderOption=UNFORMATTED_VALUE&' + ranges.map(x => 'ranges=' + encodeURIComponent(x)).join('&'));
   const vr = r.valueRanges || [], data = {}, rows = {};
   D_ORDER.forEach((k, i) => {
     const v = (vr[i] && vr[i].values) || [], head = (v[0] || []).map(String), keyOf = {};
@@ -804,7 +809,7 @@ async function driveSync(silent) {
     S.lastSync = hm(new Date()); lastPull = Date.now(); lastErr = '';
     busy = false; binPurge(true); save(); render();
     if (!silent) toast('Up to date ✓');
-    if (S.outbox.length) setTimeout(() => driveSync(true), 1500);
+    if (S.outbox.length) setTimeout(() => driveSync(true), 1500); else driveBkSoon();
     return true;
   } catch (e) {
     busy = false; lastErr = e.consent ? 'Tap to sign in again' : netMsg(e); setStatus();
@@ -841,7 +846,7 @@ function driveCard() {
   <div class="btns"><button class="btn sec sm" data-act="syncNow">Sync now</button><a class="btn sec sm" href="https://docs.google.com/spreadsheets/d/${esc(D.id)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center">Open my Sheet</a></div>
   ${lastErr ? '<button class="btn" data-act="dReauth">Sign in again</button>' : ''}
   <button class="btn dng" data-act="dSignOut">Sign out</button>
-  <div class="hint">Monthly email reports, nightly Drive backups and calendar alerts aren't available with Google sign-in yet. Use <b>Backups → Download backup file</b> now and then.</div></div>`;
+  <div class="hint">☁️ A backup copy is saved in Drive → <b>Brokeless backups</b> each day you open the app${S.prefs.dBk ? ' · last ' + dLabel(S.prefs.dBk) : ''}. Monthly email reports and Google Calendar alerts aren't available with Google sign-in yet.</div></div>`;
 }
 
 /* ---------- sync ---------- */
@@ -921,6 +926,105 @@ ACT.dSignOut = async () => {
 };
 ACT.syncNow = async () => { if (isDrive()) { if (/sign in/i.test(lastErr)) return ACT.dReauth(); toast('Syncing…'); return driveSync(false); } if (!linked()) { setTab('settings'); return ACT.spOpen({ dataset: { k: 'sync' } }); } toast(($('#syncTxt') || {}).textContent === 'Offline' ? 'Not connected to your Sheet · Settings → Google Sheet' : (($('#syncTxt') || {}).textContent || '') + ' · syncing…'); await flush(); if (!S.outbox.length) await pull(false); else toast(lastErr ? 'Offline. ' + S.outbox.length + ' change(s) safe on this phone' : 'Sending…'); };
 
+/* ---- move an own-Sheet (secret key) Brokeless to Google sign-in ----
+   The phone already holds everything, so: pull the latest, sign in, make the Drive Sheet, upload it all, check the counts.
+   The old Sheet is never touched (its email reports are switched off so it stops mailing stale numbers). */
+const pushAll = () => { Object.keys(COLL).forEach(k => (S[COLL[k]] || []).forEach(r => S.outbox.push(up(k, r)))); Object.keys(S.cfg).forEach(k => S.outbox.push(cfgOp(k, S.cfg[k]))); };
+const rowCounts = () => { const n = {}; Object.keys(COLL).forEach(k => n[k] = (S[COLL[k]] || []).length); return n; };
+ACT.dSwitchAsk = () => openSheet('Switch to Google sign-in', `<div class="hint" style="margin-top:0">No more URL and secret key. You sign in with Google, like everyone else who uses Brokeless.</div>
+  <div class="kv"><div><span>1 · Latest data is taken from this phone</span><b>✓</b></div><div><span>2 · A private Sheet "Brokeless" is made in your Google Drive</span><b>✓</b></div><div><span>3 · Everything is copied in and counted</span><b>✓</b></div><div><span>4 · A backup copy is saved in Drive every day you open the app</span><b>✓</b></div></div>
+  <div class="hint">Your <b>old Sheet stays exactly as it is</b>, as a spare copy. Its monthly email is switched off so it does not mail old numbers.</div>
+  <div class="hint amber">Not available with Google sign-in yet: the monthly <b>email report</b>, <b>Google Calendar</b> alerts and saving new <b>bill photos</b> to Drive. Everything else works the same.</div>
+  <div class="hint">Using Brokeless on another phone or laptop? Sign out there afterwards and sign in with Google.</div>
+  <button class="btn big gsi" data-act="dSwitch">${GLOGO} Switch with Google</button>`);
+ACT.dSwitch = () => driveSwitch();
+async function driveSwitch() {
+  if (isDrive() || !S.url || !S.key || U.dSw) return; U.dSw = true;
+  const old = { url: S.url, key: S.key, srvV: S.srvV };
+  try {
+    toast('Getting the latest from your Sheet…');
+    const ok = await pull(true); if (ok && S.outbox.length) { busy = false; await flush(); }
+    if (!ok || S.outbox.length) { U.dSw = false; return toast('Could not reach your Sheet' + (lastErr ? ': ' + lastErr : '') + '. Try again when you are online.'); }
+    toast('Opening Google sign-in…');
+    await gToken(true);
+    const me = await gapi('GET', 'https://www.googleapis.com/oauth2/v3/userinfo');
+    toast('Making your Brokeless Sheet…');
+    let f = await driveFind();
+    if (f) {
+      const r = await gapi('GET', SHEETS_API + '/' + f.id + '/values:batchGet?ranges=' + encodeURIComponent('Accounts!A2:A') + '&ranges=' + encodeURIComponent('Expenses!A2:A')), n = (r.valueRanges || []).reduce((a, v) => a + ((v.values || []).length), 0);
+      if (n) {
+        if (!confirm((me.email || 'This Google account') + ' already has a Brokeless Sheet with ' + n + ' row(s), from an earlier sign-in.\n\nKeep that one aside as "Brokeless (old)" and make a new one from this phone\'s data?')) { U.dSw = false; return toast('Nothing changed'); }
+        await gapi('PATCH', DRIVE_API + '/' + f.id + '?fields=id', { name: 'Brokeless (old · ' + today() + ')', appProperties: { brokeless: '0' } }); f = null;
+      }
+    }
+    if (!f) f = await driveCreate();
+    const want = rowCounts();
+    S.drive = { id: f.id, email: me.email || '', name: me.name || '', since: nowTs(), from: 'script' }; S.url = ''; S.key = ''; S.srvV = 99; U.dTabsOk = '';
+    S.outbox = []; pushAll(); save();
+    let good = await driveSync(true), bad = [];
+    for (let i = 0; good && S.outbox.length && i < 3; i++) good = await driveSync(true);
+    if (good) { const d = await driveRead(); bad = Object.keys(COLL).filter(k => ((d.data[k] || []).length) !== want[k]); }
+    if (!good || bad.length) {
+      /* put this phone back exactly as it was; set the half-made Sheet aside */
+      const why = !good ? lastErr : 'counts did not match (' + bad.map(dTab).join(', ') + ')';
+      try { await gapi('PATCH', DRIVE_API + '/' + f.id + '?fields=id', { name: 'Brokeless (unfinished · ' + today() + ')', appProperties: { brokeless: '0' } }); } catch (e) { }
+      S.drive = null; S.url = old.url; S.key = old.key; S.srvV = old.srvV; S.outbox = []; lastErr = ''; save(); U.dSw = false; render();
+      return toast('Switch stopped: ' + why + '. Nothing changed, you are still on your Sheet.');
+    }
+    /* the old Sheet stops mailing reports (best effort; it is not used again) */
+    try { const rp = S.cfg.report || {}; if (rp.on !== false || rp.weekly) await fetch(old.url, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ key: old.key, ops: [cfgOp('report', Object.assign({}, rp, { on: false, weekly: false }))] }) }); } catch (e) { }
+    S.prefs.oldSheet = old.url; save();
+    try { await driveBackup(true); } catch (e) { }
+    U.dSw = false; shut(); render();
+    const tot = Object.values(want).reduce((a, b) => a + b, 0);
+    openSheet('You are on Google sign-in ✓', `<div class="detail"><div class="ic big" style="background:var(--soft)">☁️</div><div class="dv" style="font-size:1.5rem">${tot.toLocaleString('en-IN')} rows copied</div><div class="dt">Signed in as ${esc(me.email || 'your Google account')} · every tab counted and matching</div></div>
+    <div class="kv"><div><span>Your data now lives in</span><b>Drive → Brokeless</b></div><div><span>First backup</span><b>${S.prefs.dBk === today() ? 'Saved ✓' : 'Will retry'}</b></div><div><span>Old Sheet</span><b>Untouched</b></div></div>
+    <div class="hint">On a new phone you only tap <b>Sign in with Google</b>. No URL, no secret key.</div><button class="btn big" data-act="closeSheet">Done</button>`);
+  } catch (e) {
+    if (S.drive && S.drive.from === 'script' && !S.prefs.oldSheet) { S.drive = null; S.url = old.url; S.key = old.key; S.srvV = old.srvV; S.outbox = []; save(); }
+    U.dSw = false; render();
+    if (e.message !== 'Sign-in cancelled') toast(e.consent ? 'Google sign-in needs your OK. Try again.' : 'Switch stopped: ' + netMsg(e) + '. Nothing changed.');
+  }
+}
+/* ---- daily backup in Google sign-in mode: a copy of the Sheet in Drive → "Brokeless backups", once each day the app is opened ---- */
+const bkKeepN = () => +((S.cfg.backup || {}).keep) || 15;
+async function driveBkFolder() {
+  const q = encodeURIComponent("appProperties has { key='brokelessBk' and value='1' } and trashed=false and mimeType='application/vnd.google-apps.folder'");
+  const r = await gapi('GET', DRIVE_API + '?q=' + q + '&pageSize=1&fields=files(id)');
+  if ((r.files || [])[0]) return r.files[0].id;
+  return (await gapi('POST', DRIVE_API + '?fields=id', { name: 'Brokeless backups', mimeType: 'application/vnd.google-apps.folder', appProperties: { brokelessBk: '1' } })).id;
+}
+async function driveBkList() {
+  const q = encodeURIComponent("appProperties has { key='brokelessBackup' and value='1' } and trashed=false");
+  const r = await gapi('GET', DRIVE_API + '?q=' + q + '&orderBy=createdTime desc&pageSize=100&fields=files(id,name,createdTime,appProperties)');
+  return (r.files || []).map(f => ({ id: f.id, name: f.name, kind: (f.appProperties || {}).kind === 'safety' ? 'safety' : 'daily' }));
+}
+async function driveBackup(manual, kind) {
+  if (!isDrive()) return null;
+  if (!manual && (S.prefs.dBk === today() || S.outbox.length || U.dBkBusy)) return null;
+  U.dBkBusy = true;
+  try {
+    const folder = await driveBkFolder(), name = nowTs().slice(0, 16) + ' · ' + (kind === 'safety' ? 'Safety copy' : 'Backup');
+    await gapi('POST', DRIVE_API + '/' + S.drive.id + '/copy?fields=id', { name, parents: [folder], appProperties: { brokeless: '0', brokelessBackup: '1', kind: kind || 'daily' } });
+    if (kind !== 'safety') { S.prefs.dBk = today(); save(); }
+    const extra = (await driveBkList()).filter(b => b.kind === 'daily').slice(bkKeepN());
+    for (const b of extra) { try { await gapi('PATCH', DRIVE_API + '/' + b.id + '?fields=id', { trashed: true }); } catch (e) { } }
+    return name;
+  } finally { U.dBkBusy = false; }
+}
+const driveBkSoon = () => { if (isDrive() && S.prefs.dBk !== today() && !S.outbox.length) { clearTimeout(U.dBkT); U.dBkT = setTimeout(() => driveBackup(false).catch(() => { }), 5000); } };
+/* put a backup copy back: a safety copy of today's Sheet first, then every tab is replaced */
+async function driveRestore(id) {
+  await driveBackup(true, 'safety');
+  const d = await driveRead(id);
+  if (!((d.data.Accounts || []).length)) throw new Error('That backup has no accounts in it');
+  const before = {}; Object.keys(COLL).forEach(k => before[k] = (S[COLL[k]] || []).map(x => x.id));
+  S.outbox = []; applyRemote(d); S.outbox = [];
+  Object.keys(COLL).forEach(k => { const keep = new Set((S[COLL[k]] || []).map(x => x.id)); before[k].forEach(i => { if (!keep.has(i)) S.outbox.push(del(k, i)); }); });
+  pushAll(); save();
+  if (!await driveSync(true)) throw new Error(lastErr || 'could not save');
+}
+
 /* ---------- events ---------- */
 document.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (!el) return; const f = ACT[el.dataset.act]; if (f) { e.preventDefault(); f(el, e); } });
 document.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.in && IN[t.dataset.in]) IN[t.dataset.in](t); });
@@ -956,7 +1060,7 @@ function fitTiles(root) {
 function hideSheet() { document.documentElement.classList.remove('sh-on'); $('#scrim').classList.remove('open'); $('#sheet').classList.remove('open'); U.c = null; try { bellBadge(); } catch (e) { } }
 function shut() { if (sheetOpen()) { hideSheet(); U.extra = true; } }
 ACT.closeSheet = shut;
-window.addEventListener('popstate', () => { if (wrapOpen()) { wrapHide(); return; } if (sheetOpen()) hideSheet(); else { U.extra = false; if (U.tab === 'settings' && U.sp) { U.sp = null; U.fresh = true; render(); window.scrollTo(0, 0); } } });
+window.addEventListener('popstate', () => { if ($('#tour')) { tourHide(); return; } if (wrapOpen()) { wrapHide(); return; } if (sheetOpen()) hideSheet(); else { U.extra = false; if (U.tab === 'settings' && U.sp) { U.sp = null; U.fresh = true; render(); window.scrollTo(0, 0); } } });
 /* swipe the sheet down (from its top bar) to close */
 (() => {
   let y0 = null, dy = 0; const s = $('#sheet');
@@ -2056,20 +2160,102 @@ ACT.wConnect = async () => {
   if (!S.accounts.length) onboardAccounts(); else shut();
 };
 ACT.wSkip = () => onboardAccounts();
-function obRow(n, t) { return `<div class="obr"><input class="obn" value="${esc(n || '')}" placeholder="${t === 'card' ? 'e.g. HDFC Credit Card (optional)' : t === 'cash' ? 'Cash in hand' : 'e.g. HDFC Bank, SBI'}"><select class="obt">${Object.entries(ACC_T).map(([k, [i, l]]) => `<option value="${k}" ${k === (t || 'bank') ? 'selected' : ''}>${i} ${l}</option>`).join('')}</select><input class="obo" inputmode="decimal" placeholder="Balance right now ₹"></div>`; }
-function onboardAccounts() {
-  openSheet('Your accounts', `<div class="hint">Add every place your money sits with the balance it shows <b>right now</b>. Balances start counting from this moment, so they will always match your bank. For a credit card, type what you <b>owe</b> (0 if paid); add its limit later in Net worth.</div>
-  <div id="obRows">${obRow('', 'bank')}${obRow('Cash in hand', 'cash')}${obRow('', 'card')}</div>
-  <button class="btn sec" data-act="obAdd">+ Another account</button><button class="btn big" data-act="obSave">Start tracking</button>`, 'tall');
+/* ---------- first set-up: pick your banks (initials in the bank's colour, no logos), then type the balances ---------- */
+/* key, badge, account name, colour, how its SMS names it, has credit cards */
+const BANKS = [
+  ['sbi', 'SBI', 'SBI', '#1E4FA3', /\bsbi\b|state bank/i, 1], ['hdfc', 'HDFC', 'HDFC Bank', '#004C8F', /\bhdfc\b/i, 1], ['icici', 'ICICI', 'ICICI Bank', '#B33A1E', /\bicici\b/i, 1], ['axis', 'AXIS', 'Axis Bank', '#97144D', /\baxis\b/i, 1],
+  ['kotak', 'KOTAK', 'Kotak Bank', '#D0202E', /\bkotak\b/i, 1], ['pnb', 'PNB', 'PNB', '#A3123F', /\bpnb\b|punjab national/i, 1], ['bob', 'BoB', 'Bank of Baroda', '#E8601C', /\bbob\b|bank of baroda/i, 1], ['canara', 'CAN', 'Canara Bank', '#0B77B8', /\bcanara\b/i, 1],
+  ['union', 'UBI', 'Union Bank', '#C8202F', /\bunion bank\b/i, 1], ['idfc', 'IDFC', 'IDFC First Bank', '#8E1B2B', /\bidfc\b/i, 1], ['indusind', 'INDUS', 'IndusInd Bank', '#7A1F1F', /\bindusind\b/i, 1], ['yes', 'YES', 'Yes Bank', '#0A53A0', /\byes ?bank\b/i, 1],
+  ['boi', 'BOI', 'Bank of India', '#0F5FA8', /(?<!state |union |central )\bbank of india\b|\bboi\b/i, 0], ['federal', 'FED', 'Federal Bank', '#0C4DA2', /\bfederal\b/i, 1], ['au', 'AU', 'AU Bank', '#5B2A86', /^au\b|\bau (?:small|bank)/i, 1], ['rbl', 'RBL', 'RBL Bank', '#1B3F8B', /\brbl\b/i, 1],
+  ['indian', 'INDN', 'Indian Bank', '#1D4E9E', /\bindian bank\b/i, 0], ['idbi', 'IDBI', 'IDBI Bank', '#00836C', /\bidbi\b/i, 0], ['central', 'CBI', 'Central Bank', '#B5121B', /\bcentral bank\b/i, 0], ['iob', 'IOB', 'IOB', '#1F3C88', /\biob\b|indian overseas/i, 0],
+  ['uco', 'UCO', 'UCO Bank', '#0E4C92', /\buco\b/i, 0], ['mah', 'BoM', 'Bank of Maharashtra', '#0A6EB4', /\bbank of maharashtra\b/i, 0], ['bandhan', 'BDN', 'Bandhan Bank', '#C2262E', /\bbandhan\b/i, 0], ['ippb', 'IPPB', 'India Post Bank', '#B3261E', /\bippb\b|india post/i, 0],
+  ['hsbc', 'HSBC', 'HSBC', '#C8102E', /\bhsbc\b/i, 1], ['sc', 'SC', 'Standard Chartered', '#0473EA', /\bstandard chartered\b|\bstanchart\b/i, 1], ['dbs', 'DBS', 'DBS Bank', '#D4202C', /\bdbs\b/i, 0], ['amex', 'AMEX', 'Amex', '#016FD0', /\bamex\b|american express/i, 2],
+  ['onecard', '1CARD', 'OneCard', '#111827', /\bonecard\b/i, 2]
+];
+const WALLETS = [['paytm', 'Paytm', '#00B9F1'], ['phonepe', 'PhonePe', '#5F259F'], ['amazonpay', 'Amazon Pay', '#FF9900'], ['mobikwik', 'MobiKwik', '#1A6FE0']];
+const bankBy = k => BANKS.find(b => b[0] === k);
+const bankOf = name => BANKS.find(b => b[4].test(String(name || '')));
+const bBadge = (short, color) => `<span class="bbadge" style="background:${color}">${esc(short)}</span>`;
+const cardName = b => b[0] === 'sbi' ? 'SBI Card' : b[5] === 2 ? b[2] : b[2].replace(/ Bank$/, '') + ' Credit Card';
+function onboardAccounts() { U.ob = U.ob && U.ob.banks ? U.ob : { banks: [], cards: [], wal: [] }; obPick(); }
+function obPick() {
+  const O = U.ob, tile = (g, k, short, color, label) => `<button class="btile ${O[g].includes(k) ? 'on' : ''}" data-act="obTog" data-g="${g}" data-k="${k}">${bBadge(short, color)}<small>${esc(label)}</small></button>`;
+  openSheet('Which banks do you use?', `<div class="hint" style="margin-top:0">Tap every bank you have an account in. Brokeless sets each one up and matches its SMS for you. You can add or change accounts any time.</div>
+  <div class="lbl">Bank accounts</div><div class="bgrid">${BANKS.filter(b => b[5] !== 2).map(b => tile('banks', b[0], b[1], b[3], b[2].replace(/ Bank$/, ''))).join('')}</div>
+  <div class="lbl">Credit cards <small class="mute">(skip if none)</small></div><div class="bgrid">${BANKS.filter(b => b[5]).map(b => tile('cards', b[0], b[1], b[3], b[2].replace(/ Bank$/, ''))).join('')}</div>
+  <div class="lbl">Wallets <small class="mute">(only if you keep money in them)</small></div><div class="bgrid">${WALLETS.map(w => tile('wal', w[0], w[1].slice(0, 5).toUpperCase(), w[2], w[1])).join('')}</div>
+  <div class="hint">Bank not here? Tap Next and use "+ Another account".</div>`, 'tall', `<button class="btn big" data-act="obNext" id="obNextBtn" style="margin:0">${obNextLabel()}</button>`);
 }
-ACT.obAdd = () => $('#obRows').insertAdjacentHTML('beforeend', obRow());
+const obNextLabel = () => { const n = U.ob.banks.length + U.ob.cards.length + U.ob.wal.length; return n ? 'Next · ' + n + ' picked' : 'Skip · I\'ll type them myself'; };
+ACT.obTog = el => { const L = U.ob[el.dataset.g], k = el.dataset.k, i = L.indexOf(k); if (i >= 0) L.splice(i, 1); else L.push(k); el.classList.toggle('on', i < 0); const b = $('#obNextBtn'); if (b) b.textContent = obNextLabel(); buzz(6); };
+ACT.obNext = () => obBalances();
+ACT.obBack = () => obPick();
+function obRow(n, t) { return `<div class="obr"><input class="obn" value="${esc(n || '')}" placeholder="${t === 'card' ? 'e.g. HDFC Credit Card (optional)' : t === 'cash' ? 'Cash in hand' : 'e.g. HDFC Bank, SBI'}"><select class="obt">${Object.entries(ACC_T).map(([k, [i, l]]) => `<option value="${k}" ${k === (t || 'bank') ? 'selected' : ''}>${i} ${l}</option>`).join('')}</select><input class="obo" inputmode="decimal" placeholder="Balance right now ₹"></div>`; }
+function obBalances() {
+  const O = U.ob, row = (t, badge, name) => `<div class="obr2" data-t="${t}"><div class="obh">${badge}<input class="obn" value="${esc(name)}" autocomplete="off"></div>${t === 'card' ? '<div class="grid2"><input class="obo" inputmode="decimal" placeholder="You owe now ₹"><input class="obl" inputmode="decimal" placeholder="Credit limit ₹"></div>' : `<input class="obo" inputmode="decimal" placeholder="${t === 'cash' ? 'Cash with you now ₹' : 'Balance right now ₹'}">`}</div>`;
+  const picked = O.banks.map(k => row('bank', bBadge(bankBy(k)[1], bankBy(k)[3]), bankBy(k)[2])).join('') + row('cash', bBadge('CASH', '#11A04F'), 'Cash in hand') + O.wal.map(k => { const w = WALLETS.find(x => x[0] === k); return row('wallet', bBadge(w[1].slice(0, 5).toUpperCase(), w[2]), w[1]); }).join('') + O.cards.map(k => row('card', bBadge(bankBy(k)[1], bankBy(k)[3]), cardName(bankBy(k)))).join('');
+  const none = !(O.banks.length + O.cards.length + O.wal.length);
+  openSheet('Balances right now', `<div class="hint" style="margin-top:0">Type what each one shows <b>right now</b> (open your bank app). Brokeless starts counting from this moment, so it always matches your bank. Leave a box empty for 0.</div>
+  <div id="obRows">${picked}${none ? obRow('', 'bank') : ''}</div>
+  <button class="btn sec" data-act="obAdd">+ Another account</button>`, 'tall', `<div class="btns" style="margin:0"><button class="btn sec" data-act="obBack" style="flex:0 0 auto;width:auto;padding:0 18px">‹ Back</button><button class="btn" data-act="obSave" style="flex:1 1 0;width:auto;min-width:0">Start tracking</button></div>`);
+}
+ACT.obAdd = () => { $('#obRows').insertAdjacentHTML('beforeend', obRow()); const r = $$('#obRows .obr').pop(); if (r) { r.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); r.querySelector('.obn').focus(); } };
 ACT.obSave = () => {
   const ts = nowTs(), seen = new Set(S.accounts.map(a => a.name.toLowerCase()));
-  const rows = $$('.obr').map(r => ({ n: r.querySelector('.obn').value.trim(), t: r.querySelector('.obt').value, o: parseAmt(r.querySelector('.obo').value) })).filter(r => r.n && !seen.has(r.n.toLowerCase()) && (seen.add(r.n.toLowerCase()), true));
+  const rows = $$('#obRows .obr2').map(r => ({ n: r.querySelector('.obn').value.trim(), t: r.dataset.t, o: parseAmt(r.querySelector('.obo').value), l: parseAmt((r.querySelector('.obl') || {}).value) }))
+    .concat($$('#obRows .obr').map(r => ({ n: r.querySelector('.obn').value.trim(), t: r.querySelector('.obt').value, o: parseAmt(r.querySelector('.obo').value) })))
+    .filter(r => r.n && !seen.has(r.n.toLowerCase()) && (seen.add(r.n.toLowerCase()), true));
   if (!rows.length) return toast('Add at least one account');
-  commit(rows.map((r, i) => up('Accounts', { id: uid('A'), name: r.n, type: r.t, opening: isNaN(r.o) ? 0 : (r.t === 'card' ? -Math.abs(r.o) : r.o), openingDate: ts, archived: false, order: S.accounts.length + i })));
-  shut(); render(); toast('You are all set 🎉');
+  const ops = rows.map((r, i) => up('Accounts', { id: uid('A'), name: r.n, type: r.t, opening: isNaN(r.o) ? 0 : (r.t === 'card' ? -Math.abs(r.o) : r.o), openingDate: ts, archived: false, order: S.accounts.length + i }));
+  const L = Object.assign({}, (S.cfg.cards || {}).limits); rows.forEach(r => { if (r.t === 'card' && r.l > 0) L[r.n] = r.l; });
+  if (Object.keys(L).length) ops.push(cfgOp('cards', Object.assign({}, S.cfg.cards, { limits: L })));
+  commit(ops); U.ob = null; shut(); render(); toast('You are all set 🎉');
+  if (!S.prefs.tour) setTimeout(tourShow, 500);
 };
+
+/* ---------- welcome tour (5 swipe cards, Skip on every card) + Settings → How it works ---------- */
+const TOUR = [
+  ['➕', 'Log a spend in 5 seconds', 'Tap the big <b>+</b> at the bottom. Amount, category, Save.', ['Split a bill with friends', 'Add a photo of the bill or a #tag', 'Income, transfers and investments are in the same +'], ['#3D2FD0', '#8B6CFF']],
+  ['📩', 'Your bank SMS does the typing', 'The phone app reads <b>only bank payment SMS</b>, never OTPs. Each one waits in the 🔔 bell.', ['One tap files it as expense, income or transfer', 'It remembers what you chose for each shop', 'Paid your card? It asks once: "Yes, I paid"'], ['#0B6E4F', '#19B37D']],
+  ['🏦', 'All your money in one place', 'The <b>Money</b> tab shows every bank, cash, card and investment.', ['Tap an account → Match to line it up with your bank', 'Tap a card → % of limit used and Pay', 'Loans to friends and EMIs live here too'], ['#0B4F8A', '#2F9BF5']],
+  ['🎯', 'Plan before the month plans you', 'The <b>Plan</b> tab keeps goals, bills and a budget.', ['Goals set money aside inside an account', 'Bills remind you, or log themselves', 'Budget warns at 80% and 100%'], ['#8A3A0B', '#F59E0B']],
+  ['🔐', 'Private by design', 'Your data lives on <b>your phone</b> and in <b>your own Google Drive</b>. Nobody else can see it.', ['Lock with fingerprint or PIN', '👁 hides every amount in one tap', 'Guides any time: Settings → How it works'], ['#17133A', '#5B5BF7']]
+];
+function tourShow() {
+  let el = $('#tour'); if (!el) { el = document.createElement('div'); el.id = 'tour'; document.body.appendChild(el); try { history.pushState({ tr: 1 }, ''); } catch (e) { } }
+  document.documentElement.classList.add('wr-on'); U.ti = 0;
+  el.innerHTML = `<div class="wr-top"><div class="wr-prog">${TOUR.map((_, i) => `<i class="${i === 0 ? 'on' : ''}"></i>`).join('')}</div><div class="wr-bar"><b style="text-align:left">Quick tour</b><button class="tr-skip" data-act="tourSkip">Skip</button></div></div>
+  <div class="wr-track" id="trTrack">${TOUR.map(([e, t, s, L, bg], i) => `<section class="wr-s" style="--a:${bg[0]};--b:${bg[1]}"><div class="wr-k">${i + 1} of ${TOUR.length}</div><div class="wr-e">${e}</div><div class="wr-t">${t}</div><div class="wr-sub">${s}</div><ul class="tr-l">${L.map(x => `<li>${x}</li>`).join('')}</ul></section>`).join('')}</div>
+  <div class="wr-foot"><button class="wr-btn main" data-act="tourNext" id="trNext" style="flex:1">Next</button></div>`;
+  const tr = $('#trTrack');
+  tr.addEventListener('scroll', () => { const i = Math.round(tr.scrollLeft / Math.max(1, tr.clientWidth)); if (i !== U.ti) { U.ti = i; tourMark(); } }, { passive: true });
+}
+function tourMark() { $$('#tour .wr-prog i').forEach((b, k) => b.classList.toggle('on', k <= U.ti)); const n = $('#trNext'); if (n) n.textContent = U.ti >= TOUR.length - 1 ? 'Start using Brokeless' : 'Next'; }
+function tourHide() { const el = $('#tour'); if (el) el.remove(); document.documentElement.classList.remove('wr-on'); if (!S.prefs.tour) { S.prefs.tour = today(); save(); } }
+const tourClose = () => { if (history.state && history.state.tr) history.back(); else tourHide(); };
+ACT.tourSkip = () => tourClose();
+ACT.tourNext = () => { const tr = $('#trTrack'); if (!tr) return; if (U.ti >= TOUR.length - 1) return tourClose(); U.ti++; tr.scrollTo({ left: U.ti * tr.clientWidth, behavior: 'smooth' }); tourMark(); };
+ACT.tourOpen = () => tourShow();
+/* icon, title, steps, button label, where the button goes */
+const HELP = [
+  ['➕', 'Add an expense', ['Tap the big + at the bottom of any page.', 'Type the amount, pick a category and the account you paid from.', 'Optional: a note, #tag, a bill photo, or Split to share it with friends.', 'To change or delete one, tap it in the Expenses list.'], 'Open Expenses', 'tab:home'],
+  ['📩', 'Bank SMS', ['Needs the Android app with SMS permission (Settings → Phone app).', 'Only completed payments are kept. OTPs and offers never leave your SMS inbox.', 'Open the 🔔 bell → tap a message → pick what it was → Save.', 'Use Ignore only when you already logged it by hand.', 'Rename a shop once (Roppen → Rapido) and it shows that way everywhere.'], 'Bank SMS settings', 'sp:sms'],
+  ['🏦', 'Accounts & balances', ['Money → Accounts shows every bank, cash, wallet and card.', 'Tap an account → Match, and type what your bank app shows. Brokeless adds one small correction.', 'Each account counts only entries after its "Balance as of" moment, so old data never breaks today\'s balance.', '"Held for others" keeps someone else\'s money out of your net worth.'], 'Open Accounts', 'money:acc'],
+  ['💳', 'Credit cards', ['A card shows what you owe, never the limit left.', 'A swipe is an expense on the day you swipe.', 'Paying the bill is a transfer bank → card. It is not a second expense.', 'Tap the card → Pay, any day, full or part.', 'Add the credit limit (Edit) to see % used and your safe line (30% unless you change it).'], 'Open Accounts', 'money:acc'],
+  ['⇄', 'Income, transfers, investments', ['Use the same + button and pick Income, Transfer or Invest at the top.', 'ATM withdrawal = transfer bank → cash.', 'Investments track what you put in and what it is worth now, with yearly return.'], 'Open Money', 'money:inc'],
+  ['🤝', 'Loans & split bills', ['Money → Loans: "I lent" or "I borrowed", then mark repayments.', 'Split a bill while adding an expense: your share is the expense, the rest is owed to you.'], 'Open Loans', 'money:loans'],
+  ['🎯', 'Goals', ['Plan → Goals. A goal sets money aside inside an account.', '"Free to spend" is your banks and cash minus goal money.', 'Add money to a goal or take it out whenever you like.'], 'Open Plan', 'plan:goals'],
+  ['🔔', 'Bills & reminders', ['Plan → Bills. Add rent, recharges, subscriptions, SIPs.', 'A bill can remind you, or log itself on the due day.', 'Brokeless also spots payments that repeat and offers to remind you.'], 'Open Bills', 'plan:rem'],
+  ['📊', 'Insights & budget', ['Insights has Overview, Spending, Trends and Net worth. Change the month at the top.', 'Set a monthly budget per category in Settings → Categories.', 'Tap Net worth to choose what counts.'], 'Open Insights', 'tab:insights'],
+  ['✨', 'Ask · Pulse · Wrap', ['Tap ✨ at the top right.', 'Ask answers questions about your own data, on your phone.', 'Pulse is your money health score. Wrap is a shareable story of your month.'], '', ''],
+  ['🔐', 'Lock, privacy & backups', ['Settings → Lock & privacy: fingerprint, PIN, pattern or password.', '👁 at the top hides all amounts.', 'With Google sign-in your data is in a private Sheet in your own Drive, with a backup copy each day you open the app.', 'Settings → Backups: restore a copy or download a file.'], 'Open Backups', 'sp:backup']
+];
+function helpCard() {
+  return `<div class="card"><h2>Quick tour</h2><div class="hint" style="margin-top:0">The 5 welcome cards, any time you like.</div><button class="btn" data-act="tourOpen">▶ Play the tour</button></div>
+  <div class="card"><h2>Guides <small>tap to open</small></h2>${HELP.map(([i, t, L, b, go]) => `<details class="hlp"><summary><span class="ic" style="background:var(--soft)">${i}</span><b>${esc(t)}</b></summary><ol>${L.map(x => `<li>${esc(x)}</li>`).join('')}</ol>${b ? `<button class="btn sec sm" data-act="helpGo" data-go="${go}">${esc(b)} ›</button>` : ''}</details>`).join('')}</div>
+  <div class="hint center">Still stuck? Settings → Send feedback reaches the maker directly.</div>`;
+}
+ACT.helpGo = el => { const [a, b] = el.dataset.go.split(':'); if (a === 'tab') return setTab(b); if (a === 'money') { U.mseg = b; return setTab('money'); } if (a === 'plan') { U.pseg = b; return setTab('goals'); } if (a === 'sp') { U.sp = b; U.fresh = true; render(); window.scrollTo(0, 0); } };
 
 /* =========================================================
    MONEY — income / transfers / invest / EMIs / loans
@@ -2550,7 +2736,7 @@ function parseSms(raw, recvTs) {
   const l4m = t.match(/(?:a\/?c|acct|account|card|from|to)\s*(?:no\.?|number|ending(?: with)?)?\s*[:.]?\s*(?:[x*]+|\.{2,})\s*(\d{3,6})/i) || t.match(/\b[xX*]{2,}(\d{3,6})\b/);
   const l4 = l4m ? l4m[1] : '';
   const banks = [['kotak', 'Kotak'], ['icici', 'ICICI'], ['hdfc', 'HDFC'], ['sbi', 'SBI'], ['axis', 'Axis'], ['idfc', 'IDFC'], ['yes ?bank', 'Yes Bank'], ['indusind', 'IndusInd'], ['bob|bank of baroda', 'BoB'], ['pnb', 'PNB'], ['paytm', 'Paytm'], ['amex|american express', 'Amex'], ['au bank|au small', 'AU'], ['federal', 'Federal'], ['rbl', 'RBL']];
-  const bk = (banks.find(([r]) => new RegExp('\\b(' + r + ')\\b', 'i').test(t)) || [, ''])[1];
+  const bk = (banks.find(([r]) => new RegExp('\\b(' + r + ')\\b', 'i').test(t)) || [, ''])[1] || (BANKS.find(b => !BANK_OLD.includes(b[0]) && b[4].test(t)) || [])[2] || '';
   let payee = '', m;
   /* "To dispute call 18002662 or SMS BLOCK…" is the bank's helpline, not who you paid */
   const tp = t.replace(/[.;,]?\s*(?:to|for|in case of)\s+(?:dispute|block|report|stop)\b.*$/i, '').replace(/[.;,]?\s*(?:if not (?:you|done)|not you\b|call\s+(?:us\s+)?(?:on\s+|at\s+)?1[89]00|sms\s+block)\b.*$/i, '');
@@ -2592,9 +2778,10 @@ ACT.nkSave = () => { const v = $('#nkIn').value.trim(), N = U.nk; if (!N) return
 ACT.nkClear = () => { const N = U.nk; if (!N) return; commit([nickOp(N.payee, '')]); toast('Using the bank\'s name'); nkDone(); };
 ACT.nickEdit = el => { const p = el.dataset.p || (U.pd && (S.pend.find(x => x.id === U.pd.id) || {}).payee); if (!p) return; if (U.pd && $('#pdRemk')) U.pd.note = $('#pdRemk').value; nickSheet(p, el.dataset.p ? '' : 'pend'); };
 const payeeNotes = (payee, pk) => uniq([pk && pk.note].concat(S.exp.filter(e => e.payee && payeeKey(e.payee) === payeeKey(payee)).slice(-30).reverse().map(e => e.remarks))).slice(0, 5);
+const BANK_OLD = ['sbi', 'hdfc', 'icici', 'axis', 'kotak', 'pnb', 'bob', 'idfc', 'indusind', 'yes', 'federal', 'au', 'rbl', 'amex'];
 function accForSms(x) {
   if (x.l4) { const a = S.accounts.find(a => (a.l4 || '').split(',').some(v => v && (v === x.l4 || v.slice(-4) === x.l4.slice(-4)))); if (a) return a.name; }
-  if (x.bank) { const typ = x.card ? 'card' : null, l = live(a => a.name.toLowerCase().includes(x.bank.toLowerCase()) && mineA(a) && (typ ? a.type === 'card' : a.type !== 'card')); if (l.length === 1) return l[0].name; }
+  if (x.bank) { const typ = x.card ? 'card' : null, bk = bankOf(x.bank), l = live(a => (a.name.toLowerCase().includes(x.bank.toLowerCase()) || (bk && bankOf(a.name) === bk)) && mineA(a) && (typ ? a.type === 'card' : a.type !== 'card')); if (l.length === 1) return l[0].name; }
   return '';
 }
 const SMS_GUESS = [[/railway|irctc|metro|uber|ola|rapido|petrol|fuel|fastag|bus|redbus/i, 'Transportation'], [/mc ?donald|swiggy|zomato|kfc|domino|pizza|cafe|restaurant|food|starbucks|burger|chai/i, 'Food & Dining'], [/amazon|flipkart|myntra|ajio|nykaa|meesho/i, 'Shopping'], [/airtel|jio|vodafone|vi |electric|bescom|mahavitaran|adani|gas|broadband/i, 'Household'], [/pharm|apollo|medplus|hospital|clinic|1mg/i, 'Medical'], [/netflix|hotstar|spotify|prime|youtube|google/i, 'Personal & Lifestyle']];
@@ -4391,6 +4578,7 @@ function renderSettings() {
   if (isDrive()) pg('sync', driveCard());
   else {
     if (!S.url) pg('sync', `<div class="card"><h2 style="display:block">☁️ Save to your Google Drive<small style="display:block;margin-top:3px">Recommended · free · private</small></h2><div class="hint" style="margin-top:0">Sign in with Google and Brokeless keeps everything in a private Sheet in <b>your</b> Google Drive. Use it on any phone or laptop. Nobody else can see it.</div><button class="btn big gsi" data-act="dSignIn">${GLOGO} Sign in with Google</button></div>`);
+    if (S.url && S.key) pg('sync', `<div class="card"><h2 style="display:block">☁️ Sign in with Google instead<small style="display:block;margin-top:3px">No more URL and secret key</small></h2><div class="hint" style="margin-top:0">Move your data to a private Sheet in your own Google Drive and sign in like everyone else. Your current Sheet stays as a spare copy.</div><button class="btn big gsi" data-act="dSwitchAsk">${GLOGO} Switch to Google sign-in</button></div>`);
     pg('sync', (S.url ? '' : '<details class="card"><summary style="font-weight:800;cursor:pointer">Advanced: use your own Sheet script</summary>') + `<div class="card"><h2>Google Sheet</h2><div class="lbl" style="margin-top:0">Web app URL</div><input id="sUrl" value="${esc(S.url)}" placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off"><div class="lbl">Secret key</div><input id="sKey" type="password" value="${esc(S.key)}" placeholder="Ledger menu → Show secret key" autocomplete="off">
   <button class="btn" data-act="sConnect">Save & connect</button><div class="btns"><button class="btn sec sm" data-act="syncNow">Sync now</button><button class="btn sec sm" data-act="reload">Reload from Sheet</button></div><div class="hint">${st}</div></div>` + (S.url ? '' : '</details>'));
   }
@@ -4427,12 +4615,17 @@ function renderSettings() {
   ${S.theme === 'glass' ? `<div class="lbl">Glass tone</div><div class="seg" style="margin:0">${[['', 'Auto'], ['light', 'Bright'], ['dark', 'Night']].map(([k, l]) => `<button class="${(S.glassTone || '') === k ? 'on' : ''}" data-act="glassTone" data-k="${k}">${l}</button>`).join('')}</div><div class="lbl">Glass effect</div><div class="seg" style="margin:0">${[['', '⚡ Smooth'], ['full', '💎 Full blur']].map(([k, l]) => `<button class="${(S.glassFx || '') === k ? 'on' : ''}" data-act="glassFx" data-k="${k}">${l}</button>`).join('')}</div><div class="hint">${S.glassFx === 'full' ? 'Full blur frosts every card live. Looks richest, but needs a fast phone; switch to Smooth if scrolling feels slow.' : 'Smooth keeps the see-through look but only blurs pop-ups, so scrolling stays fast. Try Full blur on a fast phone.'}</div>` : ''}
   <div class="hint">${S.theme === 'glass' ? 'Glass: see-through frosted cards over a soft colour wash. Picks bright or night to match your phone, unless you choose one.' : 'Auto follows your phone\'s light / dark setting. Try ✨ Glass for frosted see-through cards.'}</div></div>`);
   pg('bin', binCard());
-  pg('backup', `<div class="card"><h2>Google Drive backups <small>Ledger App / Backups</small></h2><button class="btn" data-act="bkNow">☁️ Back up now</button>
+  pg('help', helpCard());
+  pg('backup', isDrive() ? `<div class="card"><h2>Google Drive backups <small>Drive → Brokeless backups</small></h2><button class="btn" data-act="bkNow">☁️ Back up now</button>
+  <div class="lbl">Keep daily backups</div><div class="seg" style="margin:0">${[7, 15, 30].map(k => `<button class="${bkKeepN() === k ? 'on' : ''}" data-act="bkKeep" data-v="${k}">Last ${k}</button>`).join('')}</div>
+  <div id="bkBox" style="margin-top:12px"><div class="hint">Loading your backups…</div></div>
+  <div class="hint">A copy of your Sheet is saved the first time you open Brokeless each day${S.prefs.dBk ? ' · last one ' + dLabel(S.prefs.dBk) : ''}. Older copies beyond the number above go to Drive's bin.</div></div>
+  <div class="card"><h2>Files on this phone</h2><button class="btn sec" data-act="exportJson">⬇ Download backup file (JSON)</button><button class="btn sec" data-act="impJson">⬆ Restore from a JSON file</button><input type="file" id="impFile" accept=".json,application/json" hidden><button class="btn sec" data-act="exportCsv">⬇ Download all entries (CSV)</button><div class="hint">Your Sheet in Google Drive is the master copy. Before a restore from Drive a safety copy is made first, so it can be undone.</div></div>` : `<div class="card"><h2>Google Drive backups <small>Ledger App / Backups</small></h2><button class="btn" data-act="bkNow">☁️ Back up now</button>
   <div class="lbl">Keep automatic daily backups</div><div class="seg" style="margin:0">${[7, 15, 30].map(k => `<button class="${(+((S.cfg.backup || {}).keep) || 15) === k ? 'on' : ''}" data-act="bkKeep" data-v="${k}">Last ${k}</button>`).join('')}</div>
   <div id="bkBox" style="margin-top:12px">${S.url ? '<div class="hint">Loading your backups…</div>' : '<div class="hint">Connect your Sheet first.</div>'}</div>
   <div class="hint">Every night at 3 am a copy of your Sheet is saved as "2026-10-29 03:11 · Backup". Deleted backups go to Drive's bin, which Drive empties after 30 days (empty the bin to free space now).</div></div>
   <div class="card"><h2>Files on this phone</h2><button class="btn sec" data-act="exportJson">⬇ Download backup file (JSON)</button><button class="btn sec" data-act="impJson">⬆ Restore from a JSON file</button><input type="file" id="impFile" accept=".json,application/json" hidden><button class="btn sec" data-act="exportCsv">⬇ Download all entries (CSV)</button><button class="btn dng" data-act="clearLocal">Clear this phone's copy</button><div class="hint">The Google Sheet is your master copy. Before any restore a safety copy of the Sheet is made, so a restore can always be undone.</div></div>`);
-  if (U.sp === 'backup' && S.url) U.after = bkLoad;
+  if (U.sp === 'backup' && linked()) U.after = bkLoad;
   pg('sms', smartCard());
   pg('sms', `<div class="card"><h2>Bank SMS</h2><div class="lbl" style="margin-top:0">Card / account last 4 digits</div>${live(a => a.type !== 'cash' && a.type !== 'investment' && mineA(a)).map(a => `<div class="grid2" style="grid-template-columns:1fr 110px;align-items:center;margin-bottom:6px"><span style="font-weight:700">${esc(a.name)}</span><input data-in="acL4" data-n="${esc(a.name)}" inputmode="numeric" maxlength="12" value="${esc(a.l4 || '')}" placeholder="e.g. 1211"></div>`).join('')}<div class="hint">Matches SMS like "from XX1211" to the right account. Several numbers? Separate them with commas. The Brokeless phone app fills these in for you the first time it sees each one.</div><button class="btn sec" data-act="smsTry">🧪 Paste an SMS to test</button></div>`);
   pg('feedback', feedbackCard());
@@ -4442,9 +4635,9 @@ function renderSettings() {
 }
 /* settings: a short menu, each item opens its own page (Android back / ‹ returns to the menu) */
 const SP = () => [
-  ['Your data', [['sync', '☁️', isDrive() ? 'Google Drive & sync' : 'Google Sheet & sync', isDrive() ? (lastErr ? 'Problem · tap to see' : (S.drive.email || 'Signed in') + (S.lastSync ? ' · ' + S.lastSync : '')) : !S.url ? 'Not connected' : lastErr ? 'Problem · tap to see' : 'Connected' + (S.lastSync ? ' · ' + S.lastSync : '')], ['backup', '🗂️', 'Backups & restore', 'Drive · Ledger App / Backups'], ['import', '📥', 'Import old data', 'Expenses from a CSV · salary month by month'], ['bin', '🗑️', 'Recently deleted', (S.bin.length ? S.bin.length + ' item' + (S.bin.length === 1 ? '' : 's') : 'Empty') + ' · kept ' + binDays() + ' days']]],
+  ['Your data', [['sync', '☁️', isDrive() ? 'Google Drive & sync' : 'Google Sheet & sync', isDrive() ? (lastErr ? 'Problem · tap to see' : (S.drive.email || 'Signed in') + (S.lastSync ? ' · ' + S.lastSync : '')) : !S.url ? 'Not connected' : lastErr ? 'Problem · tap to see' : 'Connected' + (S.lastSync ? ' · ' + S.lastSync : '')], ['backup', '🗂️', 'Backups & restore', isDrive() ? 'Drive · daily' + (S.prefs.dBk ? ' · last ' + dLabel(S.prefs.dBk) : '') : 'Drive · Ledger App / Backups'], ['import', '📥', 'Import old data', 'Expenses from a CSV · salary month by month'], ['bin', '🗑️', 'Recently deleted', (S.bin.length ? S.bin.length + ' item' + (S.bin.length === 1 ? '' : 's') : 'Empty') + ' · kept ' + binDays() + ' days']]],
   ['Money', [['accounts', '🏦', 'Accounts', S.accounts.length + ' account' + (S.accounts.length === 1 ? '' : 's')], ['cats', '🏷️', 'Categories, budgets & types', S.cfg.categories.length + ' categories'], ['sms', '📩', 'Bank SMS', (pendIgnored().length ? pendIgnored().length + ' ignored · ' : '') + 'suggestions · card digits']]],
-  ['App', [['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off'], ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Brokeless v9.0']]],
+  ['App', [['help', '📖', 'How it works', 'Short guides · replay the tour'], ['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off'], ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Brokeless v9.0']]],
   ['Help us improve', [['feedback', '💬', 'Send feedback', (S.prefs.fbQ || []).length ? (S.prefs.fbQ.length + ' waiting to send') : 'Ideas, problems, what you like']]]
 ];
 function settingsView(PG) {
@@ -4505,6 +4698,7 @@ ACT.glassFx = el => { S.glassFx = el.dataset.k; save(); applyTheme(); render(); 
 ACT.clearLocal = () => { if (S.outbox.length && !confirm(S.outbox.length + ' change(s) are not uploaded yet and will be lost. Continue?')) return; if (!confirm('Remove this phone’s copy?')) return; localStorage.removeItem(KEY); location.reload(); };
 IN.acL4 = t => { clearTimeout(U.l4T); U.l4T = setTimeout(() => { const a = acc(t.dataset.n), v = t.value.replace(/[^\d,]/g, ''); if (a && (a.l4 || '') !== v) commit([up('Accounts', Object.assign({}, a, { l4: v }))]); }, 600); };
 ACT.bkNow = async () => {
+  if (isDrive()) { toast('Backing up…'); try { await driveSync(true); const n = await driveBackup(true); toast('✓ Backed up · ' + n); if ($('#bkBox')) bkLoad(); else render(); } catch (e) { toast('Backup failed: ' + netMsg(e)); } return; }
   if (!S.url) return toast('Connect your Sheet first'); toast('Backing up…');
   try { await flush(); const r = await post({ action: 'backup' }); if (!r.ok) throw new Error(r.error); toast('✓ Backed up · ' + r.name); if ($('#bkBox')) bkLoad(); } catch (e) { toast('Backup failed: ' + netMsg(e)); }
 };
@@ -4513,6 +4707,7 @@ const bkDate = b => { const m = b.name.match(/(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})/
 async function bkLoad() {
   const box = $('#bkBox'); if (!box) return;
   try {
+    if (isDrive()) { U.bk = { list: await driveBkList(), sel: new Set() }; return bkDraw(); }
     const r = await post({ action: 'backups' }); if (!r.ok) throw new Error(r.error || 'Your Sheet runs an old script');
     U.bk = { list: r.list, sel: new Set() }; bkDraw();
   } catch (e) { box.innerHTML = '<div class="hint red">' + esc(netMsg(e)) + '</div>'; }
@@ -4530,6 +4725,7 @@ ACT.bkDel = async () => {
   const ids = [...U.bk.sel]; if (!ids.length) return;
   if (ids.length >= U.bk.list.length && !confirm('This deletes ALL your Drive backups. Sure?')) return;
   if (!confirm('Delete ' + ids.length + ' backup' + (ids.length > 1 ? 's' : '') + ' from Google Drive?')) return;
+  if (isDrive()) { try { toast('Deleting…'); for (const id of ids) await gapi('PATCH', DRIVE_API + '/' + id + '?fields=id', { trashed: true }); toast('🗑 ' + ids.length + ' deleted · in Drive bin for 30 days'); bkLoad(); } catch (e) { toast('Could not delete: ' + netMsg(e)); } return; }
   try { toast('Deleting…'); const r = await post({ action: 'delBackups', ids }); if (!r.ok) throw new Error(r.error); toast('🗑 ' + r.deleted + ' deleted · in Drive bin for 30 days'); bkLoad(); } catch (e) { toast('Could not delete: ' + netMsg(e)); }
 };
 ACT.bkKeep = el => { commit([cfgOp('backup', Object.assign({}, S.cfg.backup, { keep: +el.dataset.v }))]); $$('[data-act=bkKeep]').forEach(b => b.classList.toggle('on', b === el)); toast('Keeping the last ' + el.dataset.v + ' daily backups'); };
@@ -4537,6 +4733,7 @@ ACT.bkList = () => { U.tab = 'settings'; U.sp = 'backup'; render(); };
 ACT.bkPick = async el => {
   if (!confirm('Replace everything in your Sheet with "' + el.dataset.n + '"?\n\nA safety copy of the current Sheet is saved first.')) return;
   if (S.outbox.length && !confirm(S.outbox.length + ' change(s) on this phone are not uploaded yet and will be lost. Continue?')) return;
+  if (isDrive()) { try { toast('Restoring…'); await driveRestore(el.dataset.id); render(); toast('✓ Restored · a safety copy of before is in your backups'); bkLoad(); } catch (e) { toast('Restore failed: ' + netMsg(e)); } return; }
   try { toast('Restoring…'); const r = await post({ action: 'restore', id: el.dataset.id }); if (!r.ok) throw new Error(r.error); S.outbox = []; save(); await pull(true); render(); toast('✓ Restored · safety copy: ' + r.safety); } catch (e) { toast('Restore failed: ' + netMsg(e)); }
 };
 ACT.impJson = () => { U.noLock = Date.now() + 120000; const f = $('#impFile'); f.value = ''; f.onchange = () => impJsonFile(f.files[0]); f.click(); };
