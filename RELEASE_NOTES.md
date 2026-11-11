@@ -1,5 +1,6 @@
 ## Brokeless v9.0 · What's new
 
+- **Fixed: Sign in with Google stopped at "Unsupported locale: en_IN"** while making your Sheet
 - **🔑 → Google: switch your own Brokeless to Google sign-in** (Settings → Google Sheet & sync → Switch to Google sign-in). No more URL and secret key. Everything on your phone is copied into a private "Brokeless" Sheet in your Drive and counted; your old Sheet stays untouched as a spare. If anything fails half-way you stay exactly where you were
 - **☁️ Daily Drive backup with Google sign-in**: a copy is saved in Drive → "Brokeless backups" the first time you open the app each day. Settings → Backups: back up now, restore (a safety copy is made first), delete, keep last 7 / 15 / 30
 - **🏦 Pick your banks** on first set-up: tap your banks, cards and wallets (initials in each bank's colour), then type the balances. Bank SMS are matched to them automatically, and more banks are recognised (Canara, Union, BOI, IDBI, Indian, IOB, UCO, Bandhan, HSBC and more)

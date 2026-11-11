@@ -546,7 +546,7 @@ const FEEDBACK = { url: 'https://script.google.com/macros/s/AKfycbySVWBIS19EnBmG
 const fbOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(FEEDBACK.url);
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-11 b22';
+const APP_BUILD = '2026-11-11 b23';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -746,7 +746,8 @@ async function driveFind() {
 }
 async function driveCreate() {
   const sheets = D_ORDER.map(k => ({ properties: { title: dTab(k), gridProperties: { frozenRowCount: 1 } } })).concat([{ properties: { title: D_CFG, gridProperties: { frozenRowCount: 1 } } }]);
-  const ss = await gapi('POST', SHEETS_API, { properties: { title: 'Brokeless', locale: 'en_IN', timeZone: 'Asia/Kolkata' }, sheets });
+  /* no locale: Google rejects some (en_IN) and the Sheet then simply uses the account's own language. If the time zone is refused too, make it with just the name */
+  let ss; try { ss = await gapi('POST', SHEETS_API, { properties: { title: 'Brokeless', timeZone: 'Asia/Kolkata' }, sheets }); } catch (e) { if (!/invalid|unsupported/i.test(e.message)) throw e; ss = await gapi('POST', SHEETS_API, { properties: { title: 'Brokeless' }, sheets }); }
   await gapi('POST', SHEETS_API + '/' + ss.spreadsheetId + '/values:batchUpdate', { valueInputOption: 'RAW', data: D_ORDER.map(k => ({ range: dTab(k) + '!A1', values: [DSHEETS[k].map(c => c[1])] })).concat([{ range: D_CFG + '!A1', values: [['Key', 'Value']] }]) });
   await gapi('PATCH', DRIVE_API + '/' + ss.spreadsheetId + '?fields=id', { appProperties: { brokeless: '1' }, description: 'Your Brokeless money data. Only you can see this file.' });
   return { id: ss.spreadsheetId, name: 'Brokeless' };
