@@ -1,5 +1,7 @@
 ## Brokeless v9.0 · What's new
 
+- **📲 Permissions asked at set-up**: after your balances, one screen with **Read bank SMS**, **Notifications** and **Battery: Unrestricted**, each with what it is for and one button. If Android blocks SMS access for an app installed from a link, it shows the exact steps
+- **With Google sign-in, no more "Connect the Sheet first"**: Email reports and the Google Calendar tick are hidden (they only work with your own Sheet script). Settings → Google Drive & sync explains where your data is saved, with **Open my Sheet**
 - **Fixed: Sign in with Google stopped at "Unsupported locale: en_IN"** while making your Sheet
 - **🔑 → Google: switch your own Brokeless to Google sign-in** (Settings → Google Sheet & sync → Switch to Google sign-in). No more URL and secret key. Everything on your phone is copied into a private "Brokeless" Sheet in your Drive and counted; your old Sheet stays untouched as a spare. If anything fails half-way you stay exactly where you were
 - **☁️ Daily Drive backup with Google sign-in**: a copy is saved in Drive → "Brokeless backups" the first time you open the app each day. Settings → Backups: back up now, restore (a safety copy is made first), delete, keep last 7 / 15 / 30

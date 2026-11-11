@@ -285,6 +285,7 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .alert{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:16px;padding:10px 12px;margin-bottom:10px;box-shadow:var(--sh)}
 .alert.over{border-left-color:var(--red)}
 .cuse{margin:0 0 12px}.cuse-t{position:relative;height:12px;border-radius:99px;background:var(--soft);border:1px solid var(--line)}.cuse-t i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;min-width:4px}.cuse-t u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);border-radius:2px;text-decoration:none}
+.srow.pw{align-items:flex-start}.srow.pw .mid b,.srow.pw .mid small{white-space:normal;overflow:visible;text-overflow:clip;display:block}.srow.pw .mid small{margin-top:2px;line-height:1.35}
 .alert.cpay{border-left-color:var(--green);flex-wrap:wrap}.alert.cpay .mid{flex:1 1 0;min-width:0}.alert.cpay .cpb{flex:1 0 100%;display:flex;gap:8px;align-items:center}.alert.cpay .cpb .btn{flex:1;margin:0}
 .gcard,.ecard{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px;box-shadow:var(--sh);margin-bottom:12px}
 .ghead{display:flex;gap:14px;align-items:center;width:100%;text-align:left}
@@ -546,7 +547,7 @@ const FEEDBACK = { url: 'https://script.google.com/macros/s/AKfycbySVWBIS19EnBmG
 const fbOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(FEEDBACK.url);
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-11 b23';
+const APP_BUILD = '2026-11-11 b24';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -836,13 +837,13 @@ async function driveSignIn() {
     const ok = await driveSync(true); if (!ok) return toast('Signed in, but could not load yet: ' + lastErr);
     shut(); render();
     toast(fresh ? '✓ Your private Brokeless Sheet is ready in Google Drive' : '✓ Welcome back' + (me.given_name ? ', ' + me.given_name : ''));
-    if (!S.accounts.length) setTimeout(onboardAccounts, 400);
+    if (!S.accounts.length) setTimeout(onboardAccounts, 400); else if (permMiss().length) setTimeout(obPerms, 700);
   } catch (e) { if (e.message !== 'Sign-in cancelled') toast(e.consent ? 'Google sign-in needs your OK. Try again.' : netMsg(e)); }
 }
 function driveCard() {
   const D = S.drive;
   return `<div class="card"><h2 style="display:block">☁️ Google Drive<small style="display:block;margin-top:3px">Signed in as ${esc(D.email || 'your Google account')}</small></h2>
-  <div class="hint" style="margin-top:0">Everything is saved in a private Sheet called <b>Brokeless</b> in your own Google Drive. Only you can see it.</div>
+  <div class="hint" style="margin-top:0">Everything you add is saved on this phone straight away, then copied to a private Sheet called <b>Brokeless</b> in your own Google Drive (the dot at the top turns green). Only you can see it. Tap <b>Open my Sheet</b> to look at it.</div>
   <div class="hint">${lastErr ? '⚠️ ' + esc(lastErr) : '✓ ' + (S.outbox.length ? S.outbox.length + ' change(s) waiting' : 'Everything saved') + (S.lastSync ? ' · last sync ' + S.lastSync : '')}</div>
   <div class="btns"><button class="btn sec sm" data-act="syncNow">Sync now</button><a class="btn sec sm" href="https://docs.google.com/spreadsheets/d/${esc(D.id)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center">Open my Sheet</a></div>
   ${lastErr ? '<button class="btn" data-act="dReauth">Sign in again</button>' : ''}
@@ -1907,7 +1908,7 @@ ACT.cSave = async () => {
   const splitting = c.kind === 'exp' && c.splitOn && c.split.length;
   if (splitting && c.split.length + 1 > a * 100) return toast('Amount too small to split');
   if (c.kind === 'exp' && c.photo) {
-    if (!S.url || !S.key) { if (!confirm('Photos are saved to Google Drive. Connect the Sheet first. Save without photo?')) return; }
+    if (!S.url || !S.key) { if (!confirm(isDrive() ? 'Saving bill photos is not available with Google sign-in yet. Save this expense without the photo?' : 'Sign in with Google first to keep bill photos. Save without photo?')) return; }
     else {
       const btn = $('#cSave'); btn.disabled = true; btn.textContent = 'Uploading photo…';
       try { const r = await post({ action: 'upload', data: c.photo.split(',')[1], name: 'bill_' + d + '_' + (rem || c.cat).replace(/[^\w-]+/g, '_').slice(0, 30) + '.jpg' }); if (!r.ok) throw new Error(r.error); row.photo = r.url; }
@@ -2211,8 +2212,24 @@ ACT.obSave = () => {
   const L = Object.assign({}, (S.cfg.cards || {}).limits); rows.forEach(r => { if (r.t === 'card' && r.l > 0) L[r.n] = r.l; });
   if (Object.keys(L).length) ops.push(cfgOp('cards', Object.assign({}, S.cfg.cards, { limits: L })));
   commit(ops); U.ob = null; shut(); render(); toast('You are all set 🎉');
-  if (!S.prefs.tour) setTimeout(tourShow, 500);
+  obAfter();
 };
+/* after set-up on the phone app: ask for what bank-SMS reading needs, one tap each, with what it is for */
+const permMiss = () => { if (!AND) return []; const I = andInfo(); return [!I.sms && 'sms', !I.notif && 'notif', !I.battery && 'battery'].filter(Boolean); };
+function obAfter() { if (permMiss().length) setTimeout(obPerms, 450); else if (!S.prefs.tour) setTimeout(tourShow, 500); }
+function obPerms() {
+  const I = andInfo(), left = permMiss().length;
+  const row = (ic, t, sub, on, act, lbl) => `<div class="srow pw"><span class="ic" style="background:var(--soft)">${ic}</span><span class="mid"><b>${t}</b><small>${sub}</small></span>${on ? '<b class="green" style="flex:0 0 auto">✓ On</b>' : `<button class="btn sm" data-act="${act}">${lbl}</button>`}</div>`;
+  openSheet('Let Brokeless help you', `<div id="obPermBox"><div class="hint" style="margin-top:0">Three quick switches so Brokeless can fill in your spends for you. Each one stays on your phone. You can change them later in Settings → Phone app.</div>
+  ${row('📩', 'Read bank SMS', 'Payments from your bank SMS wait in the 🔔 bell, ready to file in one tap. OTPs and personal messages are never read.', I.sms, 'obAllow', 'Allow')}
+  ${row('🔔', 'Notifications', 'A ping when a payment is saved, a bill is due or an update is ready.', I.notif, 'obAllow', 'Allow')}
+  ${row('🔋', 'Battery: Unrestricted', 'Stops the phone from putting Brokeless to sleep, so no bank SMS is missed. Important on Samsung, Xiaomi, Realme, Oppo and Vivo.', I.battery, 'obBattery', 'Fix')}
+  ${U.obTried && !I.sms ? `<div class="hint amber">Still off? Because Brokeless is installed from a link, Android may block SMS access. Open phone <b>Settings → Apps → Brokeless → ⋮ (top right) → Allow restricted settings</b>, come back and tap Allow again.</div>` : ''}</div>`, 'tall', `<button class="btn big" data-act="obPermDone" style="margin:0">${left ? 'Continue' + (left < 3 ? '' : ' without these') : 'All set · continue'}</button>`);
+}
+ACT.obAllow = () => { U.obTried = true; try { AND.requestSms(); } catch (e) { } setTimeout(() => { if ($('#obPermBox')) obPerms(); }, 1500); };
+ACT.obBattery = () => { try { AND.openBattery(); } catch (e) { } };
+ACT.obPermDone = () => { shut(); if (!S.prefs.tour) setTimeout(tourShow, 400); };
+ACT.obPerms = () => obPerms();
 
 /* ---------- welcome tour (5 swipe cards, Skip on every card) + Settings → How it works ---------- */
 const TOUR = [
@@ -3232,7 +3249,8 @@ function drainSms() {
 window.__ledgerSmsPing = () => drainSms();
 window.__ledgerOpenPending = () => { drainSms(); if (pendNew().length) ACT.pendOpen(); };
 window.onLedgerUpdate = () => toast('A new version of Brokeless is ready', 'Restart', () => { try { AND.reload(); } catch (e) { location.reload(); } });
-window.onLedgerPerm = () => { if (U.tab === 'settings') render(); };
+window.onLedgerPerm = () => { if (sheetOpen() && $('#obPermBox')) obPerms(); else if (U.tab === 'settings') render(); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden && sheetOpen() && $('#obPermBox')) setTimeout(obPerms, 300); });
 function phoneCard() {
   if (!AND) return `<div class="card"><h2>Brokeless Android app</h2><div class="hint" style="margin:0">The Android app reads bank SMS for you, unlocks with your fingerprint and works offline. Download it from your GitHub page (Releases → ledger.apk).</div></div>`;
   const I = andInfo();
@@ -3418,7 +3436,7 @@ function remSheet(r, preset) {
   <label class="check"><input type="checkbox" id="rmAuto" ${v.auto ? 'checked' : ''}> Log it automatically on the due date</label><div class="hint">You get an "Auto-logged · Undo" message. Turn off to get a reminder with a Pay button instead.</div></div>
   <div class="lbl">Repeat</div><div class="grid2"><input id="rmEvery" type="number" min="1" inputmode="numeric" data-in="rmStep" value="${esc(v.every || 1)}"><div class="chips" style="padding:0">${REM_UNITS.map(([k, l]) => chip('unit', k, l)).join('')}</div></div>
   <div class="grid2"><div><div class="lbl">Next due</div><input type="date" id="rmNext" data-in="rmStep" value="${esc(v.next)}"></div><div><div class="lbl">Time</div><input type="time" id="rmTime" value="${esc(v.time || '09:00')}"></div></div>
-  <label class="check"><input type="checkbox" id="rmCal" ${v.cal !== false ? 'checked' : ''}> Add to my Google Calendar (phone alert)</label>
+  ${S.url && S.key ? `<label class="check"><input type="checkbox" id="rmCal" ${v.cal !== false ? 'checked' : ''}> Add to my Google Calendar (phone alert)</label>` : ''}
   <div class="lbl">Note</div><input id="rmNote" value="${esc(v.note || '')}" placeholder="Optional">
   ${r ? `<label class="check"><input type="checkbox" id="rmAct" ${v.active !== false ? 'checked' : ''}> Active</label>` : ''}
   <button class="btn big" data-act="rmSave">${r ? 'Save changes' : 'Add reminder'}</button>${r ? `<div class="btns">${r.kind === 'task' ? `<button class="btn sec" data-act="remDone" data-id="${r.id}">✓ Mark done</button>` : `<button class="btn sec" data-act="remPay" data-id="${r.id}">Pay now</button>`}</div><button class="btn dng" data-act="rmDel">Delete reminder</button>` : ''}`, 'tall');
@@ -3440,7 +3458,7 @@ ACT.rmSave = () => {
   if (!name) return toast('Give it a name'); if (!next) return toast('Pick the next due date');
   if (R.kind !== 'task' && !(amt > 0)) return toast('Enter the amount'); if (R.kind !== 'task' && !R.account) return toast('Pick the account');
   const old = R.id ? S.rem.find(x => x.id === R.id) : null;
-  const row = Object.assign({}, old || {}, { id: R.id || uid('R'), name, kind: R.kind, amount: R.kind === 'task' ? 0 : amt, account: R.kind === 'task' ? '' : R.account, category: R.kind === 'bill' ? R.category : '', invType: R.kind === 'sip' ? R.invType : '', invTo: R.kind === 'sip' ? R.invTo : '', every: Math.max(1, parseInt($('#rmEvery').value) || 1), unit: R.unit, next, time: $('#rmTime').value || '09:00', auto: R.kind !== 'task' && $('#rmAuto').checked, cal: $('#rmCal').checked, active: $('#rmAct') ? $('#rmAct').checked : true, note: $('#rmNote').value.trim() });
+  const row = Object.assign({}, old || {}, { id: R.id || uid('R'), name, kind: R.kind, amount: R.kind === 'task' ? 0 : amt, account: R.kind === 'task' ? '' : R.account, category: R.kind === 'bill' ? R.category : '', invType: R.kind === 'sip' ? R.invType : '', invTo: R.kind === 'sip' ? R.invTo : '', every: Math.max(1, parseInt($('#rmEvery').value) || 1), unit: R.unit, next, time: $('#rmTime').value || '09:00', auto: R.kind !== 'task' && $('#rmAuto').checked, cal: $('#rmCal') ? $('#rmCal').checked : false, active: $('#rmAct') ? $('#rmAct').checked : true, note: $('#rmNote').value.trim() });
   if (old && old.next !== next) row.snooze = '';
   const st = R.kind !== 'task' ? rmStepCalc() : null; if ($('#rmStepOn') && $('#rmStepOn').checked && R.kind !== 'task' && !st) return toast('Type the new price');
   row.then = st ? st.then : 0; row.thenFrom = st ? st.thenFrom : ''; remRoll(row);
@@ -4638,7 +4656,7 @@ function renderSettings() {
 const SP = () => [
   ['Your data', [['sync', '☁️', isDrive() ? 'Google Drive & sync' : 'Google Sheet & sync', isDrive() ? (lastErr ? 'Problem · tap to see' : (S.drive.email || 'Signed in') + (S.lastSync ? ' · ' + S.lastSync : '')) : !S.url ? 'Not connected' : lastErr ? 'Problem · tap to see' : 'Connected' + (S.lastSync ? ' · ' + S.lastSync : '')], ['backup', '🗂️', 'Backups & restore', isDrive() ? 'Drive · daily' + (S.prefs.dBk ? ' · last ' + dLabel(S.prefs.dBk) : '') : 'Drive · Ledger App / Backups'], ['import', '📥', 'Import old data', 'Expenses from a CSV · salary month by month'], ['bin', '🗑️', 'Recently deleted', (S.bin.length ? S.bin.length + ' item' + (S.bin.length === 1 ? '' : 's') : 'Empty') + ' · kept ' + binDays() + ' days']]],
   ['Money', [['accounts', '🏦', 'Accounts', S.accounts.length + ' account' + (S.accounts.length === 1 ? '' : 's')], ['cats', '🏷️', 'Categories, budgets & types', S.cfg.categories.length + ' categories'], ['sms', '📩', 'Bank SMS', (pendIgnored().length ? pendIgnored().length + ' ignored · ' : '') + 'suggestions · card digits']]],
-  ['App', [['help', '📖', 'How it works', 'Short guides · replay the tour'], ['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off'], ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Brokeless v9.0']]],
+  ['App', [['help', '📖', 'How it works', 'Short guides · replay the tour'], ['security', '🔒', 'Lock & privacy', lockSummary()], ['alerts', '🔔', 'Notifications & nudges', 'What shows in the bell'], ...(S.url && S.key ? [['reports', '✉️', 'Email reports', (S.cfg.report || {}).on !== false ? 'Monthly on day ' + ((S.cfg.report || {}).day || 1) : 'Off']] : []), ['look', '🎨', 'Appearance', ({ '': 'Auto', light: 'Light', dark: 'Dark', glass: '✨ Glass' })[S.theme || ''] || 'Auto'], ['phone', '📱', 'Phone app', AND ? 'v' + (andInfo().version || '?') : 'Get the Android app'], ['about', 'ℹ️', 'About & install', 'Brokeless v9.0']]],
   ['Help us improve', [['feedback', '💬', 'Send feedback', (S.prefs.fbQ || []).length ? (S.prefs.fbQ.length + ' waiting to send') : 'Ideas, problems, what you like']]]
 ];
 function settingsView(PG) {
@@ -4684,7 +4702,7 @@ ACT.rpK = el => { U.rp.k = el.dataset.v; const y = window.scrollY; render(); win
 IN.rpF = t => { U.rp.from = t.value; $('#rpLbl').textContent = rpHint(rpRange('custom')); };
 IN.rpT = t => { U.rp.to = t.value; $('#rpLbl').textContent = rpHint(rpRange('custom')); };
 ACT.rpSend = async el => {
-  if (!S.url || !S.key) return toast('Connect the Sheet first');
+  if (!S.url || !S.key) return toast('Email reports are not available with Google sign-in yet');
   const R = rpRange(U.rp.k), C2 = cmpRanges(R);
   el.disabled = true; el.textContent = 'Sending…'; await flush();
   try { const r = await post({ action: 'report', from: R.from, to: R.to, mo: R.mo, label: R.label, cmp: U.rp.cmp || S.cfg.report.cmp || 'prev', prev: C2.prev, ly: C2.ly }); if (!r.ok) throw new Error(r.error); toast(R.label + ' sent to ' + r.sentTo + ' ✓'); }
