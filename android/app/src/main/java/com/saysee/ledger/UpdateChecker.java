@@ -71,6 +71,7 @@ final class UpdateChecker {
 
     /** Newest release newer than the installed app, or null. Saved so the app can show it offline. */
     static JSONObject check(Context c) {
+        if (BuildConfig.PLAY) return null; // Google Play delivers updates for the Play build
         try {
             JSONArray a = new JSONArray(get(API));
             int mine = myCode(c);

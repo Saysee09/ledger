@@ -147,7 +147,22 @@ public class MainActivity extends AppCompatActivity {
         widgetAction = getIntent() != null ? getIntent().getStringExtra(Widgets.EXTRA) : null;
         if (getIntent() != null && ACTION_INSTALL.equals(getIntent().getAction())) { final Intent st = getIntent(); ui.postDelayed(() -> installStatus(st), 800); }
         web = new WebView(this);
-        setContentView(web);
+        if (Build.VERSION.SDK_INT >= 35) {
+            /* Android 15+ draws apps behind the status and navigation bars. A WebView ignores its own padding,
+               so it sits inside a box that keeps clear of the bars, the camera cut-out and the keyboard. */
+            android.widget.FrameLayout box = new android.widget.FrameLayout(this);
+            box.setBackgroundColor(getColor(R.color.bg));
+            box.addView(web, new android.widget.FrameLayout.LayoutParams(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+            setContentView(box);
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(box, (v, in) -> {
+                androidx.core.graphics.Insets b = in.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars() | androidx.core.view.WindowInsetsCompat.Type.displayCutout());
+                androidx.core.graphics.Insets k = in.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime());
+                v.setPadding(b.left, b.top, b.right, Math.max(b.bottom, k.bottom));
+                return androidx.core.view.WindowInsetsCompat.CONSUMED;
+            });
+        } else {
+            setContentView(web);
+        }
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -603,7 +618,7 @@ public class MainActivity extends AppCompatActivity {
             if (!dir.exists() && !dir.mkdirs()) return "";
             File f = new File(dir, safe);
             try (OutputStream o = new FileOutputStream(f)) { o.write(b); }
-            Uri u = FileProvider.getUriForFile(this, "com.saysee.ledger.files", f);
+            Uri u = FileProvider.getUriForFile(this, getPackageName() + ".files", f);
             Intent s = new Intent(Intent.ACTION_SEND);
             s.setType("image/png");
             s.putExtra(Intent.EXTRA_STREAM, u);
@@ -629,6 +644,7 @@ public class MainActivity extends AppCompatActivity {
                 o.put("version", getPackageManager().getPackageInfo(getPackageName(), 0).versionName);
                 o.put("code", UpdateChecker.myCode(MainActivity.this));
                 o.put("beta", UpdateChecker.beta(MainActivity.this));
+                o.put("play", BuildConfig.PLAY);
                 o.put("sms", has(Manifest.permission.RECEIVE_SMS) && has(Manifest.permission.READ_SMS));
                 o.put("smsLast", SmsStore.last(MainActivity.this));
                 o.put("notif", Build.VERSION.SDK_INT < 33 || has(Manifest.permission.POST_NOTIFICATIONS));

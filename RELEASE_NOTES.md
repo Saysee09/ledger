@@ -1,5 +1,7 @@
 ## Brokeless v9.1 · What's new
 
+- **Ready for Android 16**: the app now targets Android 16, which Google Play requires. On Android 15 and 16 phones the screen is laid out to stay clear of the status bar, the gesture bar and the keyboard
+- **Google Play build**: a separate build for the Play Store (app ID `com.brokeless.app`) with no self-updater, since Play does the updating. The link-installed app keeps updating itself as before
 - **📊 Monthly report in the app** (Settings → Monthly report): spent vs last month, income, what was left over, average per day, where it went with budgets, the 5 biggest spends and card dues. Use ‹ › for any month
 - **✉️ Send to my email**: opens your mail app with the report already written and addressed to your Google account. You tap Send. Works with Google sign-in, no extra permission
 - **🔔 On the 1st**: a phone notification and a line in the bell say last month's report is ready. Switch it off on the same page

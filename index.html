@@ -548,7 +548,7 @@ const FEEDBACK = { url: 'https://script.google.com/macros/s/AKfycbySVWBIS19EnBmG
 const fbOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(FEEDBACK.url);
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-11 b26';
+const APP_BUILD = '2026-11-11 b27';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -3321,8 +3321,9 @@ function phoneCard() {
   <div class="srow"><span class="ic" style="background:var(--soft)">🔋</span><span class="mid"><b>Battery: Unrestricted</b><small>${I.battery ? '✓ Samsung will not stop Brokeless' : 'Needed so Samsung does not stop SMS reading'}</small></span>${I.battery ? '' : '<button class="btn sm" data-act="andBattery">Fix</button>'}</div>
   <div class="srow"><span class="ic" style="background:var(--soft)">👆</span><span class="mid"><b>App lock</b><small>${esc(lockSummary())}</small></span><button class="btn sm sec" data-act="spOpen" data-k="security">Change</button></div>
   <div class="srow"><span class="ic" style="background:var(--soft)">🧩</span><span class="mid"><b>Home-screen widgets</b><small>Long-press your home screen → Widgets → Brokeless. Four to pick from; they refresh each time you open Brokeless.</small></span></div>
-  ${AND && AND.setBeta ? `<div class="srow"><span class="ic" style="background:var(--soft)">🧪</span><span class="mid"><b>Get test builds</b><small>${I.beta ? '✓ On · new test versions are offered here before they go live' : 'Off · only live versions'}</small></span><button class="btn sm sec" data-act="andBeta">${I.beta ? 'Turn off' : 'Turn on'}</button></div>` : ''}
-  <button class="btn sec sm" data-act="updCheck">⬆️ Check for app update</button>${U.upd ? `<div class="hint green">Version ${esc(updVer(U.upd))} is ready · <a href="#" data-act="updOpen" style="color:var(--acc);font-weight:800">What's new</a></div>` : ''}
+  ${I.play ? `<div class="srow"><span class="ic" style="background:var(--soft)">⬆️</span><span class="mid"><b>Updates</b><small>Come from Google Play, like your other apps</small></span><a class="btn sm sec" href="https://play.google.com/store/apps/details?id=com.brokeless.app" target="_blank" rel="noopener">Open</a></div>` : ''}
+  ${AND && AND.setBeta && !I.play ? `<div class="srow"><span class="ic" style="background:var(--soft)">🧪</span><span class="mid"><b>Get test builds</b><small>${I.beta ? '✓ On · new test versions are offered here before they go live' : 'Off · only live versions'}</small></span><button class="btn sm sec" data-act="andBeta">${I.beta ? 'Turn off' : 'Turn on'}</button></div>` : ''}
+  ${I.play ? '' : '<button class="btn sec sm" data-act="updCheck">⬆️ Check for app update</button>'}${U.upd && !I.play ? `<div class="hint green">Version ${esc(updVer(U.upd))} is ready · <a href="#" data-act="updOpen" style="color:var(--acc);font-weight:800">What's new</a></div>` : ''}
   <div class="hint">SMS are read only on this phone. Only completed debits and credits go to your "to sort" list and your own Google Sheet.</div></div>`;
 }
 ACT.andPerm = () => { try { AND.requestSms(); } catch (e) { } };
