@@ -1,5 +1,7 @@
 ## Brokeless v9.0 · What's new
 
+- **SMS access blocked by the phone?** The set-up screen now has an **Open Brokeless in phone settings** button with the two taps to do there (⋮ → Allow restricted settings)
+- **Settings → Permissions & phone app** (was "Phone app"): shows SMS, Notifications and Battery at a glance, with a button to open the phone's own settings for Brokeless
 - **📲 Permissions asked at set-up**: after your balances, one screen with **Read bank SMS**, **Notifications** and **Battery: Unrestricted**, each with what it is for and one button. If Android blocks SMS access for an app installed from a link, it shows the exact steps
 - **With Google sign-in, no more "Connect the Sheet first"**: Email reports and the Google Calendar tick are hidden (they only work with your own Sheet script). Settings → Google Drive & sync explains where your data is saved, with **Open my Sheet**
 - **Fixed: Sign in with Google stopped at "Unsupported locale: en_IN"** while making your Sheet

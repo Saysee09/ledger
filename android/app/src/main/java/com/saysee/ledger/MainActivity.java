@@ -678,6 +678,18 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
+        /** Android's own page for this app (App info): permissions, and ⋮ → "Allow restricted settings". */
+        @JavascriptInterface
+        public void openAppSettings() {
+            ui.post(() -> {
+                try {
+                    startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName())));
+                } catch (Exception e) {
+                    try { startActivity(new Intent(Settings.ACTION_SETTINGS)); } catch (Exception ignored) { }
+                }
+            });
+        }
+
         @JavascriptInterface
         public String saveFile(String name, String data, String mime) {
             return MainActivity.this.saveFile(name, data, mime);
