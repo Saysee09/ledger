@@ -278,6 +278,8 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .chart .center b{font-size:1.25rem;font-weight:800;letter-spacing:-.03em}
 .alert{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:16px;padding:10px 12px;margin-bottom:10px;box-shadow:var(--sh)}
 .alert.over{border-left-color:var(--red)}
+.cuse{margin:0 0 12px}.cuse-t{position:relative;height:12px;border-radius:99px;background:var(--soft);border:1px solid var(--line)}.cuse-t i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;min-width:4px}.cuse-t u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);border-radius:2px;text-decoration:none}
+.alert.cpay{border-left-color:var(--green);flex-wrap:wrap}.alert.cpay .mid{flex:1 1 0;min-width:0}.alert.cpay .cpb{flex:1 0 100%;display:flex;gap:8px;align-items:center}.alert.cpay .cpb .btn{flex:1;margin:0}
 .gcard,.ecard{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px;box-shadow:var(--sh);margin-bottom:12px}
 .ghead{display:flex;gap:14px;align-items:center;width:100%;text-align:left}
 .rw{position:relative;width:64px;height:64px;flex:0 0 auto}
@@ -538,7 +540,7 @@ const FEEDBACK = { url: 'https://script.google.com/macros/s/AKfycbySVWBIS19EnBmG
 const fbOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(FEEDBACK.url);
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-10 b19';
+const APP_BUILD = '2026-11-11 b20';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -1095,7 +1097,7 @@ ACT.updCheck = () => { if (!AND || !AND.updateCheck) return toast('Update the ph
 function heldDues() { return live(a => a.others).filter(a => heldOwed(a.name) > .004).map(a => `<div class="alert"><span class="ic" style="background:var(--soft)">🤝</span><span class="mid"><b>You owe ${esc(a.name)} ${inr(heldOwed(a.name))}</b><small>Used from ${esc(a.name)}'s money for yourself</small></span><button class="btn sm" data-act="heldPay" data-n="${esc(a.name)}">Pay back</button></div>`).join(''); }
 function inboxParts(all) {
   const keep = U.nudgeAll; U.nudgeAll = true;
-  try { return { sort: pendNew(), act: updAlert() + cardDues(all) + remDue() + emiDue() + heldDues(), info: refundAlerts() + recurAlert() + budgetAlerts() + goalNudges() + nudges() }; } finally { U.nudgeAll = keep; }
+  try { return { sort: pendSort(), act: cardPayAlerts() + updAlert() + cardDues(all) + remDue() + emiDue() + heldDues(), info: cardUseAlerts() + refundAlerts() + recurAlert() + budgetAlerts() + goalNudges() + nudges() }; } finally { U.nudgeAll = keep; }
 }
 const nAlerts = h => (h.match(/class="alert/g) || []).length;
 function inboxCount() { if (!S.accounts.length) return { all: 0, sort: 0, act: 0 }; const P = inboxParts(false), A = inboxParts(true); return { sort: P.sort.length, act: nAlerts(P.act), info: nAlerts(P.info), all: P.sort.length + nAlerts(A.act) + nAlerts(P.info), badge: P.sort.length + nAlerts(P.act) + nAlerts(P.info) }; }
@@ -1113,6 +1115,7 @@ function inboxChip() {
 }
 ACT.inbox = () => inboxSheet();
 function inboxSheet() {
+  pendFix(); cardPayTidy();
   const P = inboxParts(true), n = P.sort.length;
   let h = '';
   if (n) h += `<div class="ibx-h"><span>📩 To sort · ${n}</span><span style="text-transform:none;letter-spacing:0">bank SMS</span></div>` + pendListHtml(P.sort);
@@ -1184,24 +1187,103 @@ const nwCfg = () => Object.assign({ bank: true, cash: true, wallet: true, invest
 const cardLimit = a => +(((S.cfg.cards || {}).limits || {})[a.name]) || 0;
 /* a card whose balance is a big plus number: the limit was typed in as the balance */
 const cardLooksLimit = a => a.type === 'card' && mineA(a) && !a.archived && (C.bal[a.name] || 0) > 1000 && +a.opening > 1000;
+/* how much of the limit is used. Your own safe line (default 30%, one setting for all cards) sits on the bar */
+const cardGuide = () => { const g = +((S.cfg.cards || {}).guide); return g > 0 && g <= 100 ? Math.round(g) : 30; };
+const pctS = p => p > 0 && p < 1 ? '<1%' : Math.round(p) + '%';
+function cardUse(a) {
+  const lim = cardLimit(a); if (!lim || !a || a.type !== 'card') return null;
+  const due = cardDue(a), g = cardGuide(), pct = due / lim * 100, safe = r2(lim * g / 100 - due);
+  return { lim, due, g, pct, safe, left: r2(Math.max(0, lim - due)), over: safe < -.004 };
+}
+const cardUseLine = u => u.over ? `<span class="red">${pctS(u.pct)} used · ${inr(-u.safe, 1)} over your ${u.g}% line</span>` : `${pctS(u.pct)} used · ${inr(u.safe, 1)} left to ${u.g}%`;
+function cardBar(a) {
+  const u = cardUse(a); if (!u) return `<div class="hint center" style="margin:0 0 10px">Add this card's <b>credit limit</b> (Edit) to see how much of it you have used.</div>`;
+  return `<div class="cuse"><div class="cuse-t"><i style="width:${Math.min(100, u.pct).toFixed(1)}%;background:${u.over ? 'var(--red)' : 'var(--green)'}"></i><u style="left:${u.g}%"></u></div>
+  <div class="kv" style="margin:8px 0 0"><div><span>Used</span><b class="${u.over ? 'red' : ''}">${inr(u.due)} · ${pctS(u.pct)}</b></div><div><span>${u.over ? 'Over your ' + u.g + '% line by' : 'Left before your ' + u.g + '% line'}</span><b class="${u.over ? 'red' : 'green'}">${inr(Math.abs(u.safe))}</b></div><div><span>Left on the card (limit ${inr(u.lim, 1)})</span><b>${inr(u.left)}</b></div></div></div>`;
+}
+function cardUseAlerts() {
+  return live(a => a.type === 'card' && mineA(a)).filter(a => { const u = cardUse(a); return u && u.over && !snoozed('cuse|' + a.name); }).map(a => { const u = cardUse(a); return `<div class="alert over"><span class="ic" style="background:var(--soft)">💳</span><span class="mid"><b>${esc(a.name)} · ${pctS(u.pct)} of limit used</b><small>${inr(-u.safe)} over your ${u.g}% line. Pay that much to get back under.</small></span><button class="btn sm" data-act="payCard" data-n="${esc(a.name)}" data-amt="${-u.safe}">Pay</button><button class="ax" data-act="snooze" data-k="cuse|${esc(a.name)}" data-d="3" aria-label="Later">✕</button></div>`; }).join('');
+}
 function cardDues(all) {
   const t = today(), dn = +t.slice(8, 10);
-  return live(a => a.type === 'card' && mineA(a) && cardDue(a) > .004).filter(a => all || (dn >= cardDay(a) && !snoozed('card|' + a.name + '|' + ym()))).map(a => `<div class="alert ${dn >= cardDay(a) ? 'over' : ''}"><span class="ic" style="background:var(--soft)">💳</span><span class="mid"><b>${esc(a.name)} · ${inr(cardDue(a))} due</b><small>${dn >= cardDay(a) ? 'Bill day passed (' + cardDay(a) + 'th). Pay it from your bank.' : 'Bill day ' + cardDay(a) + ' ' + mLabel(ym(), 1) + '. Already counted in your spending.'}</small></span><button class="btn sm" data-act="payCard" data-n="${esc(a.name)}">Pay</button>${dn >= cardDay(a) ? `<button class="ax" data-act="snooze" data-k="card|${esc(a.name)}|${ym()}" data-d="1" aria-label="Tomorrow">✕</button>` : ''}</div>`).join('');
+  return live(a => a.type === 'card' && mineA(a) && cardDue(a) > .004).filter(a => all || (dn >= cardDay(a) && !snoozed('card|' + a.name + '|' + ym()))).map(a => `<div class="alert ${dn >= cardDay(a) ? 'over' : ''}"><span class="ic" style="background:var(--soft)">💳</span><span class="mid"><b>${esc(a.name)} · ${inr(cardDue(a))} due</b><small>${dn >= cardDay(a) ? 'Bill day passed (' + cardDay(a) + 'th). Pay it from your bank.' : 'Bill day ' + cardDay(a) + ' ' + mLabel(ym(), 1) + '. Pay any time.' + (cardUse(a) ? ' ' + pctS(cardUse(a).pct) + ' of limit used.' : '')}</small></span><button class="btn sm" data-act="payCard" data-n="${esc(a.name)}">Pay</button>${dn >= cardDay(a) ? `<button class="ax" data-act="snooze" data-k="card|${esc(a.name)}|${ym()}" data-d="1" aria-label="Tomorrow">✕</button>` : ''}</div>`).join('');
 }
 ACT.payCard = el => {
-  const card = acc(el.dataset.n), banks = live(a => a.type === 'bank' && mineA(a)).concat(live(a => a.type === 'wallet' && mineA(a))); if (!banks.length) return toast('Add a bank account first');
-  U.cp = { n: card.name, from: (banks.find(a => a.name === S.prefs.cardFrom) || banks[0]).name };
-  openSheet('Pay ' + esc(card.name) + ' bill', `<label class="amtbox"><span>₹</span><input id="cpAmt" inputmode="decimal" value="${cardDue(card)}"></label><div class="hint center">Due now <b>${inrX(cardDue(card))}</b> · pay the full amount or a part</div>
+  const card = acc(el.dataset.n), banks = payBanks(); if (!card) return; if (!banks.length) return toast('Add a bank account first');
+  const x = el.dataset.sms ? cardPays().find(v => v.id === el.dataset.sms) : null, due = cardDue(card);
+  U.cp = { n: card.name, from: (banks.find(a => a.name === (x ? x.from : S.prefs.cardFrom)) || banks.find(a => a.name === S.prefs.cardFrom) || banks[0]).name, sms: x ? x.id : '' };
+  const amt = x ? x.amount : +el.dataset.amt > 0 ? Math.min(due, r2(+el.dataset.amt)) : due, d0 = x ? x.ts.slice(0, 10) : today();
+  openSheet('Pay ' + esc(card.name), `<label class="amtbox"><span>₹</span><input id="cpAmt" inputmode="decimal" value="${amt || ''}" placeholder="0"></label><div class="hint center">${due > .004 ? 'You owe <b>' + inrX(due) + '</b> now · pay all of it or a part, any day' : 'Nothing owed in Brokeless right now. You can still log a payment you made.'}</div>
+  ${x ? `<div class="hint green center">📩 From your ${x.d ? 'bank and card SMS' : 'card SMS'} · ${dLabel(x.ts.slice(0, 10))}, ${tLabel(x.ts)}</div>` : ''}${cardLooksLimit(card) ? `<div class="hint amber">⚠️ This card's limit was saved as its balance, so what you owe is wrong. Fix it once: Edit → check "You owed" → Save.</div>` : ''}
   <div class="lbl">Paid from</div><div class="chips wrap">${banks.map(a => `<button class="chip ${a.name === U.cp.from ? 'on' : ''}" data-act="pick" data-o="cp" data-f="from" data-v="${esc(a.name)}">${ACC_T[a.type][0]} ${esc(a.name)} <small>${inr(free(a.name), 1)}</small></button>`).join('')}</div>
-  <div class="lbl">Paid on</div><input type="date" id="cpDate" value="${today()}" max="${today()}">
-  <button class="btn big" data-act="cpSave">Pay bill</button><div class="hint">Logged as a transfer bank → card. Card spends were already counted when you swiped, so nothing is counted twice.</div>`);
+  <div class="lbl">Paid on</div><input type="date" id="cpDate" value="${d0}" max="${today()}">
+  <button class="btn big" data-act="cpSave">${x ? 'Yes, I paid this' : 'Pay card'}</button><div class="hint">Logged as a transfer bank → card, <b>not</b> as a new expense. Each card spend was already counted as an expense on the day you swiped, so nothing is counted twice.</div>`);
 };
+const payBanks = () => live(a => a.type === 'bank' && mineA(a)).concat(live(a => a.type === 'wallet' && mineA(a)));
+/* one card payment: a transfer bank → card; the SMS that reported it (bank side, card side) are marked done */
+function cpLog(card, from, amount, ts, sms) {
+  const id = sms && sms.length ? 'S' + sms[0].id.slice(1) : uid('T');
+  commit([up('Transfers', { id, ts, from, to: card, amount, remarks: 'Card bill' })].concat((sms || []).map(p => up('Pending', Object.assign({}, p, { status: 'done', done: id, account: p.dir === 'credit' ? card : from })))));
+  S.prefs.cardFrom = from; save(); cardPayTidy(); buzz(14);
+  const a = acc(card), left = cardDue(a), u = cardUse(a);
+  toast(left > .004 ? 'Paid ' + fmtINR(amount) + ' · ' + fmtINR(left) + ' still owed' + (u ? ' · ' + pctS(u.pct) + ' of limit' : '') : card + ' fully paid ✓');
+}
 ACT.cpSave = () => {
   const P = U.cp, a = parseAmt($('#cpAmt').value); if (!(a > 0)) return toast('Enter an amount');
-  const d = $('#cpDate').value || today(), nb = free(P.from) - a; if (nb < 0 && !confirm(P.from + ' will go to ' + fmtINR(nb) + ' free. Pay anyway?')) return;
-  commit([up('Transfers', { id: uid('T'), ts: d === today() ? nowTs() : d + ' 12:00:00', from: P.from, to: P.n, amount: a, remarks: 'Card bill' })]);
-  S.prefs.cardFrom = P.from; save(); shut(); render(); buzz(14); const left = cardDue(acc(P.n)); toast(left > .004 ? 'Paid · ' + fmtINR(left) + ' still due' : P.n + ' fully paid ✓');
+  const x = P.sms ? cardPays().find(v => v.id === P.sms) : null;
+  const d = $('#cpDate').value || today(), nb = free(P.from) - a; if (!x && nb < 0 && !confirm(P.from + ' will go to ' + fmtINR(nb) + ' free. Pay anyway?')) return;
+  const ts = x && d === x.ts.slice(0, 10) ? x.ts : d === today() ? nowTs() : d + ' 12:00:00';
+  cpLog(P.n, P.from, a, ts, x ? [x.c].concat(x.d ? [x.d] : []) : []); shut(); render(); if (x && inboxCount().all) inboxSheet();
 };
+/* ---------- card bill paid, straight from SMS ----------
+   Paying a card gives two SMS: the bank says money went out, the card says "payment received".
+   Brokeless joins them into one "Paid your card?" line: one tap logs the transfer and files both.
+   If you already logged the payment by hand (Pay card), the SMS are filed quietly. */
+const CP_IN = /payment|received|thank/i, CP_NOT = /refund|revers|cash ?back/i, CP_OUT = /credit ?card|card bill|\bcred\b|bbps|bharat bill|bill ?pay|billdesk|infobil/i;
+const isCardAcc = n => { const a = acc(n); return !!a && a.type === 'card'; };
+const pDay = p => String(p.ts || '').slice(0, 10);
+function cardOfSms(p) { if (isCardAcc(p.account)) return p.account; if (p.account || !p.card) return ''; const L = live(a => a.type === 'card' && mineA(a)); return L.length === 1 ? L[0].name : ''; }
+const cpBankSide = q => q.dir === 'debit' && !q.card && !q.atm && !isCardAcc(q.account) && (!q.payee || PAYEE_JUNK.test(q.payee) || CP_OUT.test(q.raw || ''));
+function cardPays() {
+  const N = pendNew(); if (!N.length || !S.accounts.some(a => a.type === 'card' && !a.archived)) return [];
+  const no = S.prefs.cpNo || [], used = new Set(), banks = payBanks(), out = [];
+  N.filter(p => p.dir === 'credit' && !no.includes(p.id) && CP_IN.test(p.raw || '') && !CP_NOT.test(p.raw || '')).forEach(c => {
+    const card = cardOfSms(c); if (!card) return;
+    const d = N.filter(q => cpBankSide(q) && !used.has(q.id) && Math.abs(q.amount - c.amount) < .005 && Math.abs(dayDiff(pDay(q), pDay(c))) <= 2).sort((a, b) => Math.abs(Date.parse(a.ts.replace(' ', 'T')) - Date.parse(c.ts.replace(' ', 'T'))) - Math.abs(Date.parse(b.ts.replace(' ', 'T')) - Date.parse(c.ts.replace(' ', 'T'))))[0];
+    if (d) used.add(d.id);
+    const fa = d && d.account && acc(d.account) && !acc(d.account).archived && !acc(d.account).others ? d.account : '';
+    out.push({ id: c.id, c, d, card, amount: c.amount, ts: d ? d.ts : c.ts, from: fa || (banks.find(a => a.name === S.prefs.cardFrom) || banks[0] || {}).name || '' });
+  });
+  return out;
+}
+function pendSort() { const X = cardPays(); if (!X.length) return pendNew(); const hide = new Set(); X.forEach(x => { hide.add(x.c.id); if (x.d) hide.add(x.d.id); }); return pendNew().filter(p => !hide.has(p.id)); }
+function cardPayAlerts() {
+  return cardPays().map(x => `<div class="alert cpay"><span class="ic" style="background:#12A15022">💳</span><span class="mid" data-act="payCard" data-n="${esc(x.card)}" data-sms="${x.id}"><b>Paid ${esc(x.card)} ${inr(x.amount)}?</b><small>${x.from ? 'From ' + esc(x.from) : 'Pick the bank'} · ${dLabel(x.ts.slice(0, 10))}, ${tLabel(x.ts)} · tap to change</small></span><span class="cpb"><button class="btn sm" data-act="cpYes" data-id="${x.id}">✓ Yes, I paid</button><button class="btn sm sec" data-act="cpNo" data-id="${x.id}">Not this</button></span></div>`).join('');
+}
+ACT.cpYes = el => {
+  const x = cardPays().find(v => v.id === el.dataset.id); if (!x) return;
+  if (!x.from) return ACT.payCard({ dataset: { n: x.card, sms: x.id } });
+  cpLog(x.card, x.from, x.amount, x.ts, [x.c].concat(x.d ? [x.d] : [])); render(); if (inboxCount().all) inboxSheet(); else shut();
+};
+ACT.cpNo = el => { S.prefs.cpNo = (S.prefs.cpNo || []).concat(el.dataset.id).slice(-100); save(); render(); inboxSheet(); toast('Okay · sort it yourself above'); };
+function cardPayTidy() {
+  const N = pendNew(); if (!N.length || !S.trf.length) return 0;
+  const taken = k => new Set(S.pend.filter(p => p.status === 'done' && p.dir === k && p.done).map(p => p.done)), tc = taken('credit'), td = taken('debit'), ops = [];
+  N.forEach(p => {
+    const isC = p.dir === 'credit', card = isC ? cardOfSms(p) : '';
+    if (isC ? (!card || !CP_IN.test(p.raw || '') || CP_NOT.test(p.raw || '')) : !cpBankSide(p)) return;
+    const t = S.trf.find(t => isCardAcc(t.to) && !isCardAcc(t.from) && Math.abs(t.amount - p.amount) < .005 && Math.abs(dayDiff(String(t.ts).slice(0, 10), pDay(p))) <= 3 && (isC ? t.to === card && !tc.has(t.id) : (!p.account || p.account === t.from) && !td.has(t.id)));
+    if (!t) return; (isC ? tc : td).add(t.id);
+    ops.push(up('Pending', Object.assign({}, p, { status: 'done', done: t.id, account: isC ? t.to : t.from })));
+  });
+  if (ops.length) commit(ops); return ops.length;
+}
+/* waiting SMS whose "payee" is really the bank's helpline text ("To dispute call 1800…"): read them again */
+const PAYEE_JUNK = /^(?:to\s+)?(?:dispute|block|report|call|sms|dial|stop|know more|helpline|customer care)\b/i;
+function pendFix() {
+  const ops = []; pendNew().forEach(p => { if (!p.payee || !PAYEE_JUNK.test(p.payee)) return; const x = p.raw ? parseSms(p.raw, p.ts) : null; ops.push(up('Pending', Object.assign({}, p, { payee: x && !PAYEE_JUNK.test(x.payee) ? x.payee : '' }))); });
+  if (ops.length) commit(ops); return ops.length;
+}
 function renderHome() {
   if (!S.accounts.length) return `<div class="card"><div class="empty"><span class="big">👋</span>Let's add your bank accounts, cash and cards with today's balances.</div><button class="btn" data-act="onboard">Set up accounts</button>${!S.url ? '<button class="btn sec" data-act="welcome">Connect Google Sheet</button>' : ''}</div>`;
   const m = U.month, es = S.exp.filter(e => inP(e, m) && myX(e)), spent = sum(es), emiAmt = sum(S.emi.filter(e => inP(e, m) && !isOthers(e.account)));
@@ -1761,11 +1843,12 @@ ACT.acctOpen = el => {
   const b = C.bal[a.name] || 0, hd = C.held[a.name] || 0, L = activity(a.name).slice(0, 40), st = a.openingDate || '';
   const gs = S.goals.filter(g => (C.gIn[g.id] || {})[a.name]);
   const pk = pockets(a.name), pkTot = r2(pk.reduce((s, x) => s + (C.bal[x.name] || 0), 0));
-  openSheet(esc(a.name), `<div class="detail"><div class="ic big" style="background:var(--soft)">${a.others ? '👥' : ACC_T[a.type][0]}</div><div class="dv ${b < 0 ? 'red' : ''}">${inr(b)}</div><div class="dt">${a.others ? 'Held for others' + (a.keptIn ? ' · kept in ' + esc(a.keptIn) : '') + ' · not in your net worth' : ACC_T[a.type][1]} · since ${dLabel(st.slice(0, 10))}${tLabel(st) ? ', ' + tLabel(st) : ''}</div></div>
+  openSheet(esc(a.name), `<div class="detail"><div class="ic big" style="background:var(--soft)">${a.others ? '👥' : ACC_T[a.type][0]}</div><div class="dv ${b < 0 ? 'red' : ''}">${a.type === 'card' && !a.others && b <= 0 ? inr(-b) : inr(b)}</div><div class="dt">${a.type === 'card' && !a.others ? (b < -.004 ? 'You owe this · bill day ' + cardDay(a) + ' · ' : 'Nothing owed ✓ · ') : ''}${a.others ? 'Held for others' + (a.keptIn ? ' · kept in ' + esc(a.keptIn) : '') + ' · not in your net worth' : ACC_T[a.type][1]} · since ${dLabel(st.slice(0, 10))}${tLabel(st) ? ', ' + tLabel(st) : ''}</div></div>
   ${pk.length ? `<div class="kv" style="margin-bottom:10px"><div><span>Your money</span><b>${inr(b)}</b></div>${pk.map(x => `<div><span>👥 ${esc(x.name)}'s money</span><b class="mute">${inr(C.bal[x.name])}</b></div>`).join('')}<div><span><b style="color:var(--ink)">Bank app should show</b></span><b>${inr(b + pkTot)}</b></div></div>` : ''}
   ${hd ? `<div class="kv">${gs.map(g => `<div><span>${g.icon} ${esc(g.name)}</span><b>${inr(C.gIn[g.id][a.name])}</b></div>`).join('')}<div><span><b style="color:var(--ink)">Free to spend</b></span><b class="green">${inr(b - hd)}</b></div></div>` : ''}
   ${a.others && heldOwed(a.name) > 0 ? `<div class="alert warn" style="margin-bottom:0"><span class="ic" style="background:var(--soft)">🤝</span><span class="mid"><b>You owe ${esc(a.name)} ${inr(heldOwed(a.name))}</b><small>Spent from ${esc(a.name)}'s money for yourself</small></span></div>` : ''}
-  <div class="btns">${a.others ? `<button class="btn" data-act="heldPay" data-n="${esc(a.name)}">↩ Pay back</button><button class="btn sec" data-act="stmt" data-n="${esc(a.name)}">📄 Statement</button>` : `<button class="btn" data-act="recon" data-n="${esc(a.name)}">${a.type === 'investment' ? 'Update value' : 'Match with bank'}</button>`}<button class="btn sec" data-act="acctEdit" data-n="${esc(a.name)}">Edit</button></div>
+  ${a.type === 'card' && !a.others ? cardBar(a) : ''}
+  <div class="btns">${a.type === 'card' && !a.others ? `<button class="btn" data-act="payCard" data-n="${esc(a.name)}">💳 Pay</button>` : ''}${a.others ? `<button class="btn" data-act="heldPay" data-n="${esc(a.name)}">↩ Pay back</button><button class="btn sec" data-act="stmt" data-n="${esc(a.name)}">📄 Statement</button>` : `<button class="btn${a.type === 'card' ? ' sec' : ''}" data-act="recon" data-n="${esc(a.name)}">${a.type === 'investment' ? 'Update value' : a.type === 'card' ? 'Match' : 'Match with bank'}</button>`}<button class="btn sec" data-act="acctEdit" data-n="${esc(a.name)}">Edit</button></div>
   <div class="section-t">Recent activity</div>${L.length ? `<div class="group">${L.map(x => row({ sheet: x.s, id: x.e.id, icon: x.i, color: '#94A3B8', t: x.t, s: dLabel(x.e.ts.slice(0, 10)) + (x.e.ts < st ? ' · before start, not counted' : ''), amt: x.e.amount, sign: x.sg })).join('')}</div>` : '<div class="empty">No activity yet.</div>'}`);
 };
 /* ---------- statement for money held for others (Mom, Evol…) ---------- */
@@ -1853,6 +1936,7 @@ function acctSheet(a, type0) {
   ${fixLim ? `<div class="hint amber" style="margin-top:10px">⚠️ ${inr(+v.opening)} was saved as this card's balance, which made it count as your money. It's been moved to <b>Credit limit</b> below. Check "You owed" and save.</div>` : ''}
   <div class="lbl">Credit limit ₹</div><input id="aLimit" inputmode="decimal" value="${fixLim ? +v.opening : lim0 || ''}" placeholder="e.g. 150000">
   <div class="hint">How much the bank lets you spend. It is <b>not</b> your money and never counts in net worth.</div>
+  <div class="lbl">Keep usage under (% of limit)</div><input id="aGuide" type="number" min="1" max="100" inputmode="numeric" value="${cardGuide()}"><div class="hint">Your own safe line, for all your cards. Brokeless shows how much is left before it and warns you when you cross it. 30% is the usual advice.</div>
   <div class="lbl">You owed at that moment ₹</div><input id="aOwe" inputmode="decimal" value="${isC && a ? (fixLim ? 0 : Math.max(0, -(+v.opening || 0))) : ''}" placeholder="0 if fully paid">
   <div class="lbl">Bill day</div><input id="aBill" type="number" min="1" max="28" inputmode="numeric" value="${v.billDay || 28}"><div class="hint">From this day each month Brokeless nudges you to pay the card until it is paid.</div></div>
   <div class="lbl">Balance as of</div><div class="grid2"><input type="date" id="aDate" value="${(v.openingDate || nowTs()).slice(0, 10)}"><input type="time" id="aTime" value="${(v.openingDate || '').slice(11, 16) || '00:00'}"></div>
@@ -1875,7 +1959,7 @@ ACT.aSave = () => {
   if (old) ['phone', 'l4'].forEach(k => { if (old[k]) rowA[k] = old[k]; });
   const ops = []; if (old && old.name !== n) ops.push({ op: 'renameAccount', from: old.name, to: n });
   ops.push(up('Accounts', rowA));
-  { const CD = Object.assign({ limits: {} }, S.cfg.cards || {}), L = Object.assign({}, CD.limits); if (old && old.name !== n && L[old.name] != null) { L[n] = L[old.name]; delete L[old.name]; } if (isC) { if (lim > 0) L[n] = lim; else delete L[n]; } if (JSON.stringify(L) !== JSON.stringify(CD.limits || {})) ops.push(cfgOp('cards', Object.assign(CD, { limits: L }))); }
+  { const CD = Object.assign({ limits: {} }, S.cfg.cards || {}), L = Object.assign({}, CD.limits); if (old && old.name !== n && L[old.name] != null) { L[n] = L[old.name]; delete L[old.name]; } if (isC) { if (lim > 0) L[n] = lim; else delete L[n]; } const g = isC ? Math.min(100, Math.max(1, parseInt(($('#aGuide') || {}).value) || cardGuide())) : cardGuide(); if (JSON.stringify(L) !== JSON.stringify(CD.limits || {}) || g !== cardGuide()) ops.push(cfgOp('cards', Object.assign(CD, { limits: L, guide: g }))); }
   { const N = nwCfg(); if (old && old.name !== n && (N.skip || []).includes(old.name)) { N.skip = N.skip.map(x => x === old.name ? n : x); ops.push(cfgOp('nw', N)); } }
   commit(ops); shut(); render(); toast('Account saved');
 };
@@ -1980,7 +2064,7 @@ ACT.obSave = () => {
 function accTiles() {
   let h = '';
   const accs = live(a => a.type !== 'investment' && mineA(a)), oth = live(a => a.others), tot = r2(accs.filter(holderType).reduce((s, a) => s + (C.bal[a.name] || 0), 0));
-  h += `<div class="strip"><button class="acard" data-act="tab" data-t="insights" style="border-color:color-mix(in srgb,var(--acc) 30%,var(--line))"><span>💰 Free to spend</span><b>${inrS(freeTotal())}</b><small>${r2(tot - freeTotal()) > 0 ? inr(tot - freeTotal()) + ' in goals · total ' + inr(tot, 1) : 'Banks & cash, nothing reserved'}</small></button>${accs.map(a => { const b = C.bal[a.name] || 0, hd = C.held[a.name] || 0, pk = pockets(a.name).length; return `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>${ACC_T[a.type][0]} ${esc(a.name)}</span><b class="${b - hd < 0 || (a.type === 'card' && b < 0) ? 'red' : ''}">${a.type === 'card' ? (b < -.004 ? inr(-b) : inr(0)) : inr(b - hd)}</b><small>${a.type === 'card' ? (cardLooksLimit(a) ? '<span style="color:var(--amber)">⚠️ Looks like the limit · fix in Insights → Net worth</span>' : (b < -.004 ? 'Due · bill day ' + cardDay(a) : 'No dues ✓') + (cardLimit(a) ? ' · ' + inr(Math.max(0, cardLimit(a) + Math.min(0, b)), 1) + ' free' : '')) : (hd > 0 ? inr(hd) + ' in goals · ' : '') + (pk ? 'With ' + pockets(a.name).map(x => x.name).join(' & ') + ': <b class="acc-tot">' + inr(b + pockets(a.name).reduce((t, x) => t + (C.bal[x.name] || 0), 0), 1) + '</b>' : hd > 0 ? 'total ' + inr(b, 1) : 'Free to spend')}</small></button>`; }).join('')}${oth.length ? oth.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}" style="border-style:dashed;box-shadow:none"><span>👥 ${esc(a.name)}</span><b class="mute">${inr(C.bal[a.name])}</b><small>${heldOwed(a.name) > 0 ? '<span class="red">You owe ' + inr(heldOwed(a.name), 1) + '</span>' : 'Held for others' + (a.keptIn ? ' · in ' + esc(a.keptIn) : '')}</small></button>`).join('') : ''}</div>`;
+  h += `<div class="strip"><button class="acard" data-act="tab" data-t="insights" style="border-color:color-mix(in srgb,var(--acc) 30%,var(--line))"><span>💰 Free to spend</span><b>${inrS(freeTotal())}</b><small>${r2(tot - freeTotal()) > 0 ? inr(tot - freeTotal()) + ' in goals · total ' + inr(tot, 1) : 'Banks & cash, nothing reserved'}</small></button>${accs.map(a => { const b = C.bal[a.name] || 0, hd = C.held[a.name] || 0, pk = pockets(a.name).length; return `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}"><span>${ACC_T[a.type][0]} ${esc(a.name)}</span><b class="${b - hd < 0 || (a.type === 'card' && b < 0) ? 'red' : ''}">${a.type === 'card' ? (b < -.004 ? inr(-b) : inr(0)) : inr(b - hd)}</b><small>${a.type === 'card' ? (cardLooksLimit(a) ? '<span style="color:var(--amber)">⚠️ Looks like the limit · fix in Insights → Net worth</span>' : (cardUse(a) ? cardUseLine(cardUse(a)) : (b < -.004 ? 'Owed · bill day ' + cardDay(a) : 'No dues ✓') + ' · add limit')) : (hd > 0 ? inr(hd) + ' in goals · ' : '') + (pk ? 'With ' + pockets(a.name).map(x => x.name).join(' & ') + ': <b class="acc-tot">' + inr(b + pockets(a.name).reduce((t, x) => t + (C.bal[x.name] || 0), 0), 1) + '</b>' : hd > 0 ? 'total ' + inr(b, 1) : 'Free to spend')}</small></button>`; }).join('')}${oth.length ? oth.map(a => `<button class="acard" data-act="acctOpen" data-n="${esc(a.name)}" style="border-style:dashed;box-shadow:none"><span>👥 ${esc(a.name)}</span><b class="mute">${inr(C.bal[a.name])}</b><small>${heldOwed(a.name) > 0 ? '<span class="red">You owe ' + inr(heldOwed(a.name), 1) + '</span>' : 'Held for others' + (a.keptIn ? ' · in ' + esc(a.keptIn) : '')}</small></button>`).join('') : ''}</div>`;
   return h;
 }
 ACT.goAcc = () => { U.mseg = 'acc'; setTab('money'); };
@@ -2455,13 +2539,15 @@ function parseSms(raw, recvTs) {
   const banks = [['kotak', 'Kotak'], ['icici', 'ICICI'], ['hdfc', 'HDFC'], ['sbi', 'SBI'], ['axis', 'Axis'], ['idfc', 'IDFC'], ['yes ?bank', 'Yes Bank'], ['indusind', 'IndusInd'], ['bob|bank of baroda', 'BoB'], ['pnb', 'PNB'], ['paytm', 'Paytm'], ['amex|american express', 'Amex'], ['au bank|au small', 'AU'], ['federal', 'Federal'], ['rbl', 'RBL']];
   const bk = (banks.find(([r]) => new RegExp('\\b(' + r + ')\\b', 'i').test(t)) || [, ''])[1];
   let payee = '', m;
-  if ((m = t.match(/\bupi\/(?:p2[ma]|[a-z]+)\/\d+\/([^\/.]+?)(?:\/|\.|\s|$)/i))) payee = m[1];
-  else if ((m = t.match(/;\s*([^;]+?)\s+credited\b/i))) payee = m[1];
-  else if (dir === 'debit' && (m = t.match(/\bspent\b.*?\bon\s+\d{1,2}[-\/ ][A-Za-z]{3}[-\/ ]\d{2,4}\s+(?:on|at)\s+(.+?)(?:\.\s|\. Avl|\.?\s*Avl|\. If|\s*$)/i))) payee = m[1];
-  else if (dir === 'debit' && (m = t.match(/\b(?:to|at)\s+(?!your\b)(?:vpa\s+)?([A-Za-z0-9@&._\- ']{2,60}?)(?=\s+on\s|\s*\.\s|\s+ref|\s+upi|\s+via|\s+avl|\s*[;,(]|\s*$)/i))) payee = m[1];
-  else if (dir === 'credit' && (m = t.match(/\b(?:from|by)\s+(?!your\b|a\/c\b|acct\b|account\b)(?:vpa\s+)?([A-Za-z0-9@&._\- ']{2,60}?)(?=\s+on\s|\s*\.\s|\s+ref|\s+upi|\s+via|\s+avl|\s*[;,(]|\s*$)/i))) payee = m[1];
+  /* "To dispute call 18002662 or SMS BLOCK…" is the bank's helpline, not who you paid */
+  const tp = t.replace(/[.;,]?\s*(?:to|for|in case of)\s+(?:dispute|block|report|stop)\b.*$/i, '').replace(/[.;,]?\s*(?:if not (?:you|done)|not you\b|call\s+(?:us\s+)?(?:on\s+|at\s+)?1[89]00|sms\s+block)\b.*$/i, '');
+  if ((m = tp.match(/\bupi\/(?:p2[ma]|[a-z]+)\/\d+\/([^\/.]+?)(?:\/|\.|\s|$)/i))) payee = m[1];
+  else if ((m = tp.match(/;\s*([^;]+?)\s+credited\b/i))) payee = m[1];
+  else if (dir === 'debit' && (m = tp.match(/\bspent\b.*?\bon\s+\d{1,2}[-\/ ][A-Za-z]{3}[-\/ ]\d{2,4}\s+(?:on|at)\s+(.+?)(?:\.\s|\. Avl|\.?\s*Avl|\. If|\s*$)/i))) payee = m[1];
+  else if (dir === 'debit' && (m = tp.match(/\b(?:to|at)\s+(?!your\b)(?:vpa\s+)?([A-Za-z0-9@&._\- ']{2,60}?)(?=\s+on\s|\s*\.\s|\s+ref|\s+upi|\s+via|\s+avl|\s*[;,(]|\s*$)/i))) payee = m[1];
+  else if (dir === 'credit' && (m = tp.match(/\b(?:from|by)\s+(?!your\b|a\/c\b|acct\b|account\b)(?:vpa\s+)?([A-Za-z0-9@&._\- ']{2,60}?)(?=\s+on\s|\s*\.\s|\s+ref|\s+upi|\s+via|\s+avl|\s*[;,(]|\s*$)/i))) payee = m[1];
   payee = cleanName(payee).replace(/^(?:transfer|deposit)\s+(?:from|by)\s+/i, '').replace(/@[a-z]+$/i, '').replace(/^(?:[x*]+\d+|a\/c.*|acct.*)$/i, '');
-  if (/^\+?\d[\d\s-]{6,}|\bbank\b|\bcard\b/i.test(payee)) payee = '';
+  if (/^\+?\d[\d\s-]{6,}|\bbank\b|\bcard\b/i.test(payee) || /^(?:dispute|block|report|call|sms|dial|helpline)\b/i.test(payee)) payee = '';
   if (atm) payee = 'ATM withdrawal';
   const ref = ((t.match(/(?:upi[: ]*(?:ref(?:\.|erence)?\.?\s*(?:no\.?)?)?|ref(?:\.|erence)?\s*(?:no\.?|#)?|rrn|txn id|imps ref)[:\s.]*([0-9X]{6,})/i)) || [, ''])[1];
   const d = smsDate(t), rt = recvTs || nowTs();
@@ -2525,7 +2611,7 @@ const pendIgnored = () => { const since = addDays(today(), -60); return S.pend.f
 function pendListHtml(L, ig) {
   return `<div class="group">${L.map(p => { const pk = payeeFind(p.payee); return `<button class="item" data-act="pendPick" data-id="${p.id}"><span class="ic" style="background:${p.dir === 'credit' ? '#12A15022' : 'var(--soft)'}">${p.dir === 'credit' ? '⬇️' : p.card ? '💳' : p.atm ? '🏧' : '⬆️'}</span><span class="mid"><b>${esc(nickOf(p.payee) || (pk && pk.note) || p.payee || (p.dir === 'credit' ? 'Money received' : 'Payment'))}${pk && pk.note ? ' <small class="mute" style="font-weight:600">· ' + esc(pk.category || pk.label || '') + '</small>' : ''}</b><small>${p.payee && (nickOf(p.payee) || (pk && pk.note)) ? esc(p.payee) + ' · ' : ''}${esc(p.account || p.bank + (p.l4 ? ' ·' + p.l4 : '') || 'Unknown account')} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}</small></span><span class="amt ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</span></button>`; }).join('')}</div>${ig ? '' : `<button class="btn sec" data-act="pendIgnoreAll">Ignore all ${L.length}</button>`}`;
 }
-ACT.pendIgnoreAll = () => { if (!confirm('Ignore all ' + pendNew().length + ' messages? They will not be added anywhere. You can still file them later from Settings → Bank SMS.')) return; commit(pendNew().map(p => up('Pending', Object.assign({}, p, { status: 'ignored', done: 'bulk' })))); render(); if (inboxCount().all) inboxSheet(); else shut(); };
+ACT.pendIgnoreAll = () => { if (!confirm('Ignore all ' + pendSort().length + ' messages? They will not be added anywhere. You can still file them later from Settings → Bank SMS.')) return; commit(pendSort().map(p => up('Pending', Object.assign({}, p, { status: 'ignored', done: 'bulk' })))); render(); if (inboxCount().all) inboxSheet(); else shut(); };
 /* ---------- smart payee suggestions: same person / shop even when the bank writes the name differently ---------- */
 const NAME_STOP = new Set(['mr', 'mrs', 'ms', 'miss', 'dr', 'shri', 'smt', 'sri', 'kumari', 'the', 'and', 'pvt', 'ltd', 'private', 'limited', 'india', 'upi', 'to', 'from', 'by', 'payment', 'paid']);
 const nameToks = p => uniq(String(p || '').toLowerCase().replace(/@[a-z0-9.]+/g, ' ').replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(t => t.length >= 2 && !NAME_STOP.has(t) && !/^\d+$/.test(t)));
@@ -2613,6 +2699,9 @@ ACT.pendPick = el => {
   const rm = rfMatch(p), rw = rfWord(p);
   if (rm) { U.pd.act = rm.kind; U.pd.rf = rm.id; if (!U.pd.account && rm.acc) U.pd.account = rm.acc; U.pd.note = ''; }
   else if (rw && p.dir === 'credit' && !sg.length) { U.pd.act = rw; U.pd.note = ''; }
+  if (!sg.length && !rm && !rw) { const cds = live(a => a.type === 'card' && mineA(a)), bk = payBanks();
+    if (p.dir === 'credit' && cardOfSms(p) && CP_IN.test(p.raw || '') && !CP_NOT.test(p.raw || '') && bk.length) { U.pd.act = 'trf'; U.pd.account = cardOfSms(p); U.pd.to = (bk.find(a => a.name === S.prefs.cardFrom) || bk[0]).name; U.pd.note = 'Card bill'; }
+    else if (cpBankSide(p) && CP_OUT.test(p.raw || '') && cds.length === 1) { U.pd.act = 'trf'; U.pd.to = cds[0].name; U.pd.note = 'Card bill'; } }
   if (U.pd.act === 'refund' && !U.pd.rf && !U.pd.exp) { const c = rfSpendCands(p.amount, merchOf(p.raw || '', ''), p.payee, p.ts); if (c.length && Math.abs(c[0].amount - p.amount) < 1) U.pd.exp = c[0].id; }
   pendForm();
 };
@@ -2936,7 +3025,7 @@ function drainSms() {
   try { L = JSON.parse(AND.takeSms() || '[]'); } catch (e) { return 0; }
   let n = 0, nr = 0; L.forEach(x => { try { const v = window.LedgerSms(x.raw, x.ts, x.from); if (v === 'rf') nr++; else if (v) n++; } catch (e) { } });
   if (nr && !n) { const r = U.rfNew; toast(nr === 1 && r ? '↩️ ' + rfName(r) + ' ' + inr(r.amount) + ' on its way · by ' + dLabel(r.by) : '↩️ ' + nr + ' refunds on their way', 'View', () => nr === 1 && r ? ACT.rfOpen({ dataset: { id: r.id } }) : refundsSheet()); bellBadge(); }
-  if (n) { toast('📩 ' + n + ' new bank message' + (n > 1 ? 's' : '') + ' to sort', 'Open', () => ACT.pendOpen()); bellBadge(); if (U.tab === 'home') render(); }
+  if (n) { pendFix(); cardPayTidy(); const cp = cardPays()[0]; if (cp) toast('💳 Paid ' + cp.card + ' ' + inr(cp.amount) + '?', 'Confirm', () => ACT.pendOpen()); else if (pendNew().length) toast('📩 ' + n + ' new bank message' + (n > 1 ? 's' : '') + ' to sort', 'Open', () => ACT.pendOpen()); bellBadge(); if (U.tab === 'home') render(); }
   return n;
 }
 window.__ledgerSmsPing = () => drainSms();
@@ -4856,7 +4945,7 @@ function nwSheet() {
   const accRow = a => { const on = !skip.includes(a.name); return `<button class="srow" data-act="nwAcc" data-n="${esc(a.name)}" style="width:100%;text-align:left;padding-left:22px"><span class="ic" style="background:var(--soft)">${on ? '✅' : '⬜'}</span><span class="mid"><b>${ACC_T[a.type][0]} ${esc(a.name)}</b><small>${on ? 'Counted' : 'Left out'}</small></span><b>${inr(C.bal[a.name] || 0)}</b></button>`; };
   const grp = (k, t, sub) => { const L = live(a => mineA(a) && a.type === k); if (!L.length) return ''; const on = N[k] !== false; return tog(k, on, t, sub) + (on && L.length > 1 ? L.map(accRow).join('') : ''); };
   const cards = live(a => mineA(a) && a.type === 'card');
-  const cardHtml = cards.map(a => { const b = C.bal[a.name] || 0, lim = cardLimit(a), due = Math.max(0, -b); return `<button class="srow" data-act="acctEdit" data-n="${esc(a.name)}" style="width:100%;text-align:left"><span class="ic" style="background:var(--soft)">💳</span><span class="mid"><b>${esc(a.name)}</b><small>${cardLooksLimit(a) ? '<span style="color:var(--amber)">⚠️ ' + inr(b) + ' was typed as the balance. Is that the limit? Tap to fix</span>' : (due ? '<span class="red">Owe ' + inr(due) + '</span>' : 'No dues ✓') + (lim ? ' · ' + inr(Math.max(0, lim - due)) + ' free of ' + inr(lim, 1) + ' limit' : ' · tap to add the limit')}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`; }).join('');
+  const cardHtml = cards.map(a => { const b = C.bal[a.name] || 0, lim = cardLimit(a), due = Math.max(0, -b); return `<button class="srow" data-act="acctEdit" data-n="${esc(a.name)}" style="width:100%;text-align:left"><span class="ic" style="background:var(--soft)">💳</span><span class="mid"><b>${esc(a.name)}</b><small>${cardLooksLimit(a) ? '<span style="color:var(--amber)">⚠️ ' + inr(b) + ' was typed as the balance. Is that the limit? Tap to fix</span>' : (due ? '<span class="red">Owe ' + inr(due) + '</span>' : 'No dues ✓') + (lim ? ' · ' + pctS(due / lim * 100) + ' of ' + inr(lim, 1) + ' limit used' : ' · tap to add the limit')}</small></span><span class="mute" style="font-size:1.2rem">›</span></button>`; }).join('');
   openSheet('Net worth · what counts', `<div class="hero" style="margin-top:0"><div class="hl">Net worth today</div><div class="hv">${inrS(W.nw)}</div><div class="hs">Only what is ticked below. Held-for-others money (Mom, Evol) is never counted.</div></div>
   <div class="lbl">Your money</div>
   ${grp('bank', '🏦 Bank accounts', 'Money in your banks')}${grp('cash', '💵 Cash in hand', 'Cash you are carrying')}${grp('wallet', '👛 Wallets / UPI', 'Paytm, Amazon Pay…')}${grp('investment', '📈 Investments', 'Groww and other investments, at their current value')}

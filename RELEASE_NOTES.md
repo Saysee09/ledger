@@ -1,5 +1,11 @@
 ## Brokeless v9.0 · What's new
 
+- **💳 Pay your card any day**: tap the card (Money → Accounts) → **Pay**. Full amount or a part, before or after the bill day
+- **💳 Card bill from SMS, one tap**: when you pay the card, the bank SMS (money out) and the card SMS (payment received) are joined into one line in the bell: **"Paid ICICI Credit Card ₹30?" → ✓ Yes, I paid**. Already logged it with Pay? Both SMS are filed quietly. The phone notification says "card payment received · tap to confirm"
+- **📊 How much of the limit is used**: each card shows % used and how much is left before **your safe line (30%, change it in the card's Edit screen)**. A heads-up appears in the bell when you cross it
+- **Paying the card is never a second expense**: a card spend counts on the day you swipe; paying the bill only moves money bank → card
+- Fixed: bank SMS showing "Dispute Call 1800…" as the payee
+
 - **Ledger is now Brokeless** 💸 Same app, same data, new name
 - **🔐 Sign in with Google**: new users get a private Brokeless Sheet in their own Google Drive. Use it on any phone or laptop; nobody else can see it
 - **New-user setup** with clean defaults: bank, cash and card, default categories, generic bill presets
