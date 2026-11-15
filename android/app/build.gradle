@@ -6,14 +6,33 @@ def vc = Integer.parseInt((project.findProperty('versionCode') ?: '1').toString(
 
 android {
     namespace 'com.saysee.ledger'
-    compileSdk 34
+    compileSdk 36
 
     defaultConfig {
         applicationId 'com.saysee.ledger'
         minSdk 26
-        targetSdk 34
+        targetSdk 36
         versionCode vc
         versionName "8.0." + vc + (project.findProperty('versionSuffix') ?: '')
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    // direct = the APK shared by link (updates itself from GitHub). play = the Google Play build:
+    // its own app ID, no self-updater and no "install apps" permission, because Play does the updating.
+    flavorDimensions 'dist'
+    productFlavors {
+        direct {
+            dimension 'dist'
+            buildConfigField 'boolean', 'PLAY', 'false'
+        }
+        play {
+            dimension 'dist'
+            applicationId((project.findProperty('playAppId') ?: 'com.brokeless.app').toString())
+            buildConfigField 'boolean', 'PLAY', 'true'
+        }
     }
 
     signingConfigs {
