@@ -1,3 +1,14 @@
+## Brokeless v9.2 · What's new
+
+- **⇄ Moved money between your own banks? One tap**: the bank SMS (money out of ICICI) and the other bank's SMS (money into Kotak) are joined into one line in the bell: **"Moved ₹5,000 to Kotak Bank?" → ✓ Yes, moved**. Logged as a transfer, never as an expense or income. Already logged it, or filed one side as a transfer? The other SMS is filed quietly, so nothing is counted twice
+- **An SMS that names your other account** ("credited to A/c XX1211", "self transfer") is filled in as a transfer to that account
+- **Fixed: the second SMS of a UPI self-transfer was dropped** (both SMS carry the same UPI reference)
+- **Fixed: "Acc XX616"** in an ICICI SMS is now read as the account number even when the SMS mentions a second account
+- **✨ Suggestions for a first-time payee**: the Money paid screen now suggests your matching **bill** (same amount, due around now), what you logged for **the same amount before**, a transfer to **your own account**, and the category from the name. A matching bill is filled in and marked paid
+- **Money paid screen has what the + screen has**: **👥 Split bill** (your share is the expense, friends owe you the rest), **For me · I'll pay back** when paid from Mom's or Evol's money, **#tags**, and **📷 bill photo** (with your own Sheet script)
+- **Note ideas**: your usual notes for the picked category, plus your #tags, under the Note box
+- **🎯 Goals: monthly instalment**: set "Monthly instalment ₹" on a goal. The goal shows a **% bar**, the target, **"3 of 11 instalments · 8 months left · done by Jun 2027"**, and whether this month's instalment is in. **+ Add money** fills in what is left for this month
+
 ## Brokeless v9.1 · What's new
 
 - **Ready for Android 16**: the app now targets Android 16, which Google Play requires. On Android 15 and 16 phones the screen is laid out to stay clear of the status bar, the gesture bar and the keyboard

@@ -86,7 +86,7 @@ with sync_playwright() as p:
     pg.click('.sheet button[data-act=payCard]'); pg.wait_for_timeout(400)
     ok(pg.input_value('#cpAmt').replace(',', '') in ('12500', '12500.00'), 'pay sheet opens with what you owe (%s)' % pg.input_value('#cpAmt'))
     pg.fill('#cpAmt', '30'); pg.screenshot(path=OUT + '4_pay_sheet.png'); pg.click('button[data-act=cpSave]'); pg.wait_for_timeout(400)
-    pg.evaluate("([a,b]) => { window.LedgerSms(a, nowTs(), 'ICICIB'); window.LedgerSms(b, nowTs(), 'ICICIB'); pendFix(); cardPayTidy(); render(); }", [SMS['debit'].replace('10-Nov-26', '11-Nov-26'), SMS['credit'].replace('10-NOV-26', '11-NOV-26')])
+    pg.evaluate("([a,b]) => { window.LedgerSms(a, nowTs(), 'ICICIB'); window.LedgerSms(b, nowTs(), 'ICICIB'); pendFix(); cardPayTidy(); render(); }", [SMS['debit'].replace('10-Nov-26', __import__('datetime').date.today().strftime('%d-%b-%y')), SMS['credit'].replace('10-NOV-26', __import__('datetime').date.today().strftime('%d-%b-%y').upper())])
     r = pg.evaluate("() => [S.trf.length, cardPays().length, S.pend.filter(p => p.status === 'done').length, pendNew().length]")
     ok(r == [1, 0, 2, 1], 'paid by hand first -> both SMS filed quietly, no second transfer, nothing to confirm (%s)' % r)
     ok(not errs, 'no page errors %s' % errs)
