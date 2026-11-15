@@ -21,6 +21,7 @@ public class SmsReceiver extends BroadcastReceiver {
             body.append(m.getDisplayMessageBody());
         }
         String text = body.toString();
+        UpdateChecker.kick(context);
         boolean money = SmsStore.looksFinancial(sender, text);
         SmsStore.noteLast(context, sender, money);
         if (!money) return;

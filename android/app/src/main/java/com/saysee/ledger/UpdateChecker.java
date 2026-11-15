@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets;
 final class UpdateChecker {
     private static final String API = "https://api.github.com/repos/Saysee09/ledger/releases?per_page=15";
     static final String PREFS = "ledger_update";
-    static final String CHANNEL = "app_updates";
+    static final String CHANNEL = "app_updates_pop"; /* high importance: pops up on screen. Old silent channel "app_updates" is removed */
 
     private UpdateChecker() { }
 
@@ -131,12 +131,15 @@ final class UpdateChecker {
         if (u == null) return;
         SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         String tag = u.optString("tag");
-        if (tag.equals(p.getString("notified", ""))) return;
+        /* once per version, plus one reminder 2 days later if it is still not installed */
+        boolean again = tag.equals(p.getString("notified", ""));
+        if (again && (p.getBoolean("reminded", false) || System.currentTimeMillis() - p.getLong("notifiedAt", 0) < 2L * 86400000L)) return;
         if (Build.VERSION.SDK_INT >= 33 && c.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (nm == null) return;
+        if (nm == null || !nm.areNotificationsEnabled()) return;
+        try { if (nm.getNotificationChannel("app_updates") != null) nm.deleteNotificationChannel("app_updates"); } catch (Exception ignored) { }
         if (nm.getNotificationChannel(CHANNEL) == null) {
-            NotificationChannel ch = new NotificationChannel(CHANNEL, "App updates", NotificationManager.IMPORTANCE_DEFAULT);
+            NotificationChannel ch = new NotificationChannel(CHANNEL, "App updates", NotificationManager.IMPORTANCE_HIGH);
             ch.setDescription("When a new version of Brokeless is ready to install");
             nm.createNotificationChannel(ch);
         }
@@ -147,13 +150,27 @@ final class UpdateChecker {
         for (String line : u.optString("notes").split("\n")) { String t = line.replaceAll("^[#*\\-\\s]+", "").trim(); if (!t.isEmpty() && !t.toLowerCase().startsWith("ledger") && !t.toLowerCase().startsWith("brokeless")) { first = t; break; } }
         android.app.Notification n = new android.app.Notification.Builder(c, CHANNEL)
                 .setSmallIcon(R.drawable.ic_stat_rupee)
-                .setContentTitle("Brokeless " + u.optString("tag").replaceAll("\\D+", ".").replaceAll("^\\.", "8.0.") + " is ready · tap to install")
+                .setContentTitle((again ? "Still waiting: " : "") + "Brokeless " + u.optString("tag").replaceAll("\\D+", ".").replaceAll("^\\.", "8.0.") + " is ready · tap to install")
                 .setContentText(first.isEmpty() ? "See what's new" : first)
                 .setAutoCancel(true)
                 .setContentIntent(pi)
+                .setCategory(android.app.Notification.CATEGORY_RECOMMENDATION)
                 .build();
         nm.notify(2001, n);
-        p.edit().putString("notified", tag).apply();
+        if (again) p.edit().putBoolean("reminded", true).apply();
+        else p.edit().putString("notified", tag).putLong("notifiedAt", System.currentTimeMillis()).putBoolean("reminded", false).apply();
+    }
+
+    /** Extra check soon (e.g. when any SMS arrives), at most once every 2 hours, so a new version is not missed for long when Android delays the regular check. */
+    static void kick(Context c) {
+        try {
+            if (BuildConfig.PLAY) return;
+            SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+            if (System.currentTimeMillis() - p.getLong("checked", 0) < 2L * 3600000L) return;
+            androidx.work.OneTimeWorkRequest w = new androidx.work.OneTimeWorkRequest.Builder(UpdateWorker.class)
+                    .setConstraints(new androidx.work.Constraints.Builder().setRequiredNetworkType(androidx.work.NetworkType.CONNECTED).build()).build();
+            androidx.work.WorkManager.getInstance(c).enqueueUniqueWork("ledger-update-now", androidx.work.ExistingWorkPolicy.KEEP, w);
+        } catch (Exception ignored) { }
     }
 
     /** On or after the 1st (from 8 am), once a month: "Your October money report is ready". Off when the user turned it off or the month had no entries. */
@@ -185,7 +202,7 @@ final class UpdateChecker {
                     .setAutoCancel(true)
                     .setContentIntent(pi)
                     .build();
-            nm.notify(2002, n);
+            nm.notify(2003, n);
             p.edit().putString("rpDone", ym).apply();
         } catch (Exception ignored) { }
     }

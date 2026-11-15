@@ -231,9 +231,10 @@ public class MainActivity extends AppCompatActivity {
 
         /* look for a new app version about twice a day, even when Ledger is closed */
         try {
-            PeriodicWorkRequest w = new PeriodicWorkRequest.Builder(UpdateWorker.class, 12, TimeUnit.HOURS)
+            PeriodicWorkRequest w = new PeriodicWorkRequest.Builder(UpdateWorker.class, 4, TimeUnit.HOURS)
                     .setConstraints(new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()).build();
-            WorkManager.getInstance(this).enqueueUniquePeriodicWork("ledger-update", ExistingPeriodicWorkPolicy.KEEP, w);
+            /* UPDATE (not KEEP) so phones that had the old 12-hour schedule move to every 4 hours */
+            WorkManager.getInstance(this).enqueueUniquePeriodicWork("ledger-update", ExistingPeriodicWorkPolicy.UPDATE, w);
         } catch (Exception ignored) { }
     }
 

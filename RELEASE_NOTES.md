@@ -1,5 +1,6 @@
 ## Brokeless v9.2 · What's new
 
+- **🔔 Update notifications outside the app**: when a new version is out, the phone now shows a pop-up notification (it used to sit silently in the notification shade). Brokeless checks every 4 hours instead of 12, also checks when an SMS arrives, and reminds you once 2 days later if you haven't installed it
 - **⇄ Moved money between your own banks? One tap**: the bank SMS (money out of ICICI) and the other bank's SMS (money into Kotak) are joined into one line in the bell: **"Moved ₹5,000 to Kotak Bank?" → ✓ Yes, moved**. Logged as a transfer, never as an expense or income. Already logged it, or filed one side as a transfer? The other SMS is filed quietly, so nothing is counted twice
 - **An SMS that names your other account** ("credited to A/c XX1211", "self transfer") is filled in as a transfer to that account
 - **Fixed: the second SMS of a UPI self-transfer was dropped** (both SMS carry the same UPI reference)
