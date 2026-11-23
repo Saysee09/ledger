@@ -1,3 +1,18 @@
+## Brokeless v9.3 · What's new
+
+- **📆 Turn a card purchase into EMI**: open the purchase (e.g. Mobile ₹17,268 on ICICI Credit Card) → **📆 Turn into EMI** → pick months (3/6/9/12/18/24 or any) and type the EMI from your bank. It shows the total you pay and the **extra (interest + fees)**. The purchase stays in your spending on the day you bought it; the card gets it back (the bank moves it off this bill) and **each month's EMI is logged by itself on the card's bill day**, so the card's "what you owe" matches the bank. The card's limit use still counts the EMI amount left
+- **📩 The bank's "converted into EMI" SMS**: becomes one line in the 🔔 bell, **"₹17,268 turned into EMI · Link"**. Link opens the EMI screen with the purchase, months and EMI already filled in. "Convert to EMI" offers are ignored
+- **📆 EMI from a bank SMS**: an SMS with the same amount as one of your EMIs (or saying "EMI") is filled in as **📆 EMI · Bike loan** for this month, not as an expense. If that EMI was already logged, the SMS is filed with it so nothing is counted twice. EMIs can be set to **⚡ log themselves** each month (Edit EMI)
+- **No double counting**: a purchase on EMI counts once as spending; afterwards only the EMI's extra (interest, fees) counts in reports, savings rate and money flow
+- **#tags in small letters**: #Car, #CAR and #car are one tag. New notes save tags in small letters, and older notes are tidied once
+- **Note ideas without repeats**: "Uber" and "uber" show as one idea
+- **💗 Pulse → Career: new Analysis**: a CTC card, tiles for in hand a month, what reaches your bank, growth a year and time at this job, a **Where your CTC goes** bar (in hand, bonus, tax, PF, other), **Spending vs take-home**, and tips (next review target, where tax starts for you)
+- **🧮 Hike calculator** (end of Career): start from your CTC or any amount (yearly or monthly), pick a hike % or type a new offer. **⚙️ Your salary structure**: yearly performance bonus (kept out of the monthly in-hand, shown after tax), PF (up to ₹3,000 under the new ₹25,000 PF ceiling, 12% of basic, your own amount, or none), basic %, other monthly cuts, professional tax, and **Match my real salary**. Saved and used everywhere
+- **Smart tax alerts**: shows the CTC where income tax starts for you and the **tax trap** just after it (a CTC that takes home *less* than at the line), with **"ask for at least ₹X"**. Every hike shows its **real raise** (what you take home), tax a year, take-home a year, and a 10/15/20/30% compare
+- **Indian commas in every amount box**: 100000 shows as 1,00,000 while you type, and when you edit an entry (EMI, goal, card limit, loan, budget… not only the big ₹ box)
+- **Smaller home-screen widgets**: each widget is now one row high by default (Free to spend 4×1, Spent 3×1, Needs you 3×1, Pulse 2×1). Already placed widgets keep their size: long-press → resize, or remove and add again
+- **SMS blocked on a phone?** Clearer steps: try Allow once in phone settings first, which makes "Allow restricted settings" appear in the ⋮ menu
+
 ## Brokeless v9.2 · What's new
 
 - **🔔 Update notifications outside the app**: when a new version is out, the phone now shows a pop-up notification (it used to sit silently in the notification shade). Brokeless checks every 4 hours instead of 12, also checks when an SMS arrives, and reminds you once 2 days later if you haven't installed it
