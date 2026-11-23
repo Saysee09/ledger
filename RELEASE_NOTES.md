@@ -1,3 +1,15 @@
+## Brokeless v9.3 · What's new
+
+- **📆 Turn a card purchase into EMI**: open the purchase (e.g. Mobile ₹17,268 on ICICI Credit Card) → **📆 Turn into EMI** → pick months (3/6/9/12/18/24 or any) and type the EMI from your bank. It shows the total you pay and the **extra (interest + fees)**. The purchase stays in your spending on the day you bought it; the card gets it back (the bank moves it off this bill) and **each month's EMI is logged by itself on the card's bill day**, so the card's "what you owe" matches the bank. The card's limit use still counts the EMI amount left
+- **📩 The bank's "converted into EMI" SMS**: becomes one line in the 🔔 bell, **"₹17,268 turned into EMI · Link"**. Link opens the EMI screen with the purchase, months and EMI already filled in. "Convert to EMI" offers are ignored
+- **📆 EMI from a bank SMS**: an SMS with the same amount as one of your EMIs (or saying "EMI") is filled in as **📆 EMI · Bike loan** for this month, not as an expense. If that EMI was already logged, the SMS is filed with it so nothing is counted twice. EMIs can be set to **⚡ log themselves** each month (Edit EMI)
+- **No double counting**: a purchase on EMI counts once as spending; afterwards only the EMI's extra (interest, fees) counts in reports, savings rate and money flow
+- **#tags in small letters**: #Car, #CAR and #car are one tag. New notes save tags in small letters, and older notes are tidied once
+- **Note ideas without repeats**: "Uber" and "uber" show as one idea
+- **💗 Pulse → Career: Analysis + 🧮 Hike calculator**: CTC per year and month, in-hand estimate (new tax regime), what really reaches your bank, growth since your first job, how much you spend of your take-home, and the CTC to aim for at your next review. At the end, **Hike calculator**: start from your CTC or type any amount (yearly or monthly), pick a hike % or type a new offer, and see the new CTC, tax, PF and **in-hand per month**, with a quick 10/15/20/30% compare. "I got this" saves the new CTC
+- **Smaller home-screen widgets**: each widget is now one row high by default (Free to spend 4×1, Spent 3×1, Needs you 3×1, Pulse 2×1). Already placed widgets keep their size: long-press → resize, or remove and add again
+- **SMS blocked on a phone?** Clearer steps: try Allow once in phone settings first, which makes "Allow restricted settings" appear in the ⋮ menu
+
 ## Brokeless v9.2 · What's new
 
 - **🔔 Update notifications outside the app**: when a new version is out, the phone now shows a pop-up notification (it used to sit silently in the notification shade). Brokeless checks every 4 hours instead of 12, also checks when an SMS arrives, and reminds you once 2 days later if you haven't installed it

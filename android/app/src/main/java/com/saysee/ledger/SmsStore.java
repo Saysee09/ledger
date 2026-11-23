@@ -26,7 +26,7 @@ public final class SmsStore {
     static final String CHANNEL = "bank_sms";
 
     private static final Pattern AMOUNT = Pattern.compile("(?:rs\\.?|inr|₹)\\s*([\\d,]+(?:\\.\\d{1,2})?)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern MONEY_WORD = Pattern.compile("\\b(debited|credited|spent|sent|withdrawn|received|paid|deducted|refund(?:ed|s)?|deposited|purchase|txn|cash ?back|reversal|reversed)\\b", Pattern.CASE_INSENSITIVE);
+    private static final Pattern MONEY_WORD = Pattern.compile("\\b(debited|credited|spent|sent|withdrawn|received|paid|deducted|refund(?:ed|s)?|deposited|purchase|txn|cash ?back|reversal|reversed|emi|converted)\\b", Pattern.CASE_INSENSITIVE);
     private static final Pattern SKIP = Pattern.compile("\\b(otp|one[- ]time password|verification code|passcode|cvv)\\b|pre-?approved|apply now|\\boffer\\b", Pattern.CASE_INSENSITIVE);
     /* personal numbers (+91XXXXXXXXXX / 10 digits) are skipped; banks send from IDs like AX-KOTAKB */
     private static final Pattern PERSON = Pattern.compile("^\\+?\\d{10,13}$");

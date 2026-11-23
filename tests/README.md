@@ -7,6 +7,8 @@ Headless-browser checks (Playwright + Chromium, phone size 360 px, normal and la
     python3 tests/test_v91.py      # Google sign-in against a fake Google, switch, backups, bank picker, tour, guides
     python3 tests/test_perm.py     # permissions step with a simulated phone app
     python3 tests/test_rep.py      # monthly report
+    python3 tests/test_v92.py      # self-transfer, Money paid extras, goal instalments
+    python3 tests/test_v93.py      # card EMI + EMI SMS, #tags, career analysis + hike calculator, widget sizes
 
 Each prints PASS/FAIL lines and "FAILED: n". Screenshots go to tests/shots/ (not committed).
 The fake Google in test_v91.py rejects locale en_IN like the real one. Real Google and real Android cannot be reached from a sandbox.

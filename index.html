@@ -418,7 +418,7 @@ nav.nav{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:0 12px calc(10
 .ibx-ig>summary{list-style:none;cursor:pointer}.ibx-ig>summary::-webkit-details-marker{display:none}.ibx-ig>summary span:first-child::after{content:' ▾'}.ibx-ig[open]>summary span:first-child::after{content:' ▴'}
 .sheet.side{left:auto;right:0;top:0;bottom:var(--kb,0px)!important;width:min(94vw,520px);max-width:none;margin:0;height:auto!important;max-height:none!important;border-radius:26px 0 0 26px;transform:translateX(105%);padding-top:env(safe-area-inset-top);box-shadow:-12px 0 40px rgba(0,0,0,.22)}
 .sheet.side.open{transform:none}.sheet.side .grab{display:none}.sheet.side .sh-head{padding-top:14px}
-.sheet.side .sh-head h3{flex:1;min-width:0}.sidetabs{display:flex;gap:5px;flex-wrap:nowrap}.sidetabs button{font:inherit;font-size:.8rem;font-weight:800;padding:7px 11px;white-space:nowrap;border-radius:999px;border:1px solid var(--line);background:var(--soft);color:var(--mute);cursor:pointer}.sidetabs button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.sheet.side .sh-head h3{flex:1;min-width:0}.sidetabs{display:flex;gap:5px;flex-wrap:nowrap;min-width:0}.sidetabs button{font:inherit;font-size:min(.8rem,3.7vw);font-weight:800;padding:7px min(11px,2.6vw);white-space:nowrap;border-radius:999px;border:1px solid var(--line);background:var(--soft);color:var(--mute);cursor:pointer}.sidetabs button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
 .sparkb{font-size:1.05rem;line-height:1}
 html.kbd .nav,html.kbd .fab{display:none!important}
 #view input,#view textarea,#sheet input,#sheet textarea{scroll-margin:90px 0 120px}
@@ -434,6 +434,8 @@ html.kbd .nav,html.kbd .fab{display:none!important}
 .a-bar textarea:focus{outline:none;border-color:var(--acc)}.a-bar textarea::placeholder{color:var(--faint)}
 .a-bar .btn{height:48px;min-height:48px;flex:0 0 auto}
 .section-t{font-size:.72rem;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;margin:20px 6px 8px}
+.hk-hero{background:linear-gradient(135deg,var(--acc),#7C3AED);color:#fff;border-radius:18px;padding:14px 16px;margin:14px 0 10px}.hk-hero .hl{font-size:.74rem;font-weight:700;opacity:.85}.hk-hero .hv{font-size:1.6rem;font-weight:800;line-height:1.2;overflow-wrap:anywhere}.hk-hero .hv small{font-size:.8rem;font-weight:600;opacity:.8}.hk-hero .hs{font-size:.8rem;color:rgba(255,255,255,.92);margin-top:2px}.hk-hero .hl,.hk-hero .hv{color:#fff}.hk-hero .hs b.green{color:#B9FBC0}
+.hk-t{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:2px 12px}.hk-r{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr);gap:6px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem;align-items:center}.hk-r:last-child{border-bottom:0}.hk-r span{color:var(--mute);min-width:0;overflow-wrap:anywhere}.hk-r b{text-align:right;min-width:0;overflow-wrap:anywhere}.hk-r b.mute{color:var(--mute);font-weight:700;font-size:.72rem}
 </style>
 </head>
 <body>
@@ -506,6 +508,12 @@ const hrRange = h => { const a = h12(h), b = h12(h + 1); return a.slice(-2) === 
 const tLabel = ts => { const t = (ts || '').slice(11, 16); if (!t) return ''; let [h, m] = t.split(':').map(Number); const ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12; return h + ':' + p2(m) + ' ' + ap; };
 const sum = a => r2(a.reduce((s, e) => s + (Number(e.amount) || 0), 0));
 const uniq = a => [...new Set(a.filter(x => x !== '' && x != null))];
+/* same text whatever the capitals: "Uber" and "uber" are one (the first one is kept) */
+const uniqI = a => { const seen = new Set(); return a.filter(x => { if (x === '' || x == null) return false; const k = String(x).trim().toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }); };
+/* note ideas by how often you used them, capitals ignored; shown the way you wrote it most often */
+function noteFreq(list) { const f = {}; list.forEach(r => { r = String(r || '').trim(); if (!r) return; const x = f[r.toLowerCase()] || (f[r.toLowerCase()] = { n: 0, v: {} }); x.n++; x.v[r] = (x.v[r] || 0) + 1; }); return Object.values(f).sort((a, b) => b.n - a.n).map(x => Object.entries(x.v).sort((a, b) => b[1] - a[1])[0][0]); }
+/* #tags are saved in small letters: #Car, #CAR and #car are one tag */
+const tagLow = s => typeof s === 'string' ? s.replace(/#[\p{L}\p{N}_-]+/gu, t => t.toLowerCase()) : s;
 /* shift a yyyy-mm-dd by n months, clipping the day; a month-end stays a month-end */
 const shiftD = (d, n) => { const y = +d.slice(0, 4), m = +d.slice(5, 7) - 1, dd = +d.slice(8, 10), t = new Date(y, m + n, 1), dim = new Date(t.getFullYear(), t.getMonth() + 1, 0).getDate(), wasEnd = dd === new Date(y, m + 1, 0).getDate(); return ymd(new Date(t.getFullYear(), t.getMonth(), wasEnd ? dim : Math.min(dd, dim))); };
 const monday = d => { const x = new Date(d + 'T00:00:00'); return addDays(d, -((x.getDay() + 6) % 7)); };
@@ -541,7 +549,7 @@ const CAT_DEF = [['Food', '🍽️', '#F97316'], ['Household', '🏠', '#EAB308'
 const defCfg = () => ({ bin: { days: 30 }, categories: CAT_DEF.map(([name, icon, color]) => ({ name, icon, color, budget: 0, hidden: false })), sources: ['Salary', 'Bonus', 'Interest', 'Refund', 'Gift', 'Other'], invTypes: ['Stocks', 'Mutual Fund', 'ETF', 'Gold', 'FD / RD / PPF'], report: { on: true, day: 1, hour: 9, email: '', weekly: false, wHour: 9, cmp: 'prev' }, matched: {}, nudges: { weekly: true, anomaly: true, pace: true, recon: 14, goals: true }, profile: { born: '', earning: '', city: '', role: '' }, payees: {}, holdings: {}, signin: { clientIds: [], emails: [] }, backup: { keep: 15 }, career: { jobs: [] }, plans: { list: [] }, refunds: { list: [] }, salary: { shift: 25, from: '2026-10' }, nw: { bank: true, cash: true, wallet: true, investment: true, cardDues: false, loans: false, skip: [] }, cards: { limits: {} }, smart: { prefill: true, forget: {} } });
 const ACC_T = { bank: ['🏦', 'Bank'], cash: ['💵', 'Cash'], wallet: ['👛', 'Wallet / UPI'], card: ['💳', 'Credit card'], investment: ['📈', 'Investment'] };
 const COLL = { Expenses: 'exp', Income: 'inc', Transfers: 'trf', Investments: 'inv', EMILog: 'emi', GoalLog: 'goal', LoanLog: 'loan', Adjustments: 'adj', Accounts: 'accounts', Goals: 'goals', EMIs: 'emis', Loans: 'loans', Reminders: 'rem', Pending: 'pend', Deleted: 'bin' };
-const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings', 'signin', 'backup', 'career', 'plans', 'bin', 'refunds', 'salary', 'nw', 'cards', 'smart', 'goalplan'];
+const CFG_OBJ = ['report', 'matched', 'nudges', 'profile', 'payees', 'holdings', 'signin', 'backup', 'career', 'plans', 'bin', 'refunds', 'salary', 'nw', 'cards', 'smart', 'goalplan', 'emix'];
 /* Your Sheet and Google sign-in client (safe to be public: neither opens data without your Google account or secret key) */
 const CLOUD = { url: '__SHEET_URL__', clientId: '__WEB_CLIENT_ID__' };
 /* feedback inbox: a small script on the owner's Google account; users never see where it goes */
@@ -549,7 +557,7 @@ const FEEDBACK = { url: 'https://script.google.com/macros/s/AKfycbySVWBIS19EnBmG
 const fbOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(FEEDBACK.url);
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-15 b28';
+const APP_BUILD = '2026-11-23 b29';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -601,7 +609,7 @@ function localApply(o) {
 }
 /* the Recently deleted tab needs Sheet script v9; with an older script the bin is kept on this phone and uploaded later */
 const binLocal = () => !(+S.srvV >= 9);
-function commit(ops) { ops.forEach(o => { o = JSON.parse(JSON.stringify(o)); localApply(o); if (!(o.sheet === 'Deleted' && binLocal())) S.outbox.push(o); }); save(); C = calc(); flush(); setStatus(); }
+function commit(ops) { ops.forEach(o => { o = JSON.parse(JSON.stringify(o)); if (o.op === 'upsert' && o.row && o.sheet !== 'Pending' && o.sheet !== 'Deleted' && typeof o.row.remarks === 'string') o.row.remarks = tagLow(o.row.remarks); localApply(o); if (!(o.sheet === 'Deleted' && binLocal())) S.outbox.push(o); }); save(); C = calc(); flush(); setStatus(); }
 const up = (sheet, row) => ({ op: 'upsert', sheet, row });
 const del = (sheet, id) => ({ op: 'delete', sheet, id });
 const cfgOp = (key, value) => ({ op: 'config', key, value });
@@ -1271,7 +1279,7 @@ ACT.updCheck = () => { if (!AND || !AND.updateCheck) return toast('Update the ph
 function heldDues() { return live(a => a.others).filter(a => heldOwed(a.name) > .004).map(a => `<div class="alert"><span class="ic" style="background:var(--soft)">🤝</span><span class="mid"><b>You owe ${esc(a.name)} ${inr(heldOwed(a.name))}</b><small>Used from ${esc(a.name)}'s money for yourself</small></span><button class="btn sm" data-act="heldPay" data-n="${esc(a.name)}">Pay back</button></div>`).join(''); }
 function inboxParts(all) {
   const keep = U.nudgeAll; U.nudgeAll = true;
-  try { return { sort: pendSort(), act: cardPayAlerts() + selfAlerts() + updAlert() + cardDues(all) + remDue() + emiDue() + heldDues(), info: repAlert() + cardUseAlerts() + refundAlerts() + recurAlert() + budgetAlerts() + goalNudges() + nudges() }; } finally { U.nudgeAll = keep; }
+  try { return { sort: pendSort(), act: cardPayAlerts() + selfAlerts() + emiSmsAlerts() + updAlert() + cardDues(all) + remDue() + emiDue() + heldDues(), info: repAlert() + cardUseAlerts() + refundAlerts() + recurAlert() + budgetAlerts() + goalNudges() + nudges() }; } finally { U.nudgeAll = keep; }
 }
 const nAlerts = h => (h.match(/class="alert/g) || []).length;
 function inboxCount() { if (!S.accounts.length) return { all: 0, sort: 0, act: 0 }; const P = inboxParts(false), A = inboxParts(true); return { sort: P.sort.length, act: nAlerts(P.act), info: nAlerts(P.info), all: P.sort.length + nAlerts(A.act) + nAlerts(P.info), badge: P.sort.length + nAlerts(P.act) + nAlerts(P.info) }; }
@@ -1289,7 +1297,7 @@ function inboxChip() {
 }
 ACT.inbox = () => inboxSheet();
 function inboxSheet() {
-  pendFix(); cardPayTidy(); selfTidy();
+  pendFix(); cardPayTidy(); selfTidy(); emiTidy();
   const P = inboxParts(true), n = P.sort.length;
   let h = '';
   if (n) h += `<div class="ibx-h"><span>📩 To sort · ${n}</span><span style="text-transform:none;letter-spacing:0">bank SMS</span></div>` + pendListHtml(P.sort);
@@ -1367,14 +1375,14 @@ const cardGuide = () => { const g = +((S.cfg.cards || {}).guide); return g > 0 &
 const pctS = p => p > 0 && p < 1 ? '<1%' : Math.round(p) + '%';
 function cardUse(a) {
   const lim = cardLimit(a); if (!lim || !a || a.type !== 'card') return null;
-  const due = cardDue(a), g = cardGuide(), pct = due / lim * 100, safe = r2(lim * g / 100 - due);
-  return { lim, due, g, pct, safe, left: r2(Math.max(0, lim - due)), over: safe < -.004 };
+  const owed = cardDue(a), emi = emiCardLeft(a), due = r2(owed + emi), g = cardGuide(), pct = due / lim * 100, safe = r2(lim * g / 100 - due);
+  return { lim, due, owed, emi, g, pct, safe, left: r2(Math.max(0, lim - due)), over: safe < -.004 };
 }
 const cardUseLine = u => u.over ? `<span class="red">${pctS(u.pct)} used · ${inr(-u.safe, 1)} over your ${u.g}% line</span>` : `${pctS(u.pct)} used · ${inr(u.safe, 1)} left to ${u.g}%`;
 function cardBar(a) {
   const u = cardUse(a); if (!u) return `<div class="hint center" style="margin:0 0 10px">Add this card's <b>credit limit</b> (Edit) to see how much of it you have used.</div>`;
   return `<div class="cuse"><div class="cuse-t"><i style="width:${Math.min(100, u.pct).toFixed(1)}%;background:${u.over ? 'var(--red)' : 'var(--green)'}"></i><u style="left:${u.g}%"></u></div>
-  <div class="kv" style="margin:8px 0 0"><div><span>Used</span><b class="${u.over ? 'red' : ''}">${inr(u.due)} · ${pctS(u.pct)}</b></div><div><span>${u.over ? 'Over your ' + u.g + '% line by' : 'Left before your ' + u.g + '% line'}</span><b class="${u.over ? 'red' : 'green'}">${inr(Math.abs(u.safe))}</b></div><div><span>Left on the card (limit ${inr(u.lim, 1)})</span><b>${inr(u.left)}</b></div></div></div>`;
+  <div class="kv" style="margin:8px 0 0"><div><span>Used</span><b class="${u.over ? 'red' : ''}">${inr(u.due)} · ${pctS(u.pct)}</b></div>${u.emi > .004 ? `<div><span>of which on EMI (still holds the limit)</span><b>${inr(u.emi)}</b></div>` : ''}<div><span>${u.over ? 'Over your ' + u.g + '% line by' : 'Left before your ' + u.g + '% line'}</span><b class="${u.over ? 'red' : 'green'}">${inr(Math.abs(u.safe))}</b></div><div><span>Left on the card (limit ${inr(u.lim, 1)})</span><b>${inr(u.left)}</b></div></div></div>`;
 }
 function cardUseAlerts() {
   return live(a => a.type === 'card' && mineA(a)).filter(a => { const u = cardUse(a); return u && u.over && !snoozed('cuse|' + a.name); }).map(a => { const u = cardUse(a); return `<div class="alert over"><span class="ic" style="background:var(--soft)">💳</span><span class="mid"><b>${esc(a.name)} · ${pctS(u.pct)} of limit used</b><small>${inr(-u.safe)} over your ${u.g}% line. Pay that much to get back under.</small></span><button class="btn sm" data-act="payCard" data-n="${esc(a.name)}" data-amt="${-u.safe}">Pay</button><button class="ax" data-act="snooze" data-k="cuse|${esc(a.name)}" data-d="3" aria-label="Later">✕</button></div>`; }).join('');
@@ -1515,7 +1523,7 @@ function pendFix() {
 }
 function renderHome() {
   if (!S.accounts.length) return `<div class="card"><div class="empty"><span class="big">👋</span>Let's add your bank accounts, cash and cards with today's balances.</div><button class="btn" data-act="onboard">Set up accounts</button>${!S.url ? '<button class="btn sec" data-act="welcome">Connect Google Sheet</button>' : ''}</div>`;
-  const m = U.month, es = S.exp.filter(e => inP(e, m) && myX(e)), spent = sum(es), emiAmt = sum(S.emi.filter(e => inP(e, m) && !isOthers(e.account)));
+  const m = U.month, es = S.exp.filter(e => inP(e, m) && myX(e)), spent = sum(es), emiAmt = sumEmi(S.emi.filter(e => inP(e, m) && !isOthers(e.account)));
   const budget = r2(visCats().reduce((s, c) => s + (+c.budget || 0), 0));
   const cur = m === ym(), dim = daysIn(m), dn = cur ? new Date().getDate() : dim;
   let h = monthNav();
@@ -1649,7 +1657,7 @@ function entryInfo(sheet, e) {
     case 'EMILog': title = 'EMI · ' + e.emi; icon = '📆'; color = '#A855F7'; rows.push(['Paid from', e.account], ['For month', mLabel(e.period)]); break;
     case 'GoalLog': { const g = goalById(e.goalId); title = e.action + ' · ' + (g ? g.name : e.goal); icon = '🎯'; color = '#A855F7'; rows.push(['Goal', g ? g.name : e.goal], ['Account', e.account]); break; }
     case 'LoanLog': title = e.action + ' · ' + e.person; icon = '🤝'; color = '#F59E0B'; rows.push(['Person', e.person], [LACC[e.action] > 0 ? 'Into' : 'From', e.account || '—']); break;
-    case 'Adjustments': title = 'Balance correction'; icon = '⚖️'; rows.push(['Account', e.account], ['Change', (e.amount >= 0 ? '+' : '') + inr(e.amount)]); break;
+    case 'Adjustments': title = /^📆/.test(e.remarks || '') ? 'Moved to EMI' : 'Balance correction'; icon = /^📆/.test(e.remarks || '') ? '📆' : '⚖️'; rows.push(['Account', e.account], ['Change', (e.amount >= 0 ? '+' : '') + inr(e.amount)]); break;
     case 'Accounts': title = 'Account · ' + e.name; icon = (ACC_T[e.type] || ['🏦'])[0]; rows.push(['Type', (ACC_T[e.type] || ['', e.type])[1]], ['Opening balance', inr(e.opening)]); break;
     case 'Goals': title = 'Goal · ' + e.name; icon = e.icon || '🎯'; color = e.color || color; rows.push(['Target', inr(e.target)], ['Kept in', e.account || '—']); break;
     case 'Loans': title = 'Person · ' + e.name; icon = '👤'; color = '#F59E0B'; rows.push(['Type', e.dir === 'owe' ? 'You owe them' : 'They owe you']); break;
@@ -1670,6 +1678,7 @@ function entrySheet(sheet, id) {
   if (split) S.loan.filter(l => l.ref === id).forEach(l => rows.push(['👥 ' + l.person + ' owes', inr(l.amount)]));
   const linked = split || S.goal.some(g => g.ref === id) || ((sheet === 'GoalLog' || sheet === 'LoanLog') && e.ref);
   const isRf = sheet === 'Expenses' && e.amount < 0;
+  const onEmi = sheet === 'Expenses' && emiOfExp(id); if (onEmi) rows.push(['📆 On EMI', onEmi.total + ' × ' + fmtINR(onEmi.amount) + ' · ' + Math.min(emiCount(onEmi), onEmi.total) + ' of ' + onEmi.total + ' done']);
   const editable = ['Expenses', 'Income', 'Transfers', 'Investments'].includes(sheet) && !split && !isRf && !(sheet === 'Investments' && !isBuy(e)), logEd = isRf || (['EMILog', 'GoalLog', 'LoanLog'].includes(sheet) && !(sheet === 'LoanLog' && e.ref && S.exp.some(x => x.id === e.ref)));
   const rfOf = sheet === 'Expenses' && !isRf ? rfList().filter(r => r.exp === id && rfState(r) !== 'gone') : [];
   if (rfOf.length) rfOf.forEach(r => rows.push(['↩️ Refund', inr(r.amount) + ' · ' + ({ got: 'received', dropped: 'closed', late: 'late', waiting: 'expected by ' + dLabel(r.by) })[rfState(r)]]));
@@ -1677,6 +1686,7 @@ function entrySheet(sheet, id) {
   <div class="kv">${rows.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('')}${e.photo ? `<div><span>Bill photo</span><a href="${esc(e.photo)}" target="_blank" rel="noopener">View 📎</a></div>` : ''}</div>
   ${linked || (sheet === 'Expenses' && e.mine) ? `<div class="hint">🔗 ${e.mine && !split ? 'Deleting also removes what you owe ' + esc(e.account) + ' for it.' : split ? 'Split bill: deleting also removes what friends owe for it. To change amounts, delete and add again.' : 'Linked entry: deleting removes the linked goal / loan entry too.'}</div>` : ''}
   <div class="btns">${editable ? `<button class="btn sec" data-act="editEntry" data-s="${sheet}" data-id="${esc(id)}">✏️ Edit</button><button class="btn sec" data-act="dupEntry" data-s="${sheet}" data-id="${esc(id)}">↻ Repeat</button>` : ''}${logEd ? `<button class="btn sec" data-act="logEdit" data-s="${sheet}" data-id="${esc(id)}">✏️ Edit</button>` : ''}</div>
+  ${onEmi ? `<button class="btn sec" data-act="emiEdit" data-id="${esc(onEmi.id)}">📆 See the EMI</button>` : sheet === 'Expenses' && !isRf && !split && e.amount >= 500 && (acc(e.account) || {}).type === 'card' ? `<button class="btn sec" data-act="emiConv" data-id="${esc(id)}">📆 Turn into EMI</button>` : ''}
   ${sheet === 'Expenses' && !isRf && e.amount > 0 && !rfOf.some(r => ['waiting', 'late'].includes(rfState(r))) ? `<button class="btn sec" data-act="rfFromExp" data-id="${esc(id)}">↩️ I'm expecting a refund for this</button>` : ''}${rfOf.length ? `<button class="btn sec" data-act="rfOpen" data-id="${esc(rfOf[0].id)}">↩️ See the refund</button>` : ''}
   <button class="btn dng" data-act="delEntry" data-s="${sheet}" data-id="${esc(id)}">Delete</button>`);
 }
@@ -1958,8 +1968,8 @@ function updCompose() {
   const lbl = { exp: c.cat, inc: c.src, trf: (c.from || '?') + ' → ' + (c.to || '?'), inv: c.type }[c.kind];
   $('#cSave').textContent = (c.id ? 'Update' : 'Save') + (a > 0 ? ' ' + fmtINR(a, 'x') : '') + ' · ' + lbl;
   if (c.kind === 'exp') {
-    const f = {}; S.exp.filter(e => e.category === c.cat && e.remarks).slice(-300).forEach(e => f[e.remarks] = (f[e.remarks] || 0) + 1);
-    $('#remSug').innerHTML = Object.entries(f).sort((x, y) => y[1] - x[1]).slice(0, 8).map(([r]) => `<button class="chip" data-act="sug" data-v="${esc(r)}">${esc(r)}</button>`).join('') + allTags().map(t => `<button class="chip" data-act="tagAdd" data-v="${esc(t)}" style="color:var(--acc)">${esc(t)}</button>`).join('');
+    const ideas = noteFreq(S.exp.filter(e => e.category === c.cat && e.remarks).slice(-300).map(e => e.remarks));
+    $('#remSug').innerHTML = ideas.slice(0, 8).map(r => `<button class="chip" data-act="sug" data-v="${esc(r)}">${esc(r)}</button>`).join('') + allTags().map(t => `<button class="chip" data-act="tagAdd" data-v="${esc(t)}" style="color:var(--acc)">${esc(t)}</button>`).join('');
     splitSum();
   } else $('#remSug').innerHTML = '';
 }
@@ -2339,7 +2349,7 @@ function obPerms() {
   ${U.obTried && !I.sms ? permHelp() : ''}</div>`, 'tall', `<button class="btn big" data-act="obPermDone" style="margin:0">${left ? 'Continue' + (left < 3 ? '' : ' without these') : 'All set · continue'}</button>`);
 }
 /* SMS access refused: Android blocks it for apps installed from a link until "Allow restricted settings" is switched on in App info */
-const permHelp = () => `<div class="alert warn" style="display:block;margin:12px 0 0"><b style="display:block;margin-bottom:6px">SMS access is blocked by your phone</b><div class="hint" style="margin:0">Android does this for any app installed from a link, not from the Play Store. To fix it:</div><ol style="margin:8px 0 10px 20px;padding:0;font-size:.86rem;line-height:1.5"><li>Tap the button below. Your phone's page for Brokeless opens.</li><li>Tap <b>⋮</b> at the top right → <b>Allow restricted settings</b>.</li><li>Come back here and tap <b>Allow</b> again.</li></ol><button class="btn" data-act="andAppSet" style="margin:0">Open Brokeless in phone settings</button><div class="hint" style="margin:8px 0 0">No ⋮ menu? Then tap <b>Permissions → SMS → Allow</b> on that page instead.</div></div>`;
+const permHelp = () => `<div class="alert warn" style="display:block;margin:12px 0 0"><b style="display:block;margin-bottom:6px">SMS access is blocked by your phone</b><div class="hint" style="margin:0">Android does this for any app installed from a link, not from the Play Store. To fix it:</div><ol style="margin:8px 0 10px 20px;padding:0;font-size:.86rem;line-height:1.5"><li>Tap the button below. Your phone's page for Brokeless opens.</li><li>Tap <b>Permissions → SMS</b> and try <b>Allow</b>. It is blocked with a "Restricted setting" message: tap OK. <small class="mute">(This step makes the next option appear.)</small></li><li>Go back one page, tap <b>⋮</b> at the top right → <b>Allow restricted settings</b>, confirm with your PIN or fingerprint.</li><li>Now <b>Permissions → SMS → Allow</b> works. Come back here.</li></ol><button class="btn" data-act="andAppSet" style="margin:0">Open Brokeless in phone settings</button><div class="hint" style="margin:8px 0 0">Still no ⋮ option? Close Brokeless fully, open it once, and try step 2 again. Apps from the Play Store never see this block.</div></div>`;
 ACT.andAppSet = () => { try { AND.openAppSettings(); } catch (e) { try { AND.openBattery(); } catch (e2) { toast('Open phone Settings → Apps → Brokeless'); } } };
 ACT.obAllow = () => { U.obTried = true; try { AND.requestSms(); } catch (e) { } setTimeout(() => { if ($('#obPermBox')) obPerms(); }, 1500); };
 ACT.obBattery = () => { try { AND.openBattery(); } catch (e) { } };
@@ -2623,6 +2633,43 @@ ACT.loanDel = el => { if (!confirm('Delete this person?')) return; binDel([['Loa
 /* ---------- EMIs ---------- */
 const emiCount = m => (+m.paidBefore || 0) + S.emi.filter(e => e.emiId === m.id).length;
 const emiPaid = (m, p) => S.emi.some(e => e.emiId === m.id && e.period === p);
+/* ---------- EMI extras, kept in Settings → emix (no Sheet column needed):
+   { emiId: { auto, from, exp, principal, adj }, _sms: [EMI-conversion SMS] }
+   auto = log it by itself on the due day (card EMIs are billed to the card automatically)
+   exp/principal/adj = a card purchase turned into EMI: the card got the purchase back (adjustment adj),
+   the purchase itself stays your spend on the swipe day, so only the extra (interest, fees) of each EMI counts as cost */
+const emiX = m => (m && (S.cfg.emix || {})[m.id]) || {};
+const emiAuto = m => !!emiX(m).auto;
+function emixOp(id, patch) { const X = Object.assign({}, S.cfg.emix); if (patch === null) delete X[id]; else X[id] = Object.assign({}, X[id], patch); return cfgOp('emix', X); }
+const emiOfExp = id => S.emis.find(m => emiX(m).exp === id);
+const emiCost = e => { const m = S.emis.find(x => x.id === e.emiId), x = emiX(m); if (!x.exp || !(+x.principal > 0) || !(+m.total > 0)) return +e.amount || 0; return r2(Math.max(0, (+e.amount || 0) - x.principal / m.total)); };
+const sumEmi = L => r2(L.reduce((s, e) => s + emiCost(e), 0));
+/* principal still to be billed for card purchases on EMI: the bank keeps that much of the limit blocked */
+const emiCardLeft = a => r2(S.emis.filter(m => m.account === a.name && m.active !== false && emiX(m).exp && +emiX(m).principal > 0 && +m.total > 0).reduce((s, m) => s + emiX(m).principal * Math.max(0, m.total - emiCount(m)) / m.total, 0));
+/* older notes with #Car / #CAR: saved again as #car (once; only rows that need it) */
+function tagTidy() {
+  const ops = [];
+  ['Expenses', 'Income', 'Transfers', 'Investments', 'EMILog', 'GoalLog', 'LoanLog', 'Adjustments'].forEach(sh => (S[COLL[sh]] || []).forEach(e => { if (typeof e.remarks === 'string' && /#[\p{L}\p{N}_-]*\p{Lu}/u.test(e.remarks)) ops.push(up(sh, Object.assign({}, e, { remarks: tagLow(e.remarks) }))); }));
+  if (ops.length) commit(ops);
+  return ops.length;
+}
+/* the first time an EMI with "auto" falls due each month it is logged by itself. Deterministic IDs: two phones never double it */
+function runEmiAuto() {
+  const t = today(), ops = [];
+  S.emis.forEach(m => {
+    if (m.active === false || !emiAuto(m) || !(+m.amount > 0) || !acc(m.account)) return;
+    const tot = +m.total || 0, x = emiX(m); let n = emiCount(m), per = [m.startMonth || ym(), x.from || ''].sort().pop(), guard = 0;
+    while (per <= t.slice(0, 7) && guard++ < 60) {
+      if (tot && n >= tot) break;
+      const d = per + '-' + p2(Math.min(+m.dueDay || 1, daysIn(per))); if (d > t) break;
+      const id = 'C' + m.id + '_' + per.replace('-', '');
+      if (!emiPaid(m, per) && !S.emi.some(e => e.id === id)) { ops.push(up('EMILog', { id, ts: d + ' 09:00:00', emi: m.name, account: m.account, amount: +m.amount, period: per, remarks: 'Auto-logged', emiId: m.id })); n++; }
+      per = shiftM(per, 1);
+    }
+  });
+  if (ops.length) commit(ops);
+  return ops.length;
+}
 function emiState(m) {
   const cur = ym(), tot = +m.total || 0, n = emiCount(m);
   if (m.active === false) return { st: 'off', label: 'Paused' };
@@ -2633,17 +2680,18 @@ function emiState(m) {
   return { st: diff < 0 ? 'over' : diff === 0 ? 'today' : diff <= 5 ? 'soon' : 'later', label: diff < 0 ? `Overdue by ${-diff} day${diff < -1 ? 's' : ''}` : diff === 0 ? 'Due today' : `Due in ${diff} day${diff > 1 ? 's' : ''} · ${due} ${mLabel(cur, 1)}`, per: cur };
 }
 function emiDue() {
-  return S.emis.filter(m => ['over', 'soon', 'today'].includes(emiState(m).st)).map(m => { const s = emiState(m); return `<div class="alert ${s.st === 'over' ? 'over' : ''}"><span class="ic" style="background:var(--soft)">📆</span><span class="mid"><b>${esc(m.name)} · ${inr(m.amount)}</b><small class="${s.st === 'over' ? 'red' : ''}">${s.label} · ${esc(m.account)}</small></span><button class="btn sm" data-act="emiPay" data-id="${m.id}">Pay</button></div>`; }).join('');
+  return S.emis.filter(m => !emiAuto(m) && ['over', 'soon', 'today'].includes(emiState(m).st)).map(m => { const s = emiState(m); return `<div class="alert ${s.st === 'over' ? 'over' : ''}"><span class="ic" style="background:var(--soft)">📆</span><span class="mid"><b>${esc(m.name)} · ${inr(m.amount)}</b><small class="${s.st === 'over' ? 'red' : ''}">${s.label} · ${esc(m.account)}</small></span><button class="btn sm" data-act="emiPay" data-id="${m.id}">Pay</button></div>`; }).join('');
 }
 function emiView() {
   const act = S.emis.filter(m => m.active !== false && emiState(m).st !== 'done'), monthly = act.reduce((s, m) => s + (+m.amount || 0), 0);
   let h = `<div class="hero" style="--hc:#A855F7"><div class="hl">Monthly EMIs</div><div class="hv">${inrS(monthly)}</div><div class="hs">${act.length} active · <b>${inr(sum(S.emi.filter(e => inP(e, ym()))))}</b> paid this month</div></div>`;
-  if (!S.emis.length) h += `<div class="empty"><span class="big">📆</span>Add an EMI once. Every month tap <b>Pay</b>, and it's deducted from the bank you pick.</div>`;
+  if (!S.emis.length) h += `<div class="empty"><span class="big">📆</span>Add an EMI once. Every month tap <b>Pay</b>, and it's deducted from the bank you pick. A card purchase can be turned into EMI from the purchase itself (📆 Turn into EMI).</div>`;
   S.emis.forEach(m => {
     const s = emiState(m), tot = +m.total || 0, n = emiCount(m), col = { over: 'red', today: 'amber', soon: 'amber', paid: 'green', done: 'green' }[s.st] || 'mute';
-    h += `<div class="ecard"><div class="srow" style="border:none;padding:0 0 10px"><span class="ic" style="background:#A855F71f">📆</span><span class="mid"><b>${esc(m.name)}</b><small>Day ${m.dueDay} · ${esc(m.account)}</small></span><span style="text-align:right"><span class="amt">${inr(m.amount)}</span><br><small class="${col}" style="font-size:.72rem;font-weight:700">${s.label}</small></span></div>
+    h += `<div class="ecard"><div class="srow" style="border:none;padding:0 0 10px"><span class="ic" style="background:#A855F71f">📆</span><span class="mid"><b>${esc(m.name)}</b><small>Day ${m.dueDay} · ${esc(m.account)}${emiAuto(m) ? ' · ⚡ logs itself' : ''}</small></span><span style="text-align:right"><span class="amt">${inr(m.amount)}</span><br><small class="${col}" style="font-size:.72rem;font-weight:700">${s.label}</small></span></div>
     ${tot ? `<div class="bar"><i style="width:${Math.min(100, n / tot * 100)}%;background:#A855F7"></i></div><div class="hint">${n} of ${tot} paid · ${inr(Math.max(0, tot - n) * m.amount)} left${tot - n > 0 ? ' · ends ' + mLabel(shiftM(ym(), tot - n - (emiPaid(m, ym()) ? 0 : 1))) : ''}</div>` : `<div class="hint">${n} payment${n === 1 ? '' : 's'} made</div>`}
-    <div class="btns">${['done', 'off'].includes(s.st) ? '' : `<button class="btn sm" data-act="emiPay" data-id="${m.id}">${s.st === 'paid' ? 'Pay next month' : 'Pay now'}</button>`}<button class="btn sm sec" data-act="emiEdit" data-id="${m.id}">Edit</button></div></div>`;
+    ${emiConvLine(m)}
+    <div class="btns">${['done', 'off'].includes(s.st) || emiAuto(m) ? '' : `<button class="btn sm" data-act="emiPay" data-id="${m.id}">${s.st === 'paid' ? 'Pay next month' : 'Pay now'}</button>`}<button class="btn sm sec" data-act="emiEdit" data-id="${m.id}">Edit</button></div></div>`;
   });
   h += `<button class="btn" data-act="emiNew">+ Add EMI</button>`;
   const hist = S.emi.slice().sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 24);
@@ -2663,15 +2711,21 @@ function emiSheet(m) {
   <div class="grid2"><div><div class="lbl">First EMI month</div><input id="emStart" type="month" value="${v.startMonth || ym()}"></div><div><div class="lbl">Total EMIs</div><input id="emTot" type="number" inputmode="numeric" value="${v.total || ''}" placeholder="e.g. 12"></div></div>
   <div class="lbl">Already paid before this app</div><input id="emPrev" type="number" inputmode="numeric" value="${v.paidBefore || ''}" placeholder="0">
   <div class="lbl">Note</div><input id="emNote" value="${esc(v.note || '')}" placeholder="Optional, e.g. Bajaj Finserv">
+  <label class="check"><input type="checkbox" id="emAuto" ${(m ? emiAuto(m) : false) ? 'checked' : ''}> ⚡ Log it by itself each month on the due day</label><div class="hint" style="margin-top:2px">Good for card EMIs: the bank adds them to your card bill without you paying anything separately.</div>
   <label class="check"><input type="checkbox" id="emAct" ${v.active !== false ? 'checked' : ''}> Active</label>
   <button class="btn big" data-act="emSave">${m ? 'Save changes' : 'Add EMI'}</button>${m ? `<button class="btn dng" data-act="emDel">Delete EMI</button>` : ''}`);
 }
 ACT.emSave = () => {
   const n = $('#emName').value.trim(), a = parseAmt($('#emAmt').value); if (!n || !(a > 0)) return toast('Name and amount are required');
-  commit([up('EMIs', { id: U.em.id || uid('M'), name: n, amount: a, dueDay: Math.min(31, Math.max(1, parseInt($('#emDay').value) || 1)), account: U.em.account, startMonth: $('#emStart').value || ym(), total: parseInt($('#emTot').value) || 0, paidBefore: parseInt($('#emPrev').value) || 0, active: $('#emAct').checked, note: $('#emNote').value.trim() })]);
-  shut(); render(); toast('EMI saved');
+  const id = U.em.id || uid('M'), au = !!($('#emAuto') || {}).checked, ops = [up('EMIs', { id, name: n, amount: a, dueDay: Math.min(31, Math.max(1, parseInt($('#emDay').value) || 1)), account: U.em.account, startMonth: $('#emStart').value || ym(), total: parseInt($('#emTot').value) || 0, paidBefore: parseInt($('#emPrev').value) || 0, active: $('#emAct').checked, note: $('#emNote').value.trim() })];
+  const x = emiX({ id }); if (!!x.auto !== au) ops.push(emixOp(id, { auto: au, from: au ? (U.em.id ? ym() : $('#emStart').value || ym()) : x.from || '' }));
+  commit(ops); runEmiAuto(); shut(); render(); toast('EMI saved');
 };
-ACT.emDel = () => { if (!confirm('Delete this EMI? Past payments stay in your log.')) return; binDel([['EMIs', U.em.id]]); shut(); render(); };
+ACT.emDel = () => {
+  const m = S.emis.find(x => x.id === U.em.id), x = emiX(m), ad = x.adj && S.adj.find(j => j.id === x.adj);
+  if (!confirm(ad ? 'Delete this EMI? The purchase goes back onto ' + m.account + ' as owed (' + fmtINR(ad.amount) + '). Past EMI payments stay in your log.' : 'Delete this EMI? Past payments stay in your log.')) return;
+  binDel([['EMIs', U.em.id]].concat(ad ? [['Adjustments', ad.id]] : [])); if (S.cfg.emix && S.cfg.emix[U.em.id]) commit([emixOp(U.em.id, null)]); shut(); render();
+};
 ACT.emiPay = el => {
   const m = S.emis.find(x => x.id === el.dataset.id), s = emiState(m); U.ep = { id: m.id, account: m.account };
   const accs = live(a => a.type !== 'investment');
@@ -2689,6 +2743,114 @@ ACT.epSave = () => {
   commit([up('EMILog', { id: uid('P'), ts: d === today() ? nowTs() : d + ' 12:00:00', emi: m.name, account: ac, amount: a, period: per, remarks: '', emiId: m.id })]);
   shut(); render(); buzz(14); toast('EMI paid from ' + ac);
 };
+
+/* ---------- turn a card purchase into EMI ----------
+   The purchase stays your spend on the swipe day. The card gets it back (the bank moves it off this bill)
+   and from then on each month's EMI is added to the card bill, logged by itself on the bill day. */
+function emiConvLine(m) {
+  const x = emiX(m); if (!x.exp) return '';
+  const e = S.exp.find(y => y.id === x.exp), tot = (+m.amount || 0) * (+m.total || 0), extra = r2(tot - (+x.principal || 0));
+  return `<div class="hint">🛍️ ${e ? `<button class="nickb" style="display:inline;font-size:inherit;padding:0" data-act="entry" data-s="Expenses" data-id="${esc(e.id)}">${esc(e.remarks || e.category)}</button> · ` : ''}bought for ${inr(x.principal)}${m.total ? ` · you pay ${inr(tot)}${extra > .5 ? ` (<b>${inr(extra)}</b> extra)` : ' (no extra)'}` : ''}</div>`;
+}
+function emiStartFor(a) { const bd = a && a.type === 'card' ? cardDay(a) : 5; return new Date().getDate() <= bd ? ym() : shiftM(ym(), 1); }
+function emiConvSheet(expId, smsId) {
+  const sm = smsId ? emiSmsList().find(x => x.id === smsId) : null;
+  const cands = sm ? emiExpCands(sm) : [];
+  const e = S.exp.find(x => x.id === (expId || (cands[0] || {}).id));
+  const a = acc(e ? e.account : sm && sm.account) || live(x => x.type === 'card')[0];
+  const pr = sm ? sm.principal : e ? e.amount : 0, mo = (sm && sm.months) || 6;
+  U.ec = { exp: e ? e.id : '', sms: smsId || '', months: mo, account: a ? a.name : '' };
+  const em = sm && sm.emi ? sm.emi : pr ? Math.ceil(pr / mo) : '';
+  openSheet('📆 Turn into EMI', `<div id="ecForm">${sm ? `<div class="hint" style="margin-top:0">📩 From your bank SMS: ${inr(sm.principal)}${sm.months ? ' · ' + sm.months + ' months' : ''}${sm.emi ? ' · EMI ' + inr(sm.emi) : ''}${sm.rate ? ' · ' + sm.rate + '% a year' : ''}${sm.fee ? ' · fee ' + inr(sm.fee) : ''}</div>` : ''}
+  ${sm ? `<div class="lbl">Which purchase?</div><div class="chips wrap">${cands.map(x => `<button class="chip ${U.ec.exp === x.id ? 'on' : ''}" data-act="ecExp" data-id="${x.id}">${cat(x.category).icon} ${esc(x.remarks || x.category)} <small>${inr(x.amount, 1)} · ${dLabel(x.ts.slice(0, 10))}</small></button>`).join('')}<button class="chip ${!U.ec.exp ? 'on' : ''}" data-act="ecExp" data-id="">Not logged in Brokeless</button></div><div class="hint" id="ecExpHint">${U.ec.exp ? '' : 'Then only the EMIs are logged, each month in full.'}</div>`
+    : e ? `<div class="detail" style="padding:0 0 4px"><div class="dv">${inr(e.amount)}</div><div class="dt">${esc(e.remarks || e.category)} · ${esc(e.account)} · ${dLabel(e.ts.slice(0, 10))}</div></div>` : ''}
+  <div class="lbl">Months</div><div class="chips wrap">${[3, 6, 9, 12, 18, 24].map(n => `<button class="chip ${n === mo ? 'on' : ''}" data-act="ecMo" data-v="${n}">${n}</button>`).join('')}<input id="ecMoIn" type="number" inputmode="numeric" min="1" max="60" value="${[3, 6, 9, 12, 18, 24].includes(mo) ? '' : mo}" placeholder="other" data-in="ecHint" style="width:84px;padding:8px 10px"></div>
+  <div class="grid2"><div><div class="lbl">EMI per month ₹</div><input id="ecEmi" inputmode="decimal" value="${em}" data-in="ecHint" placeholder="from your bank"></div><div><div class="lbl">First EMI month</div><input id="ecStart" type="month" value="${emiStartFor(a)}"></div></div>
+  <div class="hint" id="ecHint"></div>
+  <label class="check"><input type="checkbox" id="ecAuto" checked> ⚡ Log each EMI by itself on ${a && a.type === 'card' ? 'the card\'s bill day (' + cardDay(a) + ')' : 'the due day'}</label>
+  <button class="btn big" data-act="ecSave">Turn into EMI</button>
+  <div class="hint">The purchase stays in your spending on the day you bought it. ${a && a.type === 'card' ? esc(a.name) + ' gets it back (the bank moves it off this bill) and each month\'s EMI is added to the card bill instead.' : ''} Only the extra you pay (interest, fees) counts as cost later.</div></div>`, 'tall');
+  ecHint();
+}
+const ecMonths = () => { const v = parseInt(($('#ecMoIn') || {}).value); return v > 0 && v <= 60 ? v : U.ec.months; };
+const ecPrincipal = () => { const e = S.exp.find(x => x.id === U.ec.exp), sm = U.ec.sms && emiSmsList().find(x => x.id === U.ec.sms); return e ? e.amount : sm ? sm.principal : 0; };
+function ecHint() {
+  const h = $('#ecHint'); if (!h || !U.ec) return;
+  const n = ecMonths(), a = parseAmt(($('#ecEmi') || {}).value), p = ecPrincipal();
+  if (!(a > 0)) { h.innerHTML = p ? `Type the EMI your bank told you. Without interest it would be ${inr(Math.ceil(p / n))}.` : 'Type the EMI your bank told you.'; return; }
+  const tot = r2(a * n), ex = r2(tot - p);
+  h.innerHTML = `${n} × ${inr(a)} = <b>${inr(tot)}</b>${p ? ex > .5 ? ` · <span class="amber">${inr(ex)} extra</span> (interest + fees, ${pctS(ex / p * 100)})` : ex < -.5 ? ` · <span class="red">${inr(-ex)} less than the purchase?</span>` : ' · no extra 🎉' : ''} · ends ${mLabel(shiftM(($('#ecStart') || {}).value || ym(), n - 1))}`;
+}
+IN.ecHint = () => { const v = parseInt(($('#ecMoIn') || {}).value); if (v > 0) $$('#ecForm [data-act=ecMo]').forEach(b => b.classList.remove('on')); ecHint(); };
+ACT.ecMo = el => { U.ec.months = +el.dataset.v; if ($('#ecMoIn')) $('#ecMoIn').value = ''; $$('#ecForm [data-act=ecMo]').forEach(b => b.classList.toggle('on', b === el)); ecHint(); buzz(6); };
+ACT.ecExp = el => { U.ec.exp = el.dataset.id; const e = S.exp.find(x => x.id === U.ec.exp); if (e) U.ec.account = e.account; $$('#ecForm [data-act=ecExp]').forEach(b => b.classList.toggle('on', b === el)); const h = $('#ecExpHint'); if (h) h.textContent = U.ec.exp ? '' : 'Then only the EMIs are logged, each month in full.'; ecHint(); };
+ACT.emiConv = el => emiConvSheet(el.dataset.id, '');
+ACT.ecSave = () => {
+  const E = U.ec, n = ecMonths(), a = parseAmt(($('#ecEmi') || {}).value); if (!(a > 0)) return toast('Type the EMI per month');
+  const e = S.exp.find(x => x.id === E.exp), sm = E.sms && emiSmsList().find(x => x.id === E.sms), ac = acc(e ? e.account : E.account);
+  if (!ac) return toast('Add your card first');
+  if (e && emiOfExp(e.id)) return toast('This purchase is already on EMI');
+  const p = e ? e.amount : 0, start = ($('#ecStart') || {}).value || ym(), id = uid('M'), adj = e ? uid('J') : '';
+  const name = String((e && (e.remarks || e.category)) || (sm && sm.merchant) || 'Card EMI').replace(/#[\p{L}\p{N}_-]+/gu, '').replace(/\s*·\s*(auto-logged|split.*)$/i, '').trim() || (e ? e.category : 'Card EMI');
+  const ops = [up('EMIs', { id, name, amount: a, dueDay: ac.type === 'card' ? cardDay(ac) : 5, account: ac.name, startMonth: start, total: n, paidBefore: 0, active: true, note: e ? 'Bought ' + dLabel(e.ts.slice(0, 10)) + ' for ' + fmtINR(p) : 'From bank SMS' })];
+  if (e) ops.push(up('Adjustments', { id: adj, ts: nowTs(), account: ac.name, amount: p, remarks: '📆 Moved to EMI · ' + name }));
+  const X = Object.assign({}, S.cfg.emix, { [id]: { auto: !!($('#ecAuto') || {}).checked, from: start, exp: e ? e.id : '', principal: p, adj } });
+  if (sm) X._sms = emiSmsList().map(x => x.id === sm.id ? Object.assign({}, x, { done: id }) : x);
+  ops.push(cfgOp('emix', X));
+  commit(ops); const k = runEmiAuto(); shut(); render(); buzz(12);
+  toast('On EMI: ' + n + ' × ' + fmtINR(a) + (k ? ' · ' + k + ' logged' : ''));
+};
+/* ---------- EMI-conversion SMS ("…converted into EMI…") → one bell line to link it to the purchase ---------- */
+const emiSmsList = () => ((S.cfg.emix || {})._sms || []);
+function parseEmiConv(raw, recvTs) {
+  const t = String(raw || '').replace(/\s+/g, ' ').trim();
+  if (!t || t.length < 30 || !/\bemis?\b/i.test(t)) return null;
+  if (/\b(otp|one[- ]time password|eligible|pre-?approved|apply|offer|avail|click|reply|is due|due (?:on|date|by)|missed|overdue|bounce|unpaid|failed|declined|rejected|cancel+ed)\b|https?:|\bsms\s+\w+\s+to\b|convert (?:it|your|this|the|now|purchases?)\b|\bcan (?:be )?convert/i.test(t)) return null;
+  if (!/(?:has been|have been|is|was|successfully|got)\s+(?:\w+\s+){0,3}?(?:converted|processed|booked|approved|created|activated|completed)\b|conversion\b[^.]{0,80}\b(?:successful(?:ly)?|processed|approved|booked|completed|confirmed|done)\b|\bemi (?:booked|created|activated|conversion (?:is )?(?:successful|done|confirmed))|converted (?:in)?to (?:an? )?emi|\bbooked (?:an? )?emi\b/i.test(t)) return null;
+  const A = [...t.matchAll(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)/gi)].map(m => ({ v: r2(parseFloat(m[1].replace(/,/g, ''))), i: m.index })).filter(x => x.v > 0); if (!A.length) return null;
+  const near = re => { const m = t.match(re); if (!m) return 0; const i = t.indexOf(m[0]) + m[0].length; const x = A.find(x => x.i >= t.indexOf(m[0]) && x.i <= i + 3); return x ? x.v : 0; };
+  let emi = near(/\bemis?\s*(?:amount|of|value|instal+ment)?\s*(?:is|:|-|of)?\s*(?:rs\.?|inr|₹)\s*[\d,.]+/i) || near(/(?:monthly instal+ment|instal+ment amount|monthly emi)\s*(?:of|is|:|-)?\s*(?:rs\.?|inr|₹)\s*[\d,.]+/i);
+  const pm = t.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)\s*(?:per month|\/month|\/-? ?p\.?m\.?|a month|monthly)/i); if (!emi && pm) emi = r2(parseFloat(pm[1].replace(/,/g, '')));
+  const fee = near(/(?:processing|booking|convenience) (?:fee|charges?)\s*(?:of|is|:|-)?\s*(?:rs\.?|inr|₹)\s*[\d,.]+/i);
+  const principal = Math.max(...A.map(x => x.v).filter(v => v !== emi && v !== fee), 0) || A[0].v;
+  const mm = t.match(/\b(\d{1,2})\s*(?:months?|mths?|monthly instal+ments|emis|instal+ments)\b/i) || t.match(/\btenure\s*(?:of|is|:|-)?\s*(\d{1,2})\b/i);
+  const months = mm ? +mm[1] : 0, rm = t.match(/(\d{1,2}(?:\.\d{1,2})?)\s*%/), rate = rm ? +rm[1] : 0;
+  const l4m = t.match(/(?:card|a\/?cc?|acct|account)\s*(?:no\.?|number|ending(?: with| in)?)?\s*[:.]?\s*(?:[x*]+|\.{2,})\s*(\d{3,6})/i) || t.match(/\b[xX*]{2,}(\d{3,6})\b/) || t.match(/\bcard\s+ending\s*(?:with|in)?\s*(\d{4})\b/i), l4 = l4m ? l4m[1] : '';
+  const bk = (BANKS.find(b => b[4].test(t)) || [])[1] || '';
+  const mer = t.match(/\b(?:at|on|for)\s+([A-Z][A-Za-z0-9&.' -]{2,30}?)\s+(?:has been|is|was|of|for|on|into|to)\b/);
+  const merchant = mer && !/\b(card|bank|account|emi|rs|inr|your|the)\b/i.test(mer[1]) ? titleCase(mer[1].trim()) : '';
+  if (!emi && rate > 0 && months >= 2) { const r = rate / 1200; emi = Math.round(principal * r * Math.pow(1 + r, months) / (Math.pow(1 + r, months) - 1) * 100) / 100; }
+  return { principal, emi: emi && emi < principal ? emi : 0, months: months >= 2 && months <= 60 ? months : 0, rate: rate > 0 && rate < 60 ? rate : 0, fee: fee && fee < principal ? fee : 0, l4, bank: bk, merchant, ts: recvTs || nowTs() };
+}
+function addEmiSms(x, raw) {
+  const L = emiSmsList(); if (L.some(y => Math.abs(y.principal - x.principal) < 1 && (y.l4 || '') === (x.l4 || '') && Math.abs(dayDiff(y.ts.slice(0, 10), x.ts.slice(0, 10))) <= 15)) return null;
+  const row = Object.assign({ id: uid('Q'), account: accForSms({ l4: x.l4, bank: x.bank, card: true }), raw: String(raw || '').slice(0, 300), done: '' }, x);
+  commit([cfgOp('emix', Object.assign({}, S.cfg.emix, { _sms: L.concat(row).slice(-20) }))]); return row;
+}
+/* card purchases of (almost) the same amount in the 4 months before, not already on EMI */
+function emiExpCands(sm) {
+  const since = addDays(sm.ts.slice(0, 10), -120), tol = Math.max(1.5, sm.principal * .01);
+  return S.exp.filter(e => e.amount > 0 && e.ts.slice(0, 10) >= since && e.ts.slice(0, 10) <= sm.ts.slice(0, 10) && Math.abs(e.amount - sm.principal) <= tol && !emiOfExp(e.id) && (!sm.account || e.account === sm.account) && (acc(e.account) || {}).type === 'card').sort((a, b) => Math.abs(a.amount - sm.principal) - Math.abs(b.amount - sm.principal) || b.ts.localeCompare(a.ts)).slice(0, 4);
+}
+function emiSmsAlerts() {
+  return emiSmsList().filter(x => !x.done && !x.dropped && x.ts.slice(0, 10) >= addDays(today(), -60)).map(x => { const c = emiExpCands(x)[0]; return `<div class="alert"><span class="ic" style="background:#A855F71f">📆</span><span class="mid" data-act="emiSmsOpen" data-id="${x.id}"><b>${inr(x.principal)} turned into EMI${x.account ? ' · ' + esc(x.account) : ''}</b><small>${x.months ? x.months + ' months' : 'From your bank SMS'}${x.emi ? ' · ' + inr(x.emi) + '/month' : ''}${c ? ' · ' + esc(c.remarks || c.category) + ', ' + dLabel(c.ts.slice(0, 10)) : ''}</small></span><button class="ago" data-act="emiSmsOpen" data-id="${x.id}">Link</button><button class="ax" data-act="emiSmsDrop" data-id="${x.id}" aria-label="Not this">✕</button></div>`; }).join('');
+}
+ACT.emiSmsOpen = el => emiConvSheet('', el.dataset.id);
+ACT.emiSmsDrop = el => { commit([cfgOp('emix', Object.assign({}, S.cfg.emix, { _sms: emiSmsList().map(x => x.id === el.dataset.id ? Object.assign({}, x, { dropped: true }) : x) }))]); const a = el.closest('.alert'); if (a) a.remove(); bellBadge(); if (!sheetOpen()) render(); };
+/* a bank SMS that is this month's EMI: which EMIs could it be */
+function emiCandsFor(p) {
+  const ac = p.account || accForSms(p), tol = Math.max(2, p.amount * .01);
+  return S.emis.filter(m => m.active !== false && emiState(m).st !== 'done' && Math.abs((+m.amount || 0) - p.amount) <= tol && (!ac || !m.account || m.account === ac || /\bemi\b/i.test(p.raw || '')));
+}
+/* an "EMI" SMS whose EMI is already logged (by itself or by hand) is filed quietly with it */
+function emiTidy() {
+  const ops = [], used = new Set(S.pend.filter(q => q.done).map(q => q.done));
+  S.pend.filter(p => p.status === 'new' && p.dir === 'debit' && /\bemi\b/i.test(p.raw || '')).forEach(p => {
+    const d = p.ts.slice(0, 10), per = d.slice(0, 7), hit = S.emi.find(e => !used.has(e.id) && Math.abs(e.amount - p.amount) < 1 && (!p.account || e.account === p.account) && (e.period === per || Math.abs(dayDiff(e.ts.slice(0, 10), d)) <= 6));
+    if (hit) { used.add(hit.id); ops.push(up('Pending', Object.assign({}, p, { status: 'done', done: hit.id, account: hit.account }))); }
+  });
+  if (ops.length) commit(ops);
+}
 
 /* =========================================================
    GOALS
@@ -2895,6 +3057,8 @@ function parseSms(raw, recvTs) {
   const backIn = /\b(refund(?:ed)?|revers(?:al|ed)|cash ?back)\b/i.test(t) && /\b(credited|refunded|reversed|received|deposited|added)\b/i.test(t) && !/\bwill\b/i.test(t);
   if (/pre-?approved|\boffer\b|apply now|eligible|\bwin\b|cashback (?:up ?to|of up)|will be (?:debited|deducted|auto)|\bis due\b|due (?:on|date|by)|\brequested\b|collect request|\bmandate\b.*(?:created|registered)|minimum amount due|statement (?:is )?generated|reversed? (?:will|shall)/i.test(t)) return null;
   if (!backIn && /failed|declined/i.test(t)) return null;
+  /* "Convert your purchase of ₹X to EMI" offers (a real spend SMS that only adds an EMI tip keeps its spent/debited word) */
+  if (/\bconvert\b.{0,120}\bemis?\b|\bemis?\b.{0,60}\bconvert/i.test(t) && !/\b(spent|debited|withdrawn|txn of|deducted)\b/i.test(t)) return null;
   const am = t.match(/(?:rs\.?|inr|₹)\s*([\d,]+(?:\.\d{1,2})?)/i); if (!am) return null;
   const amount = Math.round(parseFloat(am[1].replace(/,/g, '')) * 100) / 100; if (!(amount > 0)) return null;
   let dir = null;
@@ -2949,7 +3113,7 @@ const nkDone = () => { const b = U.nk && U.nk.back; U.nk = null; if (b === 'pend
 ACT.nkSave = () => { const v = $('#nkIn').value.trim(), N = U.nk; if (!N) return; commit([nickOp(N.payee, v && v !== N.payee ? v : '')]); if (U.pd && N.back === 'pend' && (!U.pd.note || U.pd.note === N.payee)) U.pd.note = v || N.payee; toast(v && v !== N.payee ? 'Shown as ' + v : 'Using the bank\'s name'); nkDone(); };
 ACT.nkClear = () => { const N = U.nk; if (!N) return; commit([nickOp(N.payee, '')]); toast('Using the bank\'s name'); nkDone(); };
 ACT.nickEdit = el => { const p = el.dataset.p || (U.pd && (S.pend.find(x => x.id === U.pd.id) || {}).payee); if (!p) return; if (U.pd && $('#pdRemk')) U.pd.note = $('#pdRemk').value; nickSheet(p, el.dataset.p ? '' : 'pend'); };
-const payeeNotes = (payee, pk) => uniq([pk && pk.note].concat(S.exp.filter(e => e.payee && payeeKey(e.payee) === payeeKey(payee)).slice(-30).reverse().map(e => e.remarks))).slice(0, 5);
+const payeeNotes = (payee, pk) => uniqI([pk && pk.note].concat(S.exp.filter(e => e.payee && payeeKey(e.payee) === payeeKey(payee)).slice(-30).reverse().map(e => e.remarks))).slice(0, 5);
 const BANK_OLD = ['sbi', 'hdfc', 'icici', 'axis', 'kotak', 'pnb', 'bob', 'idfc', 'indusind', 'yes', 'federal', 'au', 'rbl', 'amex'];
 function accForSms(x) {
   if (x.l4) { const a = S.accounts.find(a => (a.l4 || '').split(',').some(v => v && (v === x.l4 || v.slice(-4) === x.l4.slice(-4)))); if (a) return a.name; }
@@ -3047,6 +3211,7 @@ function sgLabel(h, short) {
   if (['lend', 'repay', 'back', 'borrow'].includes(h.act)) { const l = loanById(h.loan); return '🤝 ' + { lend: 'Lent', repay: 'Repaid', back: 'Got back', borrow: 'Borrowed' }[h.act] + (l ? ' · ' + esc(l.name) : ''); }
   if (h.act === 'refund') return '↩️ Refund' + (nt ? ' · ' + nt : h.category ? ' · ' + esc(h.category) : '');
   if (h.act === 'cashback') return '🎁 Cashback';
+  if (h.act === 'emi') { const m = S.emis.find(x => x.id === h.emi); return '📆 EMI' + (m ? ' · ' + esc(m.name) : ''); }
   return '💰 ' + (nt || 'Income');
 }
 const sgAmt = x => x.lo === x.hi ? inr(x.lo, 1) : inr(x.lo, 1) + '–' + inr(x.hi, 1);
@@ -3059,8 +3224,9 @@ function pdApply(P, p, h) {
   if (!p.account && h.acc && acc(h.acc) && !acc(h.acc).archived) P.account = h.acc;
   if (h.to && acc(h.to) && !acc(h.to).archived) P.to = h.to;
   if (h.loan) { const l = loanById(h.loan); if (l && !l.archived) P.loan = l.id; }
+  if (h.act === 'emi') { const m = S.emis.find(x => x.id === h.emi && x.active !== false); if (m) P.emi = m.id; else P.act = 'exp'; }
 }
-const PEND_ACT = { debit: [['exp', '🧾 Expense'], ['lend', '🤝 Lent'], ['repay', '↩️ Repaid a loan'], ['trf', '⇄ Transfer'], ['inv', '📈 Invest'], ['ignore', '🚫 Ignore']], credit: [['inc', '💰 Income'], ['refund', '↩️ Refund'], ['cashback', '🎁 Cashback'], ['back', '🤝 Got back (loan)'], ['borrow', '🤲 Borrowed'], ['trf', '⇄ Transfer in'], ['ignore', '🚫 Ignore']] };
+const PEND_ACT = { debit: [['exp', '🧾 Expense'], ['lend', '🤝 Lent'], ['repay', '↩️ Repaid a loan'], ['emi', '📆 EMI'], ['trf', '⇄ Transfer'], ['inv', '📈 Invest'], ['ignore', '🚫 Ignore']], credit: [['inc', '💰 Income'], ['refund', '↩️ Refund'], ['cashback', '🎁 Cashback'], ['back', '🤝 Got back (loan)'], ['borrow', '🤲 Borrowed'], ['trf', '⇄ Transfer in'], ['ignore', '🚫 Ignore']] };
 ACT.pendPick = el => {
   const p = S.pend.find(x => x.id === el.dataset.id); if (!p) return;
   const pk = payeeFind(p.payee) || {};
@@ -3077,6 +3243,8 @@ ACT.pendPick = el => {
     else if (cpBankSide(p) && CP_OUT.test(p.raw || '') && cds.length === 1) { U.pd.act = 'trf'; U.pd.to = cds[0].name; U.pd.note = 'Card bill'; } }
   /* first time with this payee: suggestions from your bills, the same amount before, your other accounts, the name */
   if (!sg.length && !rm) { U.pd.fresh = pdFresh(p); const f0 = smartCfg().prefill === false ? -1 : U.pd.fresh.findIndex(x => x.auto); if (f0 >= 0 && U.pd.act !== 'trf' && !rw) { U.pd.fi = f0; pdFreshApply(U.pd, U.pd.fresh[f0]); } }
+  /* matches one of your EMIs (same amount; or says "EMI") → filed as that EMI */
+  if (p.dir === 'debit') { const ec = emiCandsFor(p); U.pd.emiC = ec.map(m => m.id); if (ec.length && (/\bemi\b/i.test(p.raw || '') || (!sg.length && ec.length === 1))) { U.pd.act = 'emi'; U.pd.emi = ec[0].id; U.pd.fi = -1; U.pd.sgi = -1; if (!U.pd.account) U.pd.account = ec[0].account; } }
   if (U.pd.act === 'refund' && !U.pd.rf && !U.pd.exp) { const c = rfSpendCands(p.amount, merchOf(p.raw || '', ''), p.payee, p.ts); if (c.length && Math.abs(c[0].amount - p.amount) < 1) U.pd.exp = c[0].id; }
   pendForm();
 };
@@ -3120,12 +3288,26 @@ ACT.pdFresh = el => { const P = U.pd, x = (P.fresh || [])[+el.dataset.i]; if (!x
 /* re-draw the sheet, keep the note being typed and the scroll position */
 function pdRe() { if ($('#pdRemk')) U.pd.note = $('#pdRemk').value; const y = $('#shBody') ? $('#shBody').scrollTop : 0; pendForm(); if ($('#shBody')) $('#shBody').scrollTop = y; }
 ACT.pdUse = el => { const P = U.pd, p = S.pend.find(x => x.id === P.id), x = (P.sg || [])[+el.dataset.i]; if (!P || !p || !x) return; P.sgi = +el.dataset.i; pdApply(P, p, x.last); const y = $('#shBody') ? $('#shBody').scrollTop : 0; pendForm(); if ($('#shBody')) $('#shBody').scrollTop = y; buzz(6); };
+/* EMI from a bank SMS: which EMI, for which month */
+const pdEmiPer = (m, p) => { const d = p.ts.slice(0, 10), per = d.slice(0, 7); return emiPaid(m, per) && !S.emi.some(e => e.emiId === m.id && e.period === per && Math.abs(dayDiff(e.ts.slice(0, 10), d)) <= 6) ? shiftM(per, 1) : per; };
+function pdEmiHint(P, p) {
+  const L = (P.emiC || []).map(id => S.emis.find(m => m.id === id)).filter(Boolean); if (!L.length || p.dir !== 'debit') return '';
+  return `<div class="sugbox"><div class="sg-h">📆 Same amount as your EMI</div><div class="chips wrap" style="margin-top:8px">${L.map(m => `<button class="chip" data-act="pdEmi" data-id="${m.id}">📆 ${esc(m.name)} <small>${inr(m.amount, 1)} · ${esc(m.account)}</small></button>`).join('')}</div></div>`;
+}
+function pdEmiHtml(P, p) {
+  const L = S.emis.filter(m => m.active !== false && emiState(m).st !== 'done').sort((a, b) => Math.abs(a.amount - p.amount) - Math.abs(b.amount - p.amount));
+  if (!L.length) return `<div class="hint">No EMIs yet. Add one in Money → EMIs.</div>`;
+  const m = S.emis.find(x => x.id === P.emi), per = m ? pdEmiPer(m, p) : p.ts.slice(0, 7), ex = m && S.emi.find(e => e.emiId === m.id && e.period === per);
+  return `<div class="lbl">Which EMI?</div><div class="chips wrap">${L.map(x => `<button class="chip ${P.emi === x.id ? 'on' : ''}" data-act="pdSet" data-f="emi" data-v="${x.id}">📆 ${esc(x.name)} <small>${inr(x.amount, 1)}</small></button>`).join('')}</div>
+  ${m ? `<div class="lbl">For month</div><input type="month" id="pdPer" value="${per}">${ex ? `<div class="hint green">✓ Already logged for ${mLabel(per)}${ex.remarks === 'Auto-logged' ? ' (by itself)' : ''}. Saving files this SMS with it, so it is not counted twice.</div>` : Math.abs(m.amount - p.amount) > 1 ? `<div class="hint amber">Your EMI is ${inr(m.amount)}; this SMS says ${inr(p.amount)}. The SMS amount is logged.</div>` : ''}` : ''}`;
+}
+ACT.pdEmi = el => { if ($('#pdRemk')) U.pd.note = $('#pdRemk').value; const m = S.emis.find(x => x.id === el.dataset.id); if (!m) return; U.pd.act = 'emi'; U.pd.emi = m.id; U.pd.sgi = -1; U.pd.fi = -1; if (!U.pd.account) U.pd.account = m.account; pdRe(); buzz(6); };
 function pendForm() {
-  const P = U.pd, p = S.pend.find(x => x.id === P.id), A = PEND_ACT[p.dir];
+  const P = U.pd, p = S.pend.find(x => x.id === P.id), A = PEND_ACT[p.dir].filter(([k]) => k !== 'emi' || S.emis.some(m => m.active !== false));
   const chip = (f, v, l) => `<button class="chip ${P[f] === v ? 'on' : ''}" data-act="pdSet" data-f="${f}" data-v="${esc(v)}">${l}</button>`;
   const accs = live(a => a.type !== 'investment'), acChips = f => accs.map(a => chip(f, a.name, (a.others ? '👥' : ACC_T[a.type][0]) + ' ' + esc(a.name))).join('');
   let h = `<div class="detail" style="padding-bottom:6px"><div class="dv ${p.dir === 'credit' ? 'green' : ''}">${p.dir === 'credit' ? '+' : ''}${inr(p.amount)}</div><div class="dt">${p.payee ? `<button class="nickb" data-act="nickEdit">${esc(pName(p.payee))} <span>✏️</span></button>` : '—'} · ${dLabel(p.ts.slice(0, 10))}, ${tLabel(p.ts)}${p.ref ? ' · ref ' + esc(p.ref) : ''}</div>${nickOf(p.payee) ? `<div class="hint center" style="margin-top:2px">Bank calls it ${esc(p.payee)}</div>` : ''}</div>
-  ${pdSugBox(P, p)}${pdFreshBox(P, p)}<div class="chips wrap">${A.map(([k, l]) => chip('act', k, l)).join('')}</div>`;
+  ${P.act === 'emi' ? '' : pdSugBox(P, p) + pdFreshBox(P, p) + pdEmiHint(P, p)}<div class="chips wrap">${A.map(([k, l]) => chip('act', k, l)).join('')}</div>`;
   if (P.act !== 'ignore') {
     h += `<div class="lbl">${p.dir === 'credit' ? 'Into' : 'Paid from'} ${p.l4 ? '<small class="mute">(SMS: ' + esc(p.bank) + ' ·' + esc(p.l4) + ')</small>' : ''}</div><div class="chips wrap">${acChips('account')}</div>`;
     const pa = acc(P.account) || {};
@@ -3153,6 +3335,7 @@ function pendForm() {
       if (P.loan === 'new' && ['repay', 'back'].includes(P.act)) { const ea = P.early || ''; h += `<div class="lbl">${P.act === 'repay' ? 'You borrowed this earlier in' : 'You lent this earlier from'}</div><div class="chips wrap">${accs.map(a => `<button class="chip ${ea === a.name ? 'on' : ''}" data-act="pdSet" data-f="early" data-v="${esc(a.name)}">${(a.others ? '👥' : ACC_T[a.type][0]) + ' ' + esc(a.name)}</button>`).join('')}<button class="chip ${ea === '' ? 'on' : ''}" data-act="pdSet" data-f="early" data-v="">Not tracked</button></div><div class="hint">Logs the earlier ${P.act === 'repay' ? 'borrow' : 'loan'} too, so ${P.act === 'repay' ? 'this repay settles it' : 'this settles it'}. "Not tracked" keeps your balances as they are; pick an account only if that money came into it and you never logged it.</div>`; }
     }
     if (P.act === 'trf') { h += `<div class="lbl">${p.dir === 'credit' ? 'From' : 'To'}</div><div class="chips wrap">${acChips('to')}</div>`; const pr = P.pair && S.pend.find(x => x.id === P.pair); if (pr && P.to === pr.account) h += `<div class="hint green">📩 The ${inr(pr.amount)} SMS into ${esc(pr.account)} (${tLabel(pr.ts)}) is filed with it, so it is not counted twice.</div>`; }
+    if (P.act === 'emi') h += pdEmiHtml(P, p);
     if (P.act === 'inv') h += `<div class="lbl">Invested into</div><div class="chips wrap">${live(a => a.type === 'investment').map(a => chip('to', a.name, '📈 ' + esc(a.name))).join('')}</div>`;
     const sg = pdNoteSug(P, p), tg = P.act === 'exp' ? allTags() : [];
     h += `<div class="lbl">Note ${p.payee ? '<small class="mute">(bank name kept: ' + esc(p.payee) + ')</small>' : ''}</div><input id="pdRemk" value="${esc(P.note)}" placeholder="e.g. Breakfast #goa-trip" maxlength="140" autocomplete="off">${sg.length || tg.length ? `<div class="chips" style="margin-top:8px">${sg.map(x => `<button class="chip" data-act="pdNote" data-v="${esc(x)}">${esc(x)}</button>`).join('')}${tg.map(t => `<button class="chip" data-act="pdTag" data-v="${esc(t)}" style="color:var(--acc)">${esc(t)}</button>`).join('')}</div>` : ''}`;
@@ -3165,8 +3348,9 @@ ACT.pdNote = el => { $('#pdRemk').value = el.dataset.v; U.pd.note = el.dataset.v
 /* note ideas: what you called this payee before, then your usual notes in the picked category */
 function pdNoteSug(P, p) {
   const L = payeeNotes(p.payee, payeeFind(p.payee));
-  if (P.act === 'exp' && P.cat) { const f = {}; S.exp.filter(e => e.category === P.cat && e.remarks && !/split ÷/.test(e.remarks)).slice(-300).forEach(e => { const r = e.remarks.replace(/\s*· split ÷\d+$/, ''); f[r] = (f[r] || 0) + 1; }); Object.entries(f).sort((x, y) => y[1] - x[1]).forEach(([r]) => L.push(r)); }
-  return uniq(L.filter(x => x && x !== P.note && x !== p.payee)).slice(0, 8);
+  if (P.act === 'exp' && P.cat) noteFreq(S.exp.filter(e => e.category === P.cat && e.remarks && !/split ÷/.test(e.remarks)).slice(-300).map(e => e.remarks.replace(/\s*· split ÷\d+$/, ''))).forEach(r => L.push(r));
+  const lo = x => String(x || '').trim().toLowerCase();
+  return uniqI(L.filter(x => x && lo(x) !== lo(P.note) && lo(x) !== lo(p.payee))).slice(0, 8);
 }
 ACT.pdTag = el => { const i = $('#pdRemk'), t = el.dataset.v; if (!i || tagsOf(i.value).includes(t)) return; i.value = (i.value.trim() + ' ' + t).trim(); U.pd.note = i.value; el.classList.add('on'); };
 ACT.pdMine = el => { U.pd.mine = !!el.dataset.v; pdRe(); };
@@ -3209,6 +3393,12 @@ ACT.pdSave = async () => {
     if (P.act === 'refund' && !r.exp && !P.cat) return toast('Pick the spend or a category');
     rfFileOps(r, { id, amount: a, ts, account: P.account, cat: P.cat, payee: p.payee || '', note: nt.trim() && nt.trim() !== p.payee ? nt.trim() : '' }).forEach(o => ops.push(o));
   }
+  else if (P.act === 'emi') {
+    const m = S.emis.find(x => x.id === P.emi); if (!m) return toast('Pick the EMI');
+    const per = ($('#pdPer') || {}).value || pdEmiPer(m, p), ex = S.emi.find(e => e.emiId === m.id && e.period === per);
+    if (ex) { commit([up('Pending', Object.assign({}, p, { status: 'done', done: ex.id, account: P.account }))]); buzz(10); toast('Filed with the ' + m.name + ' EMI already logged for ' + mLabel(per)); return pendNext(); }
+    ops.push(up('EMILog', { id, ts, emi: m.name, account: P.account, amount: a, period: per, remarks: note && note !== p.payee ? note : '', emiId: m.id }));
+  }
   else if (P.act === 'inc') ops.push(up('Income', { id, ts, account: P.account, amount: a, source: /salary/i.test(note + ' ' + p.payee) ? 'Salary' : S.cfg.sources[0], remarks: note, payee: p.payee || '' }));
   else if (P.act === 'trf') { if (!P.to || P.to === P.account) return toast('Pick the other account'); ops.push(up('Transfers', p.dir === 'credit' ? { id, ts, from: P.to, to: P.account, amount: a, remarks: note } : { id, ts, from: P.account, to: P.to, amount: a, remarks: note })); }
   else if (P.act === 'inv') { if (!P.to) return toast('Pick the investment account'); ops.push(up('Investments', { id, ts, from: P.account, amount: a, type: S.cfg.invTypes[0], name: note, to: P.to, remarks: '' })); }
@@ -3229,7 +3419,7 @@ ACT.pdSave = async () => {
   }
   const accRow = acc(P.account);
   if (p.l4 && $('#pdRem') && $('#pdRem').checked && accRow) ops.push(up('Accounts', Object.assign({}, accRow, { l4: [accRow.l4, p.l4].filter(Boolean).join(',') })));
-  if (p.payee) { const lbl = { exp: P.cat, lend: 'Lent', repay: 'Loan repay', trf: 'Transfer', inv: 'Invest', inc: 'Income', back: 'Got back', borrow: 'Borrowed', refund: 'Refund', cashback: 'Cashback' }[P.act]; ops.push(payeeLearn(p.payee, { act: P.act, category: P.cat || '', loan: P.loan && P.loan !== 'new' ? P.loan : '', label: lbl, note: note.trim() && note.trim() !== p.payee ? note.trim() : '', acc: P.account, to: ['trf', 'inv'].includes(P.act) ? P.to || '' : '' })); }
+  if (p.payee) { const lbl = { exp: P.cat, lend: 'Lent', repay: 'Loan repay', trf: 'Transfer', inv: 'Invest', inc: 'Income', back: 'Got back', borrow: 'Borrowed', refund: 'Refund', cashback: 'Cashback', emi: 'EMI' }[P.act]; ops.push(payeeLearn(p.payee, { act: P.act, category: P.cat || '', loan: P.loan && P.loan !== 'new' ? P.loan : '', emi: P.act === 'emi' ? P.emi : '', label: lbl, note: note.trim() && note.trim() !== p.payee ? note.trim() : '', acc: P.account, to: ['trf', 'inv'].includes(P.act) ? P.to || '' : '' })); }
   ops.push(up('Pending', Object.assign({}, p, { status: 'done', done: id, account: P.account })));
   const pr = P.act === 'trf' && P.pair && S.pend.find(x => x.id === P.pair && x.status === 'new'); if (pr && P.to === pr.account) ops.push(up('Pending', Object.assign({}, pr, { status: 'done', done: id, account: pr.account })));
   commit(ops); if (P.act === 'trf') selfTidy(); buzz(10); pendNext();
@@ -3238,7 +3428,9 @@ ACT.pdSave = async () => {
 function pendNext() { render(); if (!pendNew().length) toast('All sorted ✓'); if (inboxCount().all) inboxSheet(); else shut(); }
 ACT.smsTry = () => openSheet('Test a bank SMS', `<div class="hint" style="margin-top:0">Paste a bank SMS. If it is a real payment it goes to your "to sort" list on the Expenses tab. OTPs and offers are ignored.</div><textarea id="smsTxt" rows="5" placeholder="Sent Rs.664.71 from XX1211 to MC DONALDS on 21-Oct-26…"></textarea><button class="btn big" data-act="smsGo">Read it</button><div id="smsOut"></div>`);
 ACT.smsGo = () => {
-  const raw = $('#smsTxt').value, rp = parseRefund(raw, nowTs(), '');
+  const raw = $('#smsTxt').value, ec = parseEmiConv(raw, nowTs());
+  if (ec) { const r = addEmiSms(ec, raw); $('#smsOut').innerHTML = `<div class="kv"><div><span>EMI conversion</span><b>${inr(ec.principal)}</b></div><div><span>Months</span><b>${ec.months || '?'}</b></div><div><span>EMI</span><b>${ec.emi ? inr(ec.emi) : '?'}</b></div><div><span>Card</span><b>${esc(accForSms({ l4: ec.l4, bank: ec.bank, card: true }) || (ec.bank || '?') + (ec.l4 ? ' ·' + ec.l4 : ''))}</b></div></div><div class="hint ${r ? 'green' : ''}">${r ? '✓ In the 🔔 bell: link it to the purchase there.' : 'Already in the bell.'}</div>`; render(); return; }
+  const rp = parseRefund(raw, nowTs(), '');
   if (rp) { const r = addRefund(rp); $('#smsOut').innerHTML = `<div class="kv"><div><span>Refund</span><b>${inr(rp.amount)}</b></div><div><span>From</span><b>${esc(rp.merchant || '—')}</b></div><div><span>Why</span><b>${esc(rp.reason)}</b></div><div><span>Expected by</span><b>${dLabel(rp.by)}</b></div><div><span>Back to</span><b>${esc(rfWhere(r || rp))}</b></div></div><div class="hint ${r ? 'green' : ''}">${r ? '✓ Added to Refunds. Brokeless will match it when the money arrives.' : 'Already in your Refunds list.'}</div><button class="btn" data-act="refundsOpen">Open Refunds</button>`; render(); return; }
   const x = parseSms(raw, nowTs());
   if (!x) { $('#smsOut').innerHTML = '<div class="hint red">Ignored: not a completed payment (OTP, offer, reminder or no amount).</div>'; return; }
@@ -3248,6 +3440,7 @@ ACT.smsGo = () => {
 /* Android app bridge: the Brokeless Android app calls this for each new bank SMS */
 /* returns true for a payment to sort, 'rf' for a refund/cashback promise (Refunds list), false if ignored */
 window.LedgerSms = (raw, recvTs, from) => {
+  const ec = parseEmiConv(raw, recvTs); if (ec) { const r = addEmiSms(ec, raw); if (r) { bellBadge(); if (U.tab === 'home') render(); } return !!r; }
   const rp = parseRefund(raw, recvTs, from); if (rp) { const r = addRefund(rp); if (r) { U.rfNew = r; bellBadge(); if (U.tab === 'home') render(); } return r ? 'rf' : false; }
   const x = parseSms(raw, recvTs); if (!x) return false; const r = addPending(x, raw); if (r && U.tab === 'home') render(); return !!r;
 };
@@ -3470,7 +3663,7 @@ function drainSms() {
   try { L = JSON.parse(AND.takeSms() || '[]'); } catch (e) { return 0; }
   let n = 0, nr = 0; L.forEach(x => { try { const v = window.LedgerSms(x.raw, x.ts, x.from); if (v === 'rf') nr++; else if (v) n++; } catch (e) { } });
   if (nr && !n) { const r = U.rfNew; toast(nr === 1 && r ? '↩️ ' + rfName(r) + ' ' + inr(r.amount) + ' on its way · by ' + dLabel(r.by) : '↩️ ' + nr + ' refunds on their way', 'View', () => nr === 1 && r ? ACT.rfOpen({ dataset: { id: r.id } }) : refundsSheet()); bellBadge(); }
-  if (n) { pendFix(); cardPayTidy(); selfTidy(); const cp = cardPays()[0], st = selfPairs()[0]; if (cp) toast('💳 Paid ' + cp.card + ' ' + inr(cp.amount) + '?', 'Confirm', () => ACT.pendOpen()); else if (st) toast('⇄ Moved ' + inr(st.amount) + ' to ' + st.to + '?', 'Confirm', () => ACT.pendOpen()); else if (pendNew().length) toast('📩 ' + n + ' new bank message' + (n > 1 ? 's' : '') + ' to sort', 'Open', () => ACT.pendOpen()); bellBadge(); if (U.tab === 'home') render(); }
+  if (n) { pendFix(); cardPayTidy(); selfTidy(); emiTidy(); const cp = cardPays()[0], st = selfPairs()[0]; if (cp) toast('💳 Paid ' + cp.card + ' ' + inr(cp.amount) + '?', 'Confirm', () => ACT.pendOpen()); else if (st) toast('⇄ Moved ' + inr(st.amount) + ' to ' + st.to + '?', 'Confirm', () => ACT.pendOpen()); else if (pendNew().length) toast('📩 ' + n + ' new bank message' + (n > 1 ? 's' : '') + ' to sort', 'Open', () => ACT.pendOpen()); bellBadge(); if (U.tab === 'home') render(); }
   return n;
 }
 window.__ledgerSmsPing = () => drainSms();
@@ -3483,7 +3676,7 @@ function phoneCard() {
   const I = andInfo();
   return `<div class="card"><h2>Permissions & phone app <small>v${esc(I.version || '?')}</small></h2>
   <div class="srow"><span class="ic" style="background:var(--soft)">📩</span><span class="mid"><b>Read bank SMS</b><small>${I.sms ? '✓ On · OTPs and offers are ignored on the phone' : 'Off · tap to allow'}</small></span>${I.sms ? '<button class="btn sm sec" data-act="andScan">Scan 30 days</button>' : '<button class="btn sm" data-act="andPerm">Allow</button>'}</div>
-  ${(() => { let L = null; try { L = I.smsLast ? JSON.parse(I.smsLast) : null; } catch (e) { } return `<div class="hint" style="margin:-4px 0 6px 54px">${!I.sms ? 'Tap Allow. <b>If Allow is greyed out</b> or says "restricted setting": phone Settings → Apps → Brokeless → ⋮ (top right) → <b>Allow restricted settings</b>, then come back and tap Allow.' : L ? 'Last SMS received ' + esc(dLabel(L.at.slice(0, 10))) + ', ' + esc(tLabel(L.at)) + ' from ' + esc(L.from || '?') + ' · ' + (L.kept ? '<span class="green">kept for sorting</span>' : 'skipped (not a bank payment)') : '<span class="amber">No SMS has reached Brokeless since this version was installed.</span> If a bank SMS arrives and this stays empty, set Battery to Unrestricted below.'}</div>`; })()}
+  ${(() => { let L = null; try { L = I.smsLast ? JSON.parse(I.smsLast) : null; } catch (e) { } return `<div class="hint" style="margin:-4px 0 6px 54px">${!I.sms ? 'Tap Allow. <b>If Allow is greyed out</b> or says "restricted setting": open phone settings (below) → Permissions → SMS → try Allow once (it is blocked, tap OK) → back → ⋮ (top right) → <b>Allow restricted settings</b> → Permissions → SMS → Allow.' : L ? 'Last SMS received ' + esc(dLabel(L.at.slice(0, 10))) + ', ' + esc(tLabel(L.at)) + ' from ' + esc(L.from || '?') + ' · ' + (L.kept ? '<span class="green">kept for sorting</span>' : 'skipped (not a bank payment)') : '<span class="amber">No SMS has reached Brokeless since this version was installed.</span> If a bank SMS arrives and this stays empty, set Battery to Unrestricted below.'}</div>`; })()}
   <div class="srow"><span class="ic" style="background:var(--soft)">🔔</span><span class="mid"><b>Notifications</b><small>${I.notif ? '✓ On · a ping for each bank message' : 'Off · tap to allow'}</small></span>${I.notif ? '' : '<button class="btn sm" data-act="andPerm">Allow</button>'}</div>
   ${AND.openAppSettings ? `<div class="srow"><span class="ic" style="background:var(--soft)">⚙️</span><span class="mid"><b>Phone settings for Brokeless</b><small>All permissions · "Allow restricted settings"</small></span><button class="btn sm sec" data-act="andAppSet">Open</button></div>` : ''}
   <div class="srow"><span class="ic" style="background:var(--soft)">🔋</span><span class="mid"><b>Battery: Unrestricted</b><small>${I.battery ? '✓ Samsung will not stop Brokeless' : 'Needed so Samsung does not stop SMS reading'}</small></span>${I.battery ? '' : '<button class="btn sm" data-act="andBattery">Fix</button>'}</div>
@@ -4389,9 +4582,105 @@ function careerTab() {
   if (J.length) h += `<div class="group">${CS.jobs.map((j, i) => { const hk = i ? CS.hikes.find(x => x.to === j.company && x.from === CS.jobs[i - 1].company) : null; return `<button class="item" data-act="jobEdit" data-id="${j.id}"><span class="ic" style="background:var(--acc2)">${j.to ? '🏢' : '⭐'}</span><span class="mid"><b>${esc(j.company || 'Company ' + (i + 1))}${j.to ? '' : ' <em class="tag">now</em>'}</b><small>${esc(j.role || '')}${j.role ? ' · ' : ''}${mLabel(j.from, 1)} ${j.from.slice(2, 4)} – ${j.to ? mLabel(j.to, 1) + ' ' + j.to.slice(2, 4) : 'now'}</small></span><span style="text-align:right"><span class="amt">${+j.ctc ? inr(j.ctc, 1) : '<span class="mute" style="font-size:.76rem">add CTC</span>'}</span>${hk ? `<br><small class="${hk.pct >= 0 ? 'green' : 'red'}" style="font-size:.72rem;font-weight:800">${hk.pct >= 0 ? '+' : ''}${hk.pct}% hike</small>` : ''}</span></button>`; }).join('')}</div>`;
   else h += `<div class="empty" style="padding:16px">Add your first job and your current one. Each job: company, role, dates and yearly CTC.</div>`;
   h += `<button class="btn" data-act="jobEdit">+ Add a job</button>`;
+  h += careerAnalysis(CS);
   if (CS.ok) h += `<div class="section-t">Career score · ${Math.round(CS.score)} / 10</div><div class="card" style="padding:6px 14px">${CS.parts.map(([l, v, w, n]) => `<div class="brow"><div class="h"><span>${esc(l)}</span><span><b>${Math.round(v * 10) / 10}</b><small class="mute"> / ${w}</small></span></div><div class="bar"><i style="width:${v / w * 100}%;background:${pulseLabel(v / w * 100)[1]}"></i></div><div class="hint" style="margin:5px 0 0">${esc(n)}</div></div>`).join('')}${CS.gaps.length ? `<div class="hint">Breaks: ${CS.gaps.map(g => g.months + ' mo after ' + esc(g.after)).join(' · ')}</div>` : ''}</div>`;
+  h += `<button class="alert info" data-act="hikeOpen" style="width:100%;text-align:left;margin-top:14px"><span class="ic" style="background:var(--acc2)">🧮</span><span class="mid"><b>Hike calculator</b><small>What a hike or a new offer means per month, after tax</small></span><span class="ago">Open</span></button>`;
   return h;
 }
+/* ---------- salary maths: new tax regime (FY 2026-27, same slabs as 2025-26), an estimate only ----------
+   Basic = 50% of CTC. PF 12% of basic from you and from the company (or capped at ₹1,800 a month each, or none).
+   Professional tax ₹2,500 a year. Standard deduction ₹75,000; no tax up to ₹12 lakh taxable (87A, with marginal relief); 4% cess. */
+function taxNew(ti) {
+  if (!(ti > 0)) return 0; const sl = [[4e5, 0], [8e5, .05], [12e5, .1], [16e5, .15], [20e5, .2], [24e5, .25], [Infinity, .3]];
+  let t = 0, lo = 0; for (const [hi, r] of sl) { if (ti > lo) t += (Math.min(ti, hi) - lo) * r; lo = hi; }
+  if (ti <= 12e5) t = 0; else t = Math.min(t, ti - 12e5);
+  return Math.round(t * 1.04);
+}
+function payOf(ctc, pf) {
+  ctc = +ctc || 0; const basic = ctc * .5 / 12, pfM = pf === 'none' ? 0 : pf === 'full' ? basic * .12 : Math.min(1800, basic * .12);
+  const gross = ctc - pfM * 12, tax = taxNew(gross - 75000), pt = ctc > 0 ? 2500 : 0, inHand = Math.max(0, (gross - pfM * 12 - tax - pt) / 12);
+  return { ctc, month: ctc / 12, gross, pf: pfM, tax, pt, inHand: Math.round(inHand) };
+}
+/* what actually reached your bank as salary: the usual of your last 3 salary credits */
+function salaryNow() {
+  const L = S.inc.filter(e => /salary/i.test(e.source || '') && e.amount > 0 && !isOthers(e.account)).sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 3).map(e => e.amount).sort((a, b) => a - b);
+  return L.length ? { amt: L[Math.floor(L.length / 2)], n: L.length } : null;
+}
+const curCtc = () => { const CS = careerStats(), c = CS.cur && +CS.cur.ctc ? CS.cur : (CS.jobs || []).filter(j => +j.ctc > 0).pop(); return c ? +c.ctc : 0; };
+function careerAnalysis(CS) {
+  const ctc = curCtc(), sal = salaryNow(); if (!ctc && !sal) return '';
+  const P = ctc ? payOf(ctc, (S.prefs.hk || {}).pf || 'cap') : null, rows = [];
+  if (P) rows.push(['CTC now', inr(ctc) + ' a year · ' + inr(Math.round(P.month)) + '/month']);
+  if (P) rows.push(['In-hand (estimate)', '≈ ' + inr(P.inHand) + '/month']);
+  if (sal) rows.push(['Salary reaching your bank', inr(sal.amt) + '/month' + (sal.n < 3 ? ' (' + sal.n + ' credit' + (sal.n > 1 ? 's' : '') + ')' : '')]);
+  if (CS.ok && CS.cagr != null && CS.first !== CS.last) rows.push(['Since your first job', inr(CS.first.ctc, 1) + ' → ' + inr(CS.last.ctc, 1) + ' · ' + (CS.cagr >= 0 ? '+' : '') + Math.round(CS.cagr * 100) + '% a year']);
+  if (CS.cur && CS.cur.from) { const mo = mDiff(CS.cur.from, ym()); rows.push(['At this job', mo < 12 ? mo + ' month' + (mo === 1 ? '' : 's') : (Math.round(mo / 12 * 10) / 10) + ' years']); }
+  const take = sal ? sal.amt : P ? P.inHand : 0, ms = [1, 2, 3].map(i => shiftM(ym(), -i)), sp = take ? r2(ms.reduce((t, m) => t + sum(S.exp.filter(e => inP(e, m) && myX(e))), 0) / 3) : 0;
+  if (take && sp > 0) rows.push(['You spend', inr(sp) + '/month · ' + Math.round(sp / take * 100) + '% of what you take home']);
+  let tip = '';
+  if (ctc && CS.cur && CS.cur.from) { const nx = shiftM(CS.cur.from, 12 * (Math.floor(mDiff(CS.cur.from, ym()) / 12) + 1)); tip = `To grow 15% a year, aim for <b>${inr(Math.round(ctc * 1.15 / 1000) * 1000)}</b> at your next review (around ${mLabel(nx)}) · that is about <b>${inr(payOf(ctc * 1.15, (S.prefs.hk || {}).pf || 'cap').inHand - P.inHand)}</b> more a month in hand.`; }
+  if (P && sal && Math.abs(sal.amt - P.inHand) > P.inHand * .15) tip += (tip ? '<br>' : '') + `Your real salary credit differs from the estimate by ${inr(Math.abs(sal.amt - P.inHand))}: deductions at your company (PF, insurance, tax plan) are different. The calculator uses your real credit when it can.`;
+  return `<div class="section-t">Analysis</div><div class="card" style="padding:6px 14px 12px"><div class="kv" style="margin:6px 0 0">${rows.map(([k, v]) => `<div><span>${esc(k)}</span><b>${v}</b></div>`).join('')}</div>${tip ? `<div class="hint">${tip}</div>` : ''}${!ctc ? `<div class="hint">Add your current job with its CTC above to see your in-hand and hike maths.</div>` : ''}</div>`;
+}
+/* ---------- hike calculator: from your current CTC (or any amount), by % or by a new offer ---------- */
+const HK_PCT = [5, 10, 15, 20, 30, 50];
+function hikeSheet() {
+  const pv = S.prefs.hk || {}, base = U.hk ? U.hk.base : curCtc() || '';
+  U.hk = Object.assign({ base, mode: 'pct', pct: 10, offer: '', pf: pv.pf || 'cap', per: 'y' }, U.hk || {});
+  const H = U.hk, own = curCtc();
+  openSheet('🧮 Hike calculator', `<div id="hkForm">
+  <div class="lbl" style="margin-top:0">Current CTC ${own ? `<small class="mute">(your job: ${inr(own, 1)})</small>` : ''}</div>
+  <div class="seg" style="margin:0 0 8px">${[['y', 'Yearly'], ['m', 'Monthly']].map(([k, l]) => `<button class="${H.per === k ? 'on' : ''}" data-act="hkPer" data-v="${k}">${l}</button>`).join('')}</div>
+  <label class="amtbox"><span>₹</span><input id="hkBase" inputmode="decimal" value="${H.base ? (H.per === 'm' ? Math.round(H.base / 12) : H.base) : ''}" placeholder="${H.per === 'm' ? 'e.g. 50,000' : 'e.g. 6,00,000'}" data-in="hkCalc"></label>
+  ${own && Math.abs(own - (+H.base || 0)) > 1 ? `<button class="chip" data-act="hkMine" style="margin-top:6px">↺ Use my CTC ${inr(own, 1)}</button>` : ''}
+  <div class="seg" style="margin:14px 0 8px">${[['pct', 'By hike %'], ['offer', 'By new offer']].map(([k, l]) => `<button class="${H.mode === k ? 'on' : ''}" data-act="hkMode" data-v="${k}">${l}</button>`).join('')}</div>
+  ${H.mode === 'pct' ? `<div class="chips wrap">${HK_PCT.map(p => `<button class="chip ${+H.pct === p ? 'on' : ''}" data-act="hkPct" data-v="${p}">${p}%</button>`).join('')}<input id="hkPctIn" inputmode="decimal" value="${HK_PCT.includes(+H.pct) ? '' : H.pct}" placeholder="other %" data-in="hkCalc" style="width:96px;padding:8px 10px"></div>`
+    : `<div class="lbl" style="margin-top:4px">New CTC offered (${H.per === 'm' ? 'monthly' : 'yearly'})</div><label class="amtbox"><span>₹</span><input id="hkOffer" inputmode="decimal" value="${H.offer ? (H.per === 'm' ? Math.round(H.offer / 12) : H.offer) : ''}" placeholder="the offer" data-in="hkCalc"></label>`}
+  <div id="hkOut"></div>
+  <details class="hint"><summary>PF and how this is worked out</summary><div class="chips wrap" style="margin:8px 0">${[['cap', 'PF ₹1,800/month'], ['full', 'PF 12% of basic'], ['none', 'No PF']].map(([k, l]) => `<button class="chip ${H.pf === k ? 'on' : ''}" data-act="hkPf" data-v="${k}">${l}</button>`).join('')}</div>New tax regime (FY 2026-27): ₹75,000 standard deduction, no tax up to ₹12 lakh taxable, 4% cess. Basic taken as half the CTC; the company's PF is part of CTC and your PF is cut from salary; ₹2,500 professional tax a year. Bonuses, HRA claims and old-regime deductions are not counted. When Brokeless knows your real salary credit, "reaches your bank" adds the change to it.</details>
+  <button class="btn sec" data-act="jbBack">‹ Back to Money Pulse</button></div>`, 'tall');
+  hkCalc();
+}
+function hkRead() {
+  const H = U.hk, m = H.per === 'm' ? 12 : 1, b = parseAmt(($('#hkBase') || {}).value); H.base = b > 0 ? r2(b * m) : 0;
+  if (H.mode === 'pct') { const c = parseFloat(($('#hkPctIn') || {}).value); if (c > -100 && !isNaN(c) && ($('#hkPctIn') || {}).value !== '') H.pct = c; }
+  else { const o = parseAmt(($('#hkOffer') || {}).value); H.offer = o > 0 ? r2(o * m) : 0; }
+}
+function hkCalc() {
+  const out = $('#hkOut'), H = U.hk; if (!out || !H) return; hkRead();
+  if (!(H.base > 0)) { out.innerHTML = `<div class="hint">Type your current CTC to start.</div>`; return; }
+  const nw = H.mode === 'pct' ? r2(H.base * (1 + (+H.pct || 0) / 100)) : H.offer, pct = H.base ? (nw - H.base) / H.base * 100 : 0;
+  if (!(nw > 0)) { out.innerHTML = `<div class="hint">Type the new CTC from the offer.</div>`; return; }
+  const A = payOf(H.base, H.pf), B = payOf(nw, H.pf), dIn = B.inHand - A.inHand, sal = Math.abs(H.base - curCtc()) < 1 ? salaryNow() : null;
+  const row = (k, a, b, cls) => `<div class="hk-r"><span>${k}</span><b>${a}</b><b class="${cls || ''}">${b}</b></div>`;
+  out.innerHTML = `<div class="hk-hero"><div class="hl">${H.mode === 'pct' ? (+H.pct || 0) + '% hike' : 'New offer · ' + (pct >= 0 ? '+' : '') + (Math.round(pct * 10) / 10) + '%'}</div><div class="hv">${inr(nw)}<small> / year</small></div><div class="hs">${inr(Math.round(nw / 12))} a month CTC · <b class="green">+${inr(Math.max(0, dIn))}</b> a month in hand</div></div>
+  <div class="hk-t">${row('', 'Now', 'After', 'mute')}
+  ${row('CTC / year', inrS(H.base), inrS(nw))}
+  ${row('CTC / month', inr(Math.round(A.month)), inr(Math.round(B.month)))}
+  ${row('Tax / month', inr(Math.round(A.tax / 12)), inr(Math.round(B.tax / 12)), B.tax > A.tax ? 'red' : '')}
+  ${row('Your PF / month', inr(Math.round(A.pf)), inr(Math.round(B.pf)))}
+  ${row('In hand / month ≈', inr(A.inHand), inr(B.inHand), 'green')}
+  ${sal ? row('Reaches your bank', inr(sal.amt), '≈ ' + inr(Math.round(sal.amt + dIn)), 'green') : ''}</div>
+  <div class="hint">Extra a year in hand ≈ <b>${inr(dIn * 12)}</b>${B.tax > A.tax ? ' · tax goes up by ' + inr(B.tax - A.tax) + ' a year' : ''}${A.tax === 0 && B.tax > 0 ? ' · you cross the ₹12 lakh tax-free line' : ''}.</div>
+  <div class="lbl">Quick compare</div><div class="hk-t">${[10, 15, 20, 30].map(p => { const x = payOf(H.base * (1 + p / 100), H.pf); return row(p + '%', inrS(Math.round(H.base * (1 + p / 100))), '+' + inr(x.inHand - A.inHand) + '/mo'); }).join('')}</div>
+  ${Math.abs(H.base - curCtc()) < 1 && CSnow() ? `<button class="btn sec" data-act="hkSave">✅ I got this · save ${inr(nw, 1)} as my new CTC</button>` : ''}`;
+}
+const CSnow = () => careerStats().cur;
+IN.hkCalc = () => { if (U.hk && U.hk.mode === 'pct' && ($('#hkPctIn') || {}).value) $$('#hkForm [data-act=hkPct]').forEach(b => b.classList.remove('on')); hkCalc(); };
+ACT.hikeOpen = () => { U.hk = null; hikeSheet(); };
+ACT.hkPer = el => { hkRead(); U.hk.per = el.dataset.v; hikeSheet(); };
+ACT.hkMode = el => { hkRead(); U.hk.mode = el.dataset.v; hikeSheet(); };
+ACT.hkPct = el => { hkRead(); U.hk.pct = +el.dataset.v; if ($('#hkPctIn')) $('#hkPctIn').value = ''; $$('#hkForm [data-act=hkPct]').forEach(b => b.classList.toggle('on', b === el)); hkCalc(); buzz(6); };
+ACT.hkPf = el => { hkRead(); U.hk.pf = el.dataset.v; S.prefs.hk = Object.assign({}, S.prefs.hk, { pf: el.dataset.v }); save(); $$('#hkForm [data-act=hkPf]').forEach(b => b.classList.toggle('on', b === el)); hkCalc(); };
+ACT.hkMine = () => { hkRead(); U.hk.base = curCtc(); hikeSheet(); };
+ACT.hkSave = () => {
+  hkRead(); const H = U.hk, cur = CSnow(), nw = H.mode === 'pct' ? Math.round(H.base * (1 + (+H.pct || 0) / 100)) : Math.round(H.offer); if (!cur || !(nw > 0)) return;
+  const m = ym(); if (!confirm('Save ' + fmtINR(nw) + ' as your CTC from ' + mLabel(m) + '? ' + (cur.from === m ? 'Your current job row is updated.' : 'A new row is added at ' + (cur.company || 'your company') + ', so the hike is counted.'))) return;
+  const J = ((S.cfg.career || {}).jobs || []).map(x => Object.assign({}, x));
+  if (cur.from === m) J.forEach(x => { if (x.id === cur.id) x.ctc = nw; });
+  else { J.forEach(x => { if (x.id === cur.id) x.to = shiftM(m, -1); }); J.push({ id: uid('J'), company: cur.company, role: cur.role || '', from: m, to: '', ctc: nw }); }
+  commit([cfgOp('career', Object.assign({}, S.cfg.career, { jobs: J }))]); U.pt = 'career'; pulseSheet(); toast('New CTC saved 🎉');
+};
 ACT.pfCity = el => { commit([cfgOp('profile', Object.assign({}, S.cfg.profile, { city: el.dataset.v }))]); U.ptKeep = true; pulseSheet(); };
 ACT.pfSave = () => { commit([cfgOp('profile', Object.assign({}, S.cfg.profile, { born: $('#pfBorn').value, earning: $('#pfEarn').value, role: ($('#pfRole').value || '').trim() }))]); U.ptKeep = true; pulseSheet(); toast('Saved'); };
 ACT.jobEdit = el => {
@@ -4433,7 +4722,7 @@ function rng() {
 /* the numbers behind the KPI tiles, for any window */
 function pstats(from, to) {
   const ex = exFilter(from, to), inR = e => { const d = e.ts.slice(0, 10); return d >= from && d <= to; };
-  const exP = ex.filter(e => e.amount > 0), spent = sum(ex), n = exP.length, inc = sum(S.inc.filter(e => incR(e, from, to) && accOk(e.account))), emis = sum(S.emi.filter(e => inR(e) && accOk(e.account))), inv = sum(S.inv.filter(e => isBuy(e) && inR(e) && accOk(e.from)));
+  const exP = ex.filter(e => e.amount > 0), spent = sum(ex), n = exP.length, inc = sum(S.inc.filter(e => incR(e, from, to) && accOk(e.account))), emis = sumEmi(S.emi.filter(e => inR(e) && accOk(e.account))), inv = sum(S.inv.filter(e => isBuy(e) && inR(e) && accOk(e.from)));
   const end = to > today() ? today() : to, days = from > today() ? 0 : dayDiff(from, end) + 1, dset = new Set(exP.map(e => e.ts.slice(0, 10)));
   const cash = sum(ex.filter(e => (acc(e.account) || {}).type === 'cash'));
   return { ex, spent, n, inc, emis, inv, days, avgDay: days ? spent / days : 0, avgEntry: n ? sum(exP) / n : 0, big: exP.reduce((m, e) => Math.max(m, e.amount), 0), rate: inc > 0 ? Math.round((inc - spent - emis) / inc * 100) : null, noSpend: days ? Math.max(0, days - [...dset].filter(d => d <= end).length) : 0, cashPct: spent ? Math.round(cash / spent * 100) : null };
@@ -4497,7 +4786,7 @@ const kpi = (l, v, cls, sub, d) => `<div class="kpi"><span>${l}</span><b class="
 function renderInsights() {
   const f = U.f, r = rng(), ex = exFilter(r.from, r.to), spent = sum(ex), exP = ex.filter(e => e.amount > 0), n = exP.length, refunded = r2(-sum(ex.filter(e => e.amount < 0)));
   const inR = e => { const d = e.ts.slice(0, 10); return d >= r.from && d <= r.to; };
-  const inc = sum(S.inc.filter(e => incR(e, r.from, r.to) && accOk(e.account))), emis = sum(S.emi.filter(e => inR(e) && accOk(e.account))), inv = sum(S.inv.filter(e => isBuy(e) && inR(e) && accOk(e.from)));
+  const inc = sum(S.inc.filter(e => incR(e, r.from, r.to) && accOk(e.account))), emis = sumEmi(S.emi.filter(e => inR(e) && accOk(e.account))), inv = sum(S.inv.filter(e => isBuy(e) && inR(e) && accOk(e.from)));
   const endD = r.to < today() ? r.to : today(), days = r.from > today() ? 0 : dayDiff(r.from, endD) + 1;
   const big = exP.reduce((m, e) => !m || e.amount > m.amount ? e : m, null), rate = inc > 0 ? Math.round((inc - spent - emis) / inc * 100) : null;
   /* savings %: meaningless before the salary lands (₹100 in, ₹6.4K out = -6261%) */
@@ -4629,7 +4918,7 @@ function flowSvg(r, ex) {
   const ct = {}; ex.forEach(e => ct[e.category] = (ct[e.category] || 0) + e.amount);
   const topC = Object.keys(ct).sort((a, b) => ct[b] - ct[a]), keep = new Set(topC.slice(0, 6));
   ex.forEach(e => add('A:' + e.account, 'R:' + (keep.has(e.category) ? e.category : 'Other'), e.amount));
-  S.emi.filter(e => inR(e) && accOk(e.account)).forEach(e => add('A:' + e.account, 'R:EMIs', e.amount));
+  S.emi.filter(e => inR(e) && accOk(e.account)).forEach(e => { const c = emiCost(e); if (c > 0) add('A:' + e.account, 'R:EMIs', c); });
   S.inv.filter(e => inR(e) && isBuy(e) && accOk(e.from)).forEach(e => add('A:' + e.from, 'R:Invested', e.amount));
   S.inv.filter(e => inR(e) && !isBuy(e) && accOk(e.to)).forEach(e => { add('L:Investments sold', 'A:' + e.to, e.amount); });
   const links = Object.entries(lk).map(([k, v]) => { const [s, t] = k.split('|'); return { s, t, v }; });
@@ -4677,7 +4966,7 @@ function drawInsights(rows, r) {
   const d0 = $('#cCatTrend');
   if (d0) U.charts.push(new Chart(d0, { type: 'bar', data: { labels: m6.map(m => mLabel(m, 1)), datasets: top5.map(c => ({ label: c, data: byM.map(l => sum(l.filter(e => e.category === c))), backgroundColor: cat(c).color, borderRadius: 4, stack: 's', maxBarThickness: 26 })).concat(hasOther ? [{ label: 'Other', data: byM.map(l => sum(l.filter(e => !top5.includes(e.category)))), backgroundColor: '#CBD5E1', borderRadius: 4, stack: 's', maxBarThickness: 26 }] : []) }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend, tooltip: Object.assign({}, tip, { callbacks: { label: lbl } }) }, scales: { x: { stacked: true, grid: { display: false } }, y: yAx(true) } } }));
   const m12 = Array.from({ length: 12 }, (_, i) => shiftM(endM, i - 11));
-  const sp = m12.map(m => sum(exFilter(m + '-01', m + '-' + p2(daysIn(m))))), em = m12.map(m => sum(S.emi.filter(e => inP(e, m) && accOk(e.account)))), ic = m12.map(m => sum(S.inc.filter(e => incP(e, m) && accOk(e.account))));
+  const sp = m12.map(m => sum(exFilter(m + '-01', m + '-' + p2(daysIn(m))))), em = m12.map(m => sumEmi(S.emi.filter(e => inP(e, m) && accOk(e.account)))), ic = m12.map(m => sum(S.inc.filter(e => incP(e, m) && accOk(e.account))));
   const d2 = $('#cTrend');
   if (d2) U.charts.push(new Chart(d2, { type: 'bar', data: { labels: m12.map(m => mLabel(m, 1)), datasets: [{ label: 'Spent', data: sp, backgroundColor: '#F97316', borderRadius: 6, stack: 'o', maxBarThickness: 22 }, { label: 'EMIs', data: em, backgroundColor: '#A855F7', borderRadius: 6, stack: 'o', maxBarThickness: 22 }, { label: 'Income', data: ic, type: 'line', stack: 'i', borderColor: '#11A04F', backgroundColor: '#11A04F', tension: .35, pointRadius: 3, borderWidth: 2.5 }] }, options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, plugins: { legend, tooltip: Object.assign({}, tip, { callbacks: { label: lbl } }) }, scales: { x: { stacked: true, grid: { display: false } }, y: yAx(true) } } }));
   const d3 = $('#cDaily');
@@ -4722,7 +5011,7 @@ const wrNote = r => String(r || '').replace(/#[\p{L}\p{N}_-]+/gu, '').replace(/\
 function wrapData(m) {
   const pm = shiftM(m, -1), mEnd = m + '-' + p2(daysIn(m)), cur = m === ym();
   const ex = S.exp.filter(e => inP(e, m) && myX(e)), spent = sum(ex), prev = sum(S.exp.filter(e => inP(e, pm) && myX(e)));
-  const inc = sum(S.inc.filter(e => incP(e, m) && !isOthers(e.account))), emi = sum(S.emi.filter(e => inP(e, m) && !isOthers(e.account))), inv = sum(S.inv.filter(e => isBuy(e) && inP(e, m) && !isOthers(e.from)));
+  const inc = sum(S.inc.filter(e => incP(e, m) && !isOthers(e.account))), emi = sumEmi(S.emi.filter(e => inP(e, m) && !isOthers(e.account))), inv = sum(S.inv.filter(e => isBuy(e) && inP(e, m) && !isOthers(e.from)));
   const byC = {}; ex.forEach(e => byC[e.category] = (byC[e.category] || 0) + e.amount);
   const cats = Object.entries(byC).sort((a, b) => b[1] - a[1]);
   const exP = ex.filter(e => e.amount > 0), spendDays = new Set(exP.map(e => e.ts.slice(0, 10))), dim = cur ? new Date().getDate() : daysIn(m);
@@ -5468,9 +5757,9 @@ try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () =
 binPurge();
 setTab('home');
 bootLock();
-if (linked()) (isDrive() ? pull(true) : flush().then(() => pull(true))).then(() => { if (runAuto()) render(); repSync(); });
+if (linked()) (isDrive() ? pull(true) : flush().then(() => pull(true))).then(() => { if (runAuto() + runEmiAuto() + tagTidy()) render(); repSync(); });
 else if (!S.accounts.length) setTimeout(welcome, 450);
-else if (runAuto()) render();
+else if (runAuto() + runEmiAuto() + tagTidy()) render();
 repSync();
 setInterval(flush, 30000);
 window.addEventListener('online', flush);
