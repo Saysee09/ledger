@@ -207,7 +207,7 @@ with sync_playwright() as p:
     ok('instalment done' in pg.inner_text('#view'), 'card says this month is done')
     # edit form: instalment field + live hint
     pg.evaluate("() => goalSheet(goalById('G1'))"); pg.wait_for_timeout(400)
-    ok(pg.input_value('#gsInst') == '5000', 'edit form shows the instalment')
+    ok(pg.input_value('#gsInst').replace(',', '') == '5000', 'edit form shows the instalment')
     pg.fill('#gsInst', '10000'); pg.wait_for_timeout(150)
     h = pg.inner_text('#gsInstHint')
     ok('4 instalments' in h, 'live hint: 35,000 left at 10,000 -> 4 instalments (%s)' % h)

@@ -436,6 +436,12 @@ html.kbd .nav,html.kbd .fab{display:none!important}
 .section-t{font-size:.72rem;font-weight:800;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;margin:20px 6px 8px}
 .hk-hero{background:linear-gradient(135deg,var(--acc),#7C3AED);color:#fff;border-radius:18px;padding:14px 16px;margin:14px 0 10px}.hk-hero .hl{font-size:.74rem;font-weight:700;opacity:.85}.hk-hero .hv{font-size:1.6rem;font-weight:800;line-height:1.2;overflow-wrap:anywhere}.hk-hero .hv small{font-size:.8rem;font-weight:600;opacity:.8}.hk-hero .hs{font-size:.8rem;color:rgba(255,255,255,.92);margin-top:2px}.hk-hero .hl,.hk-hero .hv{color:#fff}.hk-hero .hs b.green{color:#B9FBC0}
 .hk-t{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:2px 12px}.hk-r{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr) minmax(0,1fr);gap:6px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem;align-items:center}.hk-r:last-child{border-bottom:0}.hk-r span{color:var(--mute);min-width:0;overflow-wrap:anywhere}.hk-r b{text-align:right;min-width:0;overflow-wrap:anywhere}.hk-r b.mute{color:var(--mute);font-weight:700;font-size:.72rem}
+.an-hero{background:linear-gradient(135deg,#17133A,#3D2FD0 60%,#5B47E8);color:#fff;border-radius:20px;padding:16px 18px;margin:0 0 10px}.an-hero .hl{font-size:.74rem;font-weight:700;color:#C9C4FF;display:block}.an-hero .hv{font-size:min(1.9rem,8.4vw);font-weight:800;line-height:1.15;margin-top:2px;overflow-wrap:anywhere}.an-hero .hv small{font-size:.8rem;font-weight:600;color:#D9D6F5}.an-hero .hs{font-size:.8rem;color:#E4E1FF;margin-top:4px;line-height:1.4}
+.an-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,8.4rem),1fr));gap:8px;margin:0 0 10px}.an-t{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:11px 12px;min-width:0;display:flex;flex-direction:column;gap:2px}.an-t span{font-size:.72rem;font-weight:700;color:var(--mute)}.an-t b{font-size:min(1.08rem,5.2vw);font-weight:800;line-height:1.2;overflow-wrap:anywhere}.an-t small{font-size:.7rem;color:var(--mute);line-height:1.3;overflow-wrap:anywhere}
+.an-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 10px}.an-h{font-size:.8rem;font-weight:800;margin-bottom:8px;display:flex;justify-content:space-between;gap:8px}.an-bar{display:flex;height:12px;border-radius:99px;overflow:hidden;background:var(--soft)}.an-bar i{display:block;height:100%}.an-leg{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:9px;font-size:.74rem;color:var(--mute)}.an-leg span{display:inline-flex;align-items:center;gap:5px}.an-leg i{width:9px;height:9px;border-radius:3px;display:inline-block}.an-leg b{color:var(--ink)}.an-note{font-size:.78rem;color:var(--mute);margin-top:8px;line-height:1.45}
+.an-tip{display:flex;gap:10px;font-size:.8rem;line-height:1.45;padding:8px 0;border-bottom:1px solid var(--line)}.an-tip:last-child{border-bottom:0}.an-tip>span{font-size:1rem;line-height:1.2}.an-tip>div{min-width:0}
+.hk-al{display:flex;gap:10px;border-radius:14px;padding:11px 13px;margin:0 0 10px;font-size:.8rem;line-height:1.45;border:1px solid}.hk-al>div{min-width:0}.hk-al.ok{background:color-mix(in srgb,var(--green) 12%,transparent);border-color:color-mix(in srgb,var(--green) 35%,transparent)}.hk-al.warn{background:color-mix(in srgb,var(--amber) 12%,transparent);border-color:color-mix(in srgb,var(--amber) 35%,transparent)}.hk-al.bad{background:color-mix(in srgb,var(--red) 12%,transparent);border-color:color-mix(in srgb,var(--red) 40%,transparent)}
+.hk-pay{margin:12px 0 0}.hk-pay summary{cursor:pointer;list-style:none;display:flex;flex-direction:column;gap:2px}.hk-pay summary::-webkit-details-marker{display:none}.hk-pay summary b{font-size:.86rem}.hk-pay summary b::after{content:' ›';color:var(--mute)}.hk-pay[open] summary b::after{content:' ⌄'}.hk-pay summary small{font-size:.72rem;color:var(--mute);overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -557,7 +563,7 @@ const FEEDBACK = { url: 'https://script.google.com/macros/s/AKfycbySVWBIS19EnBmG
 const fbOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(FEEDBACK.url);
 const cloudOk = () => /^https:\/\/script\.google\.com\/.+\/exec$/.test(CLOUD.url) && /\.apps\.googleusercontent\.com$/.test(CLOUD.clientId);
 const APP_V = 8;
-const APP_BUILD = '2026-11-23 b29';
+const APP_BUILD = '2026-11-23 b30';
 const POS = new Set(['Add', 'Opening', 'Merge In', 'Move In']);
 const LUP = new Set(['Borrow', 'Lend', 'Opening']);
 const LACC = { Borrow: 1, Receive: 1, Lend: -1, Repay: -1 };
@@ -1093,8 +1099,8 @@ ACT.repSeen = () => { S.prefs.repSeen = ym(); save(); render(); if (inboxCount()
 function repSync() { try { if (AND && AND.setMonthReport) AND.setMonthReport(S.prefs.mrep !== false, S.exp.some(e => inP(e, ym()))); } catch (e) { } }
 
 /* ---------- events ---------- */
-document.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (!el) return; const f = ACT[el.dataset.act]; if (f) { e.preventDefault(); f(el, e); } });
-document.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.in && IN[t.dataset.in]) IN[t.dataset.in](t); });
+document.addEventListener('click', e => { const el = e.target.closest('[data-act]'); if (!el) return; const f = ACT[el.dataset.act]; if (f) { e.preventDefault(); f(el, e); amtFmtAll(); } });
+document.addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.in && IN[t.dataset.in]) { IN[t.dataset.in](t); amtFmtAll($('#sheet')); } });
 document.addEventListener('change', e => { if (e.target.id === 'cPhoto') onPhoto(e.target); });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && sheetOpen() && !e.target.dataset.enter) { const b = $('#sheet .btn.big'); if (b && e.target.type !== 'search') { e.preventDefault(); b.click(); } } });
 
@@ -4588,98 +4594,169 @@ function careerTab() {
   return h;
 }
 /* ---------- salary maths: new tax regime (FY 2026-27, same slabs as 2025-26), an estimate only ----------
-   Basic = 50% of CTC. PF 12% of basic from you and from the company (or capped at ₹1,800 a month each, or none).
-   Professional tax ₹2,500 a year. Standard deduction ₹75,000; no tax up to ₹12 lakh taxable (87A, with marginal relief); 4% cess. */
+   Your salary structure is kept in Settings → career.pay (synced): yearly bonus (part of CTC, paid once a year),
+   PF (₹3,000 cap since the ₹25,000 PF wage ceiling of 17 Sep 2026, 12% of basic, your own ₹ amount, or none),
+   basic % of the fixed pay, other monthly cuts (insurance, meal card…), professional tax a year.
+   Standard deduction ₹75,000; no tax up to ₹12 lakh taxable (87A, with marginal relief); 4% cess. */
 function taxNew(ti) {
   if (!(ti > 0)) return 0; const sl = [[4e5, 0], [8e5, .05], [12e5, .1], [16e5, .15], [20e5, .2], [24e5, .25], [Infinity, .3]];
   let t = 0, lo = 0; for (const [hi, r] of sl) { if (ti > lo) t += (Math.min(ti, hi) - lo) * r; lo = hi; }
   if (ti <= 12e5) t = 0; else t = Math.min(t, ti - 12e5);
   return Math.round(t * 1.04);
 }
-function payOf(ctc, pf) {
-  ctc = +ctc || 0; const basic = ctc * .5 / 12, pfM = pf === 'none' ? 0 : pf === 'full' ? basic * .12 : Math.min(1800, basic * .12);
-  const gross = ctc - pfM * 12, tax = taxNew(gross - 75000), pt = ctc > 0 ? 2500 : 0, inHand = Math.max(0, (gross - pfM * 12 - tax - pt) / 12);
-  return { ctc, month: ctc / 12, gross, pf: pfM, tax, pt, inHand: Math.round(inHand) };
+const PAY_DEF = { bonus: 0, pf: 'cap', pfAmt: 3000, basic: 50, other: 0, pt: 2500, pfCo: true };
+const payCfg = () => Object.assign({}, PAY_DEF, (S.cfg.career || {}).pay || {});
+const pfOf = (K, basicM) => K.pf === 'none' ? 0 : K.pf === 'full' ? basicM * .12 : K.pf === 'custom' ? Math.max(0, +K.pfAmt || 0) : Math.min(3000, basicM * .12);
+/* bonus = the yearly bonus inside this CTC (omit: your saved bonus) */
+function payOf(ctc, K, bonus) {
+  K = Object.assign({}, PAY_DEF, K || payCfg()); ctc = +ctc || 0;
+  const b = Math.max(0, Math.min(ctc, bonus != null ? +bonus || 0 : +K.bonus || 0)), fixed = ctc - b, basicM = fixed * Math.min(100, Math.max(10, +K.basic || 50)) / 100 / 12;
+  const pf = pfOf(K, basicM), coPf = K.pfCo === false ? 0 : pf, gross = Math.max(0, fixed - coPf * 12), oth = Math.max(0, +K.other || 0), pt = ctc > 0 ? Math.max(0, K.pt === '' || K.pt == null ? 2500 : +K.pt) : 0;
+  const taxAll = taxNew(gross + b - 75000), taxFix = taxNew(gross - 75000);
+  const inHand = Math.max(0, Math.round((gross - pf * 12 - taxFix - pt - oth * 12) / 12)), bonusNet = Math.max(0, Math.round(b - (taxAll - taxFix)));
+  return { ctc, b, month: ctc / 12, fixedM: fixed / 12, pf, coPf, tax: taxAll, taxM: taxFix / 12, bonusTax: taxAll - taxFix, pt, other: oth, inHand, bonusNet, year: inHand * 12 + bonusNet, taxable: Math.max(0, gross + b - 75000) };
 }
-/* what actually reached your bank as salary: the usual of your last 3 salary credits */
+/* where tax starts for this structure, and the "tax trap" after it: CTCs that take home less than at the line */
+function taxLine(K, share) {
+  const P = c => payOf(c, K, c * share);
+  let lo = 0, hi = 6e6; if (P(hi).tax === 0) return null;
+  while (hi - lo > 1) { const m = Math.floor((lo + hi) / 2); if (P(m).tax === 0) lo = m; else hi = m; }
+  const base = P(lo).year; let even = lo + 500;
+  while (even < lo + 8e5 && P(even).year <= base) even += 500;
+  return { free: Math.floor(lo / 100) * 100, even: Math.ceil(even / 1000) * 1000, base };
+}
+/* what reached your bank as salary: the usual of your last 3 salary credits since this job started */
 function salaryNow() {
-  const L = S.inc.filter(e => /salary/i.test(e.source || '') && e.amount > 0 && !isOthers(e.account)).sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 3).map(e => e.amount).sort((a, b) => a - b);
-  return L.length ? { amt: L[Math.floor(L.length / 2)], n: L.length } : null;
+  const cur = careerStats().cur, all = S.inc.filter(e => /salary/i.test(e.source || '') && e.amount > 0 && !isOthers(e.account)).sort((a, b) => b.ts.localeCompare(a.ts));
+  const since = cur && cur.from ? all.filter(e => e.ts.slice(0, 7) >= cur.from) : all, L = (since.length ? since : all).slice(0, 3);
+  if (!L.length) return null; const v = L.map(e => e.amount).sort((a, b) => a - b);
+  return { amt: v[Math.floor(v.length / 2)], n: L.length, last: L[0].ts.slice(0, 7), old: !since.length && !!cur };
 }
 const curCtc = () => { const CS = careerStats(), c = CS.cur && +CS.cur.ctc ? CS.cur : (CS.jobs || []).filter(j => +j.ctc > 0).pop(); return c ? +c.ctc : 0; };
+const anTile = (l, v, sub, cls) => `<div class="an-t"><span>${l}</span><b class="${cls || ''}">${v}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
+function payBar(P) {
+  const parts = [['In hand', P.inHand * 12, 'var(--green)'], ['Bonus', P.bonusNet, '#A855F7'], ['Tax', P.tax, 'var(--red)'], ['PF', (P.pf + P.coPf) * 12, 'var(--blue)'], ['Other', P.other * 12 + P.pt, 'var(--amber)']].filter(x => x[1] > 0), tot = parts.reduce((t, x) => t + x[1], 0) || 1;
+  return `<div class="an-bar">${parts.map(x => `<i style="width:${(x[1] / tot * 100).toFixed(1)}%;background:${x[2]}"></i>`).join('')}</div><div class="an-leg">${parts.map(x => `<span><i style="background:${x[2]}"></i>${x[0]} <b>${inr(x[1] / 12)}</b>/mo</span>`).join('')}</div>`;
+}
 function careerAnalysis(CS) {
   const ctc = curCtc(), sal = salaryNow(); if (!ctc && !sal) return '';
-  const P = ctc ? payOf(ctc, (S.prefs.hk || {}).pf || 'cap') : null, rows = [];
-  if (P) rows.push(['CTC now', inr(ctc) + ' a year · ' + inr(Math.round(P.month)) + '/month']);
-  if (P) rows.push(['In-hand (estimate)', '≈ ' + inr(P.inHand) + '/month']);
-  if (sal) rows.push(['Salary reaching your bank', inr(sal.amt) + '/month' + (sal.n < 3 ? ' (' + sal.n + ' credit' + (sal.n > 1 ? 's' : '') + ')' : '')]);
-  if (CS.ok && CS.cagr != null && CS.first !== CS.last) rows.push(['Since your first job', inr(CS.first.ctc, 1) + ' → ' + inr(CS.last.ctc, 1) + ' · ' + (CS.cagr >= 0 ? '+' : '') + Math.round(CS.cagr * 100) + '% a year']);
-  if (CS.cur && CS.cur.from) { const mo = mDiff(CS.cur.from, ym()); rows.push(['At this job', mo < 12 ? mo + ' month' + (mo === 1 ? '' : 's') : (Math.round(mo / 12 * 10) / 10) + ' years']); }
+  const K = payCfg(), P = ctc ? payOf(ctc, K) : null;
+  let h = `<div class="section-t">Analysis</div>`;
+  if (P) h += `<div class="an-hero"><span class="hl">CTC now${CS.cur ? ' · ' + esc(CS.cur.company || '') : ''}</span><div class="hv">${inr(ctc)}<small> a year</small></div><div class="hs">${inr(Math.round(P.month))} a month${P.b ? ` · fixed ${inr(Math.round(P.fixedM))} + bonus ${inr(P.b)} a year` : ''}</div></div>`;
+  const tiles = [];
+  if (P) tiles.push(anTile('In hand a month', '≈ ' + inr(P.inHand), P.b ? 'bonus ≈ ' + inr(P.bonusNet) + ' after tax, once a year' : 'estimate, new tax regime'));
+  if (sal) tiles.push(anTile('Reaches your bank', inr(sal.amt), sal.old ? 'from your earlier job' : sal.n > 1 ? 'usual of last ' + sal.n + ' salaries' : mLabel(sal.last)));
+  if (CS.ok && CS.cagr != null && CS.first !== CS.last) tiles.push(anTile('Growth a year', (CS.cagr >= 0 ? '+' : '') + Math.round(CS.cagr * 100) + '%', inr(CS.first.ctc, 1) + ' → ' + inr(CS.last.ctc, 1), CS.cagr >= .1 ? 'green' : ''));
+  if (CS.cur && CS.cur.from) { const mo = mDiff(CS.cur.from, ym()) + 1; tiles.push(anTile('At this job', mo < 12 ? mo + ' month' + (mo === 1 ? '' : 's') : (Math.round(mo / 12 * 10) / 10) + ' years', 'since ' + mLabel(CS.cur.from))); }
+  h += `<div class="an-grid">${tiles.join('')}</div>`;
+  if (P) h += `<div class="an-card"><div class="an-h">Where your CTC goes</div>${payBar(P)}</div>`;
   const take = sal ? sal.amt : P ? P.inHand : 0, ms = [1, 2, 3].map(i => shiftM(ym(), -i)), sp = take ? r2(ms.reduce((t, m) => t + sum(S.exp.filter(e => inP(e, m) && myX(e))), 0) / 3) : 0;
-  if (take && sp > 0) rows.push(['You spend', inr(sp) + '/month · ' + Math.round(sp / take * 100) + '% of what you take home']);
-  let tip = '';
-  if (ctc && CS.cur && CS.cur.from) { const nx = shiftM(CS.cur.from, 12 * (Math.floor(mDiff(CS.cur.from, ym()) / 12) + 1)); tip = `To grow 15% a year, aim for <b>${inr(Math.round(ctc * 1.15 / 1000) * 1000)}</b> at your next review (around ${mLabel(nx)}) · that is about <b>${inr(payOf(ctc * 1.15, (S.prefs.hk || {}).pf || 'cap').inHand - P.inHand)}</b> more a month in hand.`; }
-  if (P && sal && Math.abs(sal.amt - P.inHand) > P.inHand * .15) tip += (tip ? '<br>' : '') + `Your real salary credit differs from the estimate by ${inr(Math.abs(sal.amt - P.inHand))}: deductions at your company (PF, insurance, tax plan) are different. The calculator uses your real credit when it can.`;
-  return `<div class="section-t">Analysis</div><div class="card" style="padding:6px 14px 12px"><div class="kv" style="margin:6px 0 0">${rows.map(([k, v]) => `<div><span>${esc(k)}</span><b>${v}</b></div>`).join('')}</div>${tip ? `<div class="hint">${tip}</div>` : ''}${!ctc ? `<div class="hint">Add your current job with its CTC above to see your in-hand and hike maths.</div>` : ''}</div>`;
+  if (take && sp > 0) { const pc = Math.round(sp / take * 100), col = pc > 100 ? 'var(--red)' : pc > 80 ? 'var(--amber)' : 'var(--green)';
+    h += `<div class="an-card"><div class="an-h">Spending vs take-home <b style="color:${col}">${pc}%</b></div><div class="an-bar"><i style="width:${Math.min(100, pc)}%;background:${col}"></i></div><div class="an-note">You spend ${inr(sp)} a month (last 3 months) of ${inr(take)} take-home.${pc > 100 ? ' <b>More than your salary</b>: the rest came from savings, cards or other money.' : pc > 80 ? ' Little is left to save.' : ' Nice room to save.'}</div></div>`; }
+  const tips = [];
+  if (P && CS.cur && CS.cur.from) { const nx = shiftM(CS.cur.from, 12 * (Math.floor(mDiff(CS.cur.from, ym()) / 12) + 1)), tgt = Math.round(ctc * 1.15 / 1000) * 1000, Q = payOf(tgt, K, P.b * tgt / ctc); tips.push(['🎯', `Next review (around ${mLabel(nx)}): aim for <b>${inr(tgt)}</b> to grow 15% a year. That is about <b>${inr(Q.inHand - P.inHand)}</b> more a month in hand.`]); }
+  if (P) { const L = taxLine(K, ctc ? P.b / ctc : 0); if (L && ctc <= L.free) tips.push(['🧾', `No income tax up to a CTC of about <b>${inr(L.free)}</b> with your structure (${inr(L.free - ctc)} away). Between ${inr(L.free)} and ${inr(L.even)} you would take home <b>less</b>, so ask for at least ${inr(L.even)}.`]); else if (L) tips.push(['🧾', `You pay about <b>${inr(P.tax)}</b> tax a year (${inr(Math.round(P.tax / 12))} a month).`]); }
+  if (P && sal && !sal.old && sal.amt < P.inHand * .85) tips.push(['⚙️', `Your salary credit is <b>${inr(P.inHand - sal.amt)}</b> lower than the estimate. Is part of your CTC a yearly bonus, or a bigger PF or insurance cut? <button class="nickb" style="display:inline;font-size:inherit;padding:0" data-act="hikeOpen" data-v="pay">Set your salary structure</button>`]);
+  if (tips.length) h += `<div class="an-card">${tips.map(([i, t]) => `<div class="an-tip"><span>${i}</span><div>${t}</div></div>`).join('')}</div>`;
+  if (!ctc) h += `<div class="hint">Add your current job with its CTC above to see your in-hand and hike maths.</div>`;
+  return h;
 }
-/* ---------- hike calculator: from your current CTC (or any amount), by % or by a new offer ---------- */
+/* ---------- hike calculator: from your CTC (or any amount), by % or by a new offer, with your salary structure ---------- */
 const HK_PCT = [5, 10, 15, 20, 30, 50];
-function hikeSheet() {
-  const pv = S.prefs.hk || {}, base = U.hk ? U.hk.base : curCtc() || '';
-  U.hk = Object.assign({ base, mode: 'pct', pct: 10, offer: '', pf: pv.pf || 'cap', per: 'y' }, U.hk || {});
-  const H = U.hk, own = curCtc();
+function hkPayHtml(K, H) {
+  const sal = salaryNow(), own = Math.abs((+H.base || 0) - curCtc()) < 1;
+  const num = (id, v, ph, w) => `<input id="${id}" inputmode="decimal" value="${v === '' || v == null ? '' : v}" placeholder="${ph}" data-in="hkPay"${w ? ` style="width:${w}"` : ''}>`;
+  return `<div class="lbl" style="margin-top:6px">Performance bonus / variable a year ₹ <small class="mute">(part of CTC, paid once)</small></div>${num('hpBonus', K.bonus || '', '0')}
+  <div class="lbl">PF you pay a month</div><div class="chips wrap">${[['cap', 'Up to ₹3,000'], ['full', '12% of basic'], ['custom', 'My amount'], ['none', 'No PF']].map(([k, l]) => `<button class="chip ${K.pf === k ? 'on' : ''}" data-act="hpPf" data-v="${k}">${l}</button>`).join('')}</div>
+  ${K.pf === 'custom' ? `<div class="grid2" style="margin-top:8px"><div>${num('hpPfAmt', K.pfAmt, 'e.g. 2,500')}</div><div class="hint" style="margin:6px 0 0">₹ a month from your payslip</div></div>` : ''}
+  <label class="check"><input type="checkbox" id="hpCo" ${K.pfCo !== false ? 'checked' : ''} data-in="hkPay"> The company's PF is inside my CTC</label>
+  <div class="grid2"><div><div class="lbl">Basic % of fixed pay</div>${num('hpBasic', K.basic, '50')}</div><div><div class="lbl">Prof. tax a year ₹</div>${num('hpPt', K.pt, '2,500')}</div></div>
+  <div class="lbl">Other cuts a month ₹ <small class="mute">(insurance, meal card, loan…)</small></div>${num('hpOther', K.other || '', '0')}
+  ${own && sal && !sal.old ? `<button class="chip" data-act="hpMatch" style="margin-top:8px;white-space:normal;text-align:left;max-width:100%">↺ Match my real salary (${inr(sal.amt)})</button>` : ''}
+  <div class="btns" style="margin-top:10px"><button class="btn sm" data-act="hpSave">Save as my structure</button>${(S.cfg.career || {}).pay ? `<button class="btn sm sec" data-act="hpReset">Reset</button>` : ''}</div>`;
+}
+function hikeSheet(openPay) {
+  const base = U.hk ? U.hk.base : curCtc() || '';
+  U.hk = Object.assign({ base, mode: 'pct', pct: 10, offer: '', offerB: '', per: 'y', pay: payCfg() }, U.hk || {});
+  const H = U.hk, own = curCtc(), K = H.pay, set = !!(S.cfg.career || {}).pay;
+  const pv = x => x ? (H.per === 'm' ? Math.round(x / 12) : x) : '';
   openSheet('🧮 Hike calculator', `<div id="hkForm">
-  <div class="lbl" style="margin-top:0">Current CTC ${own ? `<small class="mute">(your job: ${inr(own, 1)})</small>` : ''}</div>
+  <div class="lbl" style="margin-top:0">Current CTC ${own ? `<small class="mute">(your job: ${inr(own)})</small>` : ''}</div>
   <div class="seg" style="margin:0 0 8px">${[['y', 'Yearly'], ['m', 'Monthly']].map(([k, l]) => `<button class="${H.per === k ? 'on' : ''}" data-act="hkPer" data-v="${k}">${l}</button>`).join('')}</div>
-  <label class="amtbox"><span>₹</span><input id="hkBase" inputmode="decimal" value="${H.base ? (H.per === 'm' ? Math.round(H.base / 12) : H.base) : ''}" placeholder="${H.per === 'm' ? 'e.g. 50,000' : 'e.g. 6,00,000'}" data-in="hkCalc"></label>
-  ${own && Math.abs(own - (+H.base || 0)) > 1 ? `<button class="chip" data-act="hkMine" style="margin-top:6px">↺ Use my CTC ${inr(own, 1)}</button>` : ''}
+  <label class="amtbox"><span>₹</span><input id="hkBase" inputmode="decimal" value="${pv(H.base)}" placeholder="${H.per === 'm' ? 'e.g. 50,000' : 'e.g. 6,00,000'}" data-in="hkCalc"></label>
+  ${own && Math.abs(own - (+H.base || 0)) > 1 ? `<button class="chip" data-act="hkMine" style="margin-top:6px">↺ Use my CTC ${inr(own)}</button>` : ''}
+  <details class="an-card hk-pay" ${openPay || H.payOpen ? 'open' : ''}><summary><b>⚙️ Salary structure</b><small>${set ? 'yours' : 'standard'} · ${K.bonus ? 'bonus ' + inr(K.bonus) + ' · ' : ''}PF ${K.pf === 'custom' ? inr(K.pfAmt) : K.pf === 'none' ? 'none' : K.pf === 'full' ? '12% of basic' : 'up to ₹3,000'}${K.other ? ' · other ' + inr(K.other) : ''}</small></summary><div id="hkPay">${hkPayHtml(K, H)}</div></details>
   <div class="seg" style="margin:14px 0 8px">${[['pct', 'By hike %'], ['offer', 'By new offer']].map(([k, l]) => `<button class="${H.mode === k ? 'on' : ''}" data-act="hkMode" data-v="${k}">${l}</button>`).join('')}</div>
-  ${H.mode === 'pct' ? `<div class="chips wrap">${HK_PCT.map(p => `<button class="chip ${+H.pct === p ? 'on' : ''}" data-act="hkPct" data-v="${p}">${p}%</button>`).join('')}<input id="hkPctIn" inputmode="decimal" value="${HK_PCT.includes(+H.pct) ? '' : H.pct}" placeholder="other %" data-in="hkCalc" style="width:96px;padding:8px 10px"></div>`
-    : `<div class="lbl" style="margin-top:4px">New CTC offered (${H.per === 'm' ? 'monthly' : 'yearly'})</div><label class="amtbox"><span>₹</span><input id="hkOffer" inputmode="decimal" value="${H.offer ? (H.per === 'm' ? Math.round(H.offer / 12) : H.offer) : ''}" placeholder="the offer" data-in="hkCalc"></label>`}
+  ${H.mode === 'pct' ? `<div class="chips wrap">${HK_PCT.map(p => `<button class="chip ${+H.pct === p ? 'on' : ''}" data-act="hkPct" data-v="${p}">${p}%</button>`).join('')}<input id="hkPctIn" inputmode="decimal" data-raw="1" value="${HK_PCT.includes(+H.pct) ? '' : H.pct}" placeholder="other %" data-in="hkCalc" style="width:96px;padding:8px 10px"></div>`
+    : `<div class="lbl" style="margin-top:4px">New CTC offered (${H.per === 'm' ? 'monthly' : 'yearly'})</div><label class="amtbox"><span>₹</span><input id="hkOffer" inputmode="decimal" value="${pv(H.offer)}" placeholder="the offer" data-in="hkCalc"></label>
+      <div class="lbl">Bonus inside the offer, a year ₹ <small class="mute">(empty = same share as now)</small></div><input id="hkOfferB" inputmode="decimal" value="${H.offerB || ''}" placeholder="${K.bonus && H.base ? 'about ' + Math.round(K.bonus / H.base * 100) + '% of CTC' : '0'}" data-in="hkCalc">`}
   <div id="hkOut"></div>
-  <details class="hint"><summary>PF and how this is worked out</summary><div class="chips wrap" style="margin:8px 0">${[['cap', 'PF ₹1,800/month'], ['full', 'PF 12% of basic'], ['none', 'No PF']].map(([k, l]) => `<button class="chip ${H.pf === k ? 'on' : ''}" data-act="hkPf" data-v="${k}">${l}</button>`).join('')}</div>New tax regime (FY 2026-27): ₹75,000 standard deduction, no tax up to ₹12 lakh taxable, 4% cess. Basic taken as half the CTC; the company's PF is part of CTC and your PF is cut from salary; ₹2,500 professional tax a year. Bonuses, HRA claims and old-regime deductions are not counted. When Brokeless knows your real salary credit, "reaches your bank" adds the change to it.</details>
+  <div class="hint">Estimate with the new tax regime (FY 2026-27): ₹75,000 standard deduction, no tax up to ₹12 lakh taxable, 4% cess. Monthly in-hand leaves the bonus out; the bonus's extra tax is taken from the bonus. Old-regime deductions (HRA, 80C) are not counted.</div>
   <button class="btn sec" data-act="jbBack">‹ Back to Money Pulse</button></div>`, 'tall');
   hkCalc();
 }
 function hkRead() {
   const H = U.hk, m = H.per === 'm' ? 12 : 1, b = parseAmt(($('#hkBase') || {}).value); H.base = b > 0 ? r2(b * m) : 0;
-  if (H.mode === 'pct') { const c = parseFloat(($('#hkPctIn') || {}).value); if (c > -100 && !isNaN(c) && ($('#hkPctIn') || {}).value !== '') H.pct = c; }
-  else { const o = parseAmt(($('#hkOffer') || {}).value); H.offer = o > 0 ? r2(o * m) : 0; }
+  if (H.mode === 'pct') { const v = ($('#hkPctIn') || {}).value, c = parseFloat(v); if (v && c > -100 && !isNaN(c)) H.pct = c; }
+  else { const o = parseAmt(($('#hkOffer') || {}).value); H.offer = o > 0 ? r2(o * m) : 0; const ob = ($('#hkOfferB') || {}).value; H.offerB = ob && parseAmt(ob) >= 0 ? parseAmt(ob) : ''; }
+  if ($('#hpBonus')) { const K = H.pay, n = id => { const v = parseAmt(($('#' + id) || {}).value); return isNaN(v) ? 0 : v; };
+    K.bonus = n('hpBonus'); K.other = n('hpOther'); K.basic = n('hpBasic') || 50; K.pt = ($('#hpPt').value === '' ? 2500 : n('hpPt')); if ($('#hpPfAmt')) K.pfAmt = n('hpPfAmt'); K.pfCo = $('#hpCo').checked; }
 }
 function hkCalc() {
   const out = $('#hkOut'), H = U.hk; if (!out || !H) return; hkRead();
   if (!(H.base > 0)) { out.innerHTML = `<div class="hint">Type your current CTC to start.</div>`; return; }
-  const nw = H.mode === 'pct' ? r2(H.base * (1 + (+H.pct || 0) / 100)) : H.offer, pct = H.base ? (nw - H.base) / H.base * 100 : 0;
+  const K = H.pay, share = Math.min(1, (+K.bonus || 0) / H.base), nw = H.mode === 'pct' ? r2(H.base * (1 + (+H.pct || 0) / 100)) : H.offer;
   if (!(nw > 0)) { out.innerHTML = `<div class="hint">Type the new CTC from the offer.</div>`; return; }
-  const A = payOf(H.base, H.pf), B = payOf(nw, H.pf), dIn = B.inHand - A.inHand, sal = Math.abs(H.base - curCtc()) < 1 ? salaryNow() : null;
+  const pct = (nw - H.base) / H.base * 100, nb = H.mode === 'offer' && H.offerB !== '' ? H.offerB : nw * share;
+  const A = payOf(H.base, K, H.base * share), B = payOf(nw, K, nb), dIn = B.inHand - A.inHand, dYear = B.year - A.year, real = A.year ? dYear / A.year * 100 : 0;
+  const sal = Math.abs(H.base - curCtc()) < 1 ? salaryNow() : null, rp = x => (x >= 0 ? '+' : '') + (Math.round(x * 10) / 10) + '%';
   const row = (k, a, b, cls) => `<div class="hk-r"><span>${k}</span><b>${a}</b><b class="${cls || ''}">${b}</b></div>`;
-  out.innerHTML = `<div class="hk-hero"><div class="hl">${H.mode === 'pct' ? (+H.pct || 0) + '% hike' : 'New offer · ' + (pct >= 0 ? '+' : '') + (Math.round(pct * 10) / 10) + '%'}</div><div class="hv">${inr(nw)}<small> / year</small></div><div class="hs">${inr(Math.round(nw / 12))} a month CTC · <b class="green">+${inr(Math.max(0, dIn))}</b> a month in hand</div></div>
+  /* smart part: the tax line and the trap after it */
+  const L = taxLine(K, share), keep = nw !== H.base ? Math.round(dYear / (nw - H.base) * 100) : 0; let alert = '';
+  if (L) {
+    const atLine = payOf(L.free, K, L.free * share);
+    if (nw <= L.free) alert = `<div class="hk-al ok">✅ <div><b>No income tax at ${inr(nw)}.</b> Tax starts at a CTC of about ${inr(L.free)} with your structure${nw < L.free ? ` (${inr(L.free - nw)} more)` : ''}.${L.free - nw < 1.5e5 ? ` Going over it: ask for at least <b>${inr(L.even)}</b>, below that the tax eats the raise.` : ''}</div></div>`;
+    else if (nw < L.even) alert = `<div class="hk-al bad">⚠️ <div><b>Tax trap.</b> From ${inr(L.free)} to ${inr(L.even)} the new tax takes more than the extra pay. At ${inr(nw)} you take home <b>${inr(atLine.year - B.year)} a year less</b> than at ${inr(L.free)}${B.year < A.year ? ', and less than you get now' : ''}. Ask for at least <b>${inr(L.even)}</b> (${rp((L.even - H.base) / H.base * 100)} on ${inr(H.base)}), or stay at ${inr(L.free)}.</div></div>`;
+    else if (H.base <= L.free) alert = `<div class="hk-al warn">🧾 <div><b>This crosses the tax line at ${inr(L.free)}.</b> ${inr(B.tax)} a year goes to tax, so your real raise in hand is <b>${rp(real)}</b>, not ${rp(pct)}. Still worth it: past ${inr(L.even)} every raise leaves you with more.</div></div>`;
+    else alert = `<div class="hk-al warn">🧾 <div>Tax goes from ${inr(A.tax)} to <b>${inr(B.tax)}</b> a year. Of every ₹100 more CTC you keep about <b>₹${Math.max(0, keep)}</b>.</div></div>`;
+  }
+  out.innerHTML = `<div class="hk-hero"><div class="hl">${H.mode === 'pct' ? (+H.pct || 0) + '% hike' : 'New offer · ' + rp(pct)}</div><div class="hv">${inr(nw)}<small> / year</small></div><div class="hs">${inr(Math.round(nw / 12))} a month CTC · <b>${dIn >= 0 ? '+' : '−'}${inr(Math.abs(dIn))}</b> a month in hand · real raise <b>${rp(real)}</b></div></div>
+  ${alert}
   <div class="hk-t">${row('', 'Now', 'After', 'mute')}
-  ${row('CTC / year', inrS(H.base), inrS(nw))}
-  ${row('CTC / month', inr(Math.round(A.month)), inr(Math.round(B.month)))}
-  ${row('Tax / month', inr(Math.round(A.tax / 12)), inr(Math.round(B.tax / 12)), B.tax > A.tax ? 'red' : '')}
+  ${row('CTC / year', inr(H.base), inr(nw))}
+  ${A.b || B.b ? row('Bonus / year', inr(A.b), inr(B.b)) : ''}
+  ${row('Fixed / month', inr(Math.round(A.fixedM)), inr(Math.round(B.fixedM)))}
+  ${row('Tax / year', inr(A.tax), inr(B.tax), B.tax > A.tax ? 'red' : '')}
   ${row('Your PF / month', inr(Math.round(A.pf)), inr(Math.round(B.pf)))}
-  ${row('In hand / month ≈', inr(A.inHand), inr(B.inHand), 'green')}
-  ${sal ? row('Reaches your bank', inr(sal.amt), '≈ ' + inr(Math.round(sal.amt + dIn)), 'green') : ''}</div>
-  <div class="hint">Extra a year in hand ≈ <b>${inr(dIn * 12)}</b>${B.tax > A.tax ? ' · tax goes up by ' + inr(B.tax - A.tax) + ' a year' : ''}${A.tax === 0 && B.tax > 0 ? ' · you cross the ₹12 lakh tax-free line' : ''}.</div>
-  <div class="lbl">Quick compare</div><div class="hk-t">${[10, 15, 20, 30].map(p => { const x = payOf(H.base * (1 + p / 100), H.pf); return row(p + '%', inrS(Math.round(H.base * (1 + p / 100))), '+' + inr(x.inHand - A.inHand) + '/mo'); }).join('')}</div>
-  ${Math.abs(H.base - curCtc()) < 1 && CSnow() ? `<button class="btn sec" data-act="hkSave">✅ I got this · save ${inr(nw, 1)} as my new CTC</button>` : ''}`;
+  ${A.other || A.pt ? row('Other cuts / month', inr(Math.round(A.other + A.pt / 12)), inr(Math.round(B.other + B.pt / 12))) : ''}
+  ${row('In hand / month', inr(A.inHand), inr(B.inHand), 'green')}
+  ${A.b || B.b ? row('Bonus after tax', inr(A.bonusNet), inr(B.bonusNet), 'green') : ''}
+  ${row('Take-home / year', inr(A.year), inr(B.year), 'green')}
+  ${sal && !sal.old ? row('Reaches your bank', inr(sal.amt), '≈ ' + inr(Math.round(sal.amt + dIn)), 'green') : ''}</div>
+  <div class="lbl">Quick compare <small class="mute">(real raise = what you take home)</small></div><div class="hk-t">${row('Hike', 'New CTC', 'Real raise', 'mute')}${[10, 15, 20, 30].map(p => { const c = H.base * (1 + p / 100), x = payOf(c, K, c * share); return row(p + '%', inr(Math.round(c)), rp(A.year ? (x.year - A.year) / A.year * 100 : 0) + ' · +' + inr(x.inHand - A.inHand) + '/mo', x.year < A.year ? 'red' : ''); }).join('')}</div>
+  ${Math.abs(H.base - curCtc()) < 1 && CSnow() ? `<button class="btn sec" data-act="hkSave">✅ I got this · save ${inr(nw)} as my new CTC</button>` : ''}`;
 }
 const CSnow = () => careerStats().cur;
 IN.hkCalc = () => { if (U.hk && U.hk.mode === 'pct' && ($('#hkPctIn') || {}).value) $$('#hkForm [data-act=hkPct]').forEach(b => b.classList.remove('on')); hkCalc(); };
-ACT.hikeOpen = () => { U.hk = null; hikeSheet(); };
-ACT.hkPer = el => { hkRead(); U.hk.per = el.dataset.v; hikeSheet(); };
-ACT.hkMode = el => { hkRead(); U.hk.mode = el.dataset.v; hikeSheet(); };
+IN.hkPay = () => hkCalc();
+ACT.hikeOpen = el => { U.hk = null; hikeSheet(!!(el && el.dataset && el.dataset.v === 'pay')); };
+const hkRe = keep => { const d = $('#hkForm details.hk-pay'); U.hk.payOpen = keep != null ? keep : !!(d && d.open); const y = $('#shBody') ? $('#shBody').scrollTop : 0; hikeSheet(); if ($('#shBody')) $('#shBody').scrollTop = y; };
+ACT.hkPer = el => { hkRead(); U.hk.per = el.dataset.v; hkRe(); };
+ACT.hkMode = el => { hkRead(); U.hk.mode = el.dataset.v; hkRe(); };
 ACT.hkPct = el => { hkRead(); U.hk.pct = +el.dataset.v; if ($('#hkPctIn')) $('#hkPctIn').value = ''; $$('#hkForm [data-act=hkPct]').forEach(b => b.classList.toggle('on', b === el)); hkCalc(); buzz(6); };
-ACT.hkPf = el => { hkRead(); U.hk.pf = el.dataset.v; S.prefs.hk = Object.assign({}, S.prefs.hk, { pf: el.dataset.v }); save(); $$('#hkForm [data-act=hkPf]').forEach(b => b.classList.toggle('on', b === el)); hkCalc(); };
-ACT.hkMine = () => { hkRead(); U.hk.base = curCtc(); hikeSheet(); };
+ACT.hpPf = el => { hkRead(); U.hk.pay.pf = el.dataset.v; hkRe(); };
+ACT.hkMine = () => { hkRead(); U.hk.base = curCtc(); hkRe(); };
+ACT.hpMatch = () => { hkRead(); const sal = salaryNow(), K = U.hk.pay; if (!sal) return; const P = payOf(U.hk.base, Object.assign({}, K, { other: 0 })); K.other = Math.max(0, P.inHand - sal.amt); hkRe(); toast(K.other ? 'Other cuts set to ' + fmtINR(K.other) + ' a month' : 'Your salary is already above the estimate'); };
+ACT.hpSave = () => { hkRead(); const K = Object.assign({}, U.hk.pay); commit([cfgOp('career', Object.assign({}, S.cfg.career, { pay: K }))]); hkRe(false); toast('Salary structure saved'); };
+ACT.hpReset = () => { const c = Object.assign({}, S.cfg.career); delete c.pay; commit([cfgOp('career', c)]); U.hk.pay = payCfg(); hkRe(true); };
 ACT.hkSave = () => {
   hkRead(); const H = U.hk, cur = CSnow(), nw = H.mode === 'pct' ? Math.round(H.base * (1 + (+H.pct || 0) / 100)) : Math.round(H.offer); if (!cur || !(nw > 0)) return;
   const m = ym(); if (!confirm('Save ' + fmtINR(nw) + ' as your CTC from ' + mLabel(m) + '? ' + (cur.from === m ? 'Your current job row is updated.' : 'A new row is added at ' + (cur.company || 'your company') + ', so the hike is counted.'))) return;
   const J = ((S.cfg.career || {}).jobs || []).map(x => Object.assign({}, x));
   if (cur.from === m) J.forEach(x => { if (x.id === cur.id) x.ctc = nw; });
   else { J.forEach(x => { if (x.id === cur.id) x.to = shiftM(m, -1); }); J.push({ id: uid('J'), company: cur.company, role: cur.role || '', from: m, to: '', ctc: nw }); }
-  commit([cfgOp('career', Object.assign({}, S.cfg.career, { jobs: J }))]); U.pt = 'career'; pulseSheet(); toast('New CTC saved 🎉');
+  const c = Object.assign({}, S.cfg.career, { jobs: J }); if (c.pay && +c.pay.bonus > 0 && H.base > 0) c.pay = Object.assign({}, c.pay, { bonus: Math.round(c.pay.bonus * nw / H.base) });
+  commit([cfgOp('career', c)]); U.pt = 'career'; pulseSheet(); toast('New CTC saved 🎉');
 };
 ACT.pfCity = el => { commit([cfgOp('profile', Object.assign({}, S.cfg.profile, { city: el.dataset.v }))]); U.ptKeep = true; pulseSheet(); };
 ACT.pfSave = () => { commit([cfgOp('profile', Object.assign({}, S.cfg.profile, { born: $('#pfBorn').value, earning: $('#pfEarn').value, role: ($('#pfRole').value || '').trim() }))]); U.ptKeep = true; pulseSheet(); toast('Saved'); };
@@ -5718,12 +5795,15 @@ function amtFmt(i) {
     const out = (ip ? Number(ip).toLocaleString('en-IN') : (b != null ? '0' : '')) + (b != null ? '.' + b : '');
     if (out !== v) { i.value = out; let n = 0, k = 0; while (k < out.length && n < before) { if (out[k] !== ',') n++; k++; } try { i.setSelectionRange(k, k); } catch (e) { } }
   }
+  if (!i.closest('.amtbox')) return;
   /* shrink the font until the whole number shows */
   i.style.fontSize = ''; let f = parseFloat(getComputedStyle(i).fontSize);
   while (f > 18 && i.scrollWidth > i.clientWidth + 1) { f -= 2; i.style.fontSize = f + 'px'; }
 }
-document.addEventListener('input', e => { if (e.target.matches && e.target.matches('.amtbox input')) amtFmt(e.target); }, true);
-const amtFmtAll = root => requestAnimationFrame(() => (root || document).querySelectorAll('.amtbox input').forEach(i => { if (i.value) amtFmt(i); }));
+/* Indian commas (1,00,000) in every amount box while you type, not only the big ₹ ones */
+const AMT_IN = '.amtbox input, input[inputmode=decimal]:not([data-raw])';
+document.addEventListener('input', e => { if (e.target.matches && e.target.matches(AMT_IN)) amtFmt(e.target); }, true);
+const amtFmtAll = root => requestAnimationFrame(() => (root || document).querySelectorAll(AMT_IN).forEach(i => { if (i.value && i !== document.activeElement) amtFmt(i); }));
 
 /* ---------- keyboard: keep pop-ups and the box you type in above the keyboard ---------- */
 (() => {
